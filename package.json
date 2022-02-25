@@ -1,0 +1,14 @@
+{
+  "name": "bitburner-files",
+  "packageManager": "yarn@3.2.0",
+  "scripts": {
+    "help": "bitburner-sync --help",
+    "start": "tsc --watch & bitburner-sync --watch"
+  },
+  "dependencies": {
+    "@types/node": "^17.0.21",
+    "bitburner-sync": "1.1.0",
+    "ts-node": "^10.5.0",
+    "typescript": "^4.5.5"
+  }
+}
