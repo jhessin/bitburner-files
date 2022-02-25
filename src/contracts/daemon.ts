@@ -77,6 +77,9 @@ function solve(
     case "Total Ways to Sum":
       solution = solvers.totalWaysToSum(data);
       break;
+    case "Sanitize Parentheses in Expression":
+      solution = solvers.sanitizeParentheses(data);
+      break;
     default:
       ns.tprint(`Unknown contract type: ${type}`);
       return "";

@@ -8,3 +8,4 @@ export * from "contracts/solvers/generateIps.js";
 export * from "contracts/solvers/uniquePaths.js";
 export * from "contracts/solvers/triangleSum.js";
 export * from "contracts/solvers/stockSolver.js";
+export * from "contracts/solvers/sanitizeParentheses.js";
