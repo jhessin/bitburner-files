@@ -33,5 +33,5 @@ export async function main(ns: NS) {
     `Launching script '${script}' on server '${host}' with ${threads} threads and the following arguments: ${script_args}`
   );
   await ns.scp(script, ns.getHostname(), host);
-  ns.exec(script, host, threads, ...script_args);
+  if (threads > 0) ns.exec(script, host, threads, ...script_args);
 }

@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { getPlayerDetails } from "lib/getDetails";
 
 export async function main(ns: NS) {
   await getAllServers(ns);
@@ -18,20 +19,23 @@ export async function getAllServers(ns: NS) {
   }
   await getServers();
 
-  // This lists all contracts.
-  /*
-    for (let server of allServers) {
-        let files = ns.ls(server, 'cct');
-        if (files.length === 0) return;
-        ns.tprint("==================================");
-        ns.tprint(`Files on ${server}:`);
-        for (let file of files) {
-            ns.tprint(`\t${file}`);
-        }
-        ns.tprint("==================================");
-    }
-    */
-  // ns.tprint(`${allServers.length} servers found!`);
-
   return allServers;
+}
+
+export async function getHackableServers(ns: NS) {
+  let playerData = getPlayerDetails(ns);
+  return (await getAllServers(ns)).filter(
+    (s) =>
+      playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
+      ns.hasRootAccess(s)
+  );
+}
+
+export async function getNukableServers(ns: NS) {
+  let playerData = getPlayerDetails(ns);
+  return (await getAllServers(ns)).filter(
+    (s) =>
+      playerData.portHacks >= ns.getServerNumPortsRequired(s) &&
+      !ns.hasRootAccess(s)
+  );
 }

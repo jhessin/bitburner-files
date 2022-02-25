@@ -1,28 +1,6 @@
 import { NS } from "Bitburner";
 import { getAllServers } from "lib/getall";
-
-const hackPrograms = [
-  "BruteSSH.exe",
-  "FTPCrack.exe",
-  "relaySMTP.exe",
-  "HTTPWorm.exe",
-  "SQLInject.exe",
-];
-
-function getPlayerDetails(ns: NS) {
-  let portHacks = 0;
-
-  for (let hackProgram of hackPrograms) {
-    if (ns.fileExists(hackProgram, "home")) {
-      portHacks += 1;
-    }
-  }
-
-  return {
-    hackingLevel: ns.getHackingLevel(),
-    portHacks,
-  };
-}
+import { getPlayerDetails } from "lib/getDetails";
 
 export async function main(ns: NS) {
   const servers = await getAllServers(ns);

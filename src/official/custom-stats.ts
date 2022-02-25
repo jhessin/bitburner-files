@@ -1,4 +1,6 @@
 import { NS } from "Bitburner";
+import { getPlayerDetails } from "lib/getDetails";
+import { getHackableServers, getNukableServers } from "lib/getall";
 
 const updateSeconds = 30;
 
@@ -37,6 +39,7 @@ export async function main(ns: NS) {
           maximumSignificantDigits: 3,
         }) + "/sec"
       );
+
       // Add script exp gain rate per second
       headers.push("Script XP");
       values.push(
@@ -46,6 +49,19 @@ export async function main(ns: NS) {
           notation: "compact",
         }) + "/sec"
       );
+
+      // Add number of hackable ports
+      headers.push("Hackable Ports");
+      let { portHacks } = getPlayerDetails(ns);
+      values.push(portHacks < 5 ? portHacks.toString() : "ALL");
+
+      // Add number of hackable servers
+      headers.push("Hackable servers");
+      values.push((await getHackableServers(ns)).length.toString());
+
+      // Add the number of servers that need nuked
+      headers.push("Servers Needing Nuked");
+      values.push((await getNukableServers(ns)).length.toString());
       // TODO: Add more neat stuff
 
       // Now drop it into the placeholder elements
