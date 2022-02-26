@@ -11,13 +11,12 @@ export async function main(ns: NS) {
       const onServer = ns.ls(server, ".cct").map((contract) => {
         const type = ns.codingcontract.getContractType(contract, server);
         const data = ns.codingcontract.getData(contract, server);
-        const didSolve = solve(type, data, server, contract, ns);
-        return `${server} - ${contract} - ${type} - ${didSolve || "FAILED!"}`;
+        const reward = solve(type, data, server, contract, ns);
+        return `${server} - ${contract} - ${type} - ${reward || "FAILED!"}`;
       });
       return onServer;
     });
     ns.tprint(`Found ${contracts.length} contracts`);
-    // contracts.forEach((contract) => ns.tprint(contract));
     for (const contract of contracts) {
       ns.tprint(contract);
     }
@@ -80,9 +79,9 @@ function solve(
     case "Sanitize Parentheses in Expression":
       solution = solvers.sanitizeParentheses(data);
       break;
-    // case "Find All Valid Math Expressions":
-    //   solution = solvers.findMathExpression(data);
-    //   break;
+    case "Find All Valid Math Expressions":
+      solution = solvers.findMathExpression(data);
+      break;
     default:
       ns.tprint(`Unknown contract type: ${type}`);
       return "";
