@@ -31,6 +31,9 @@ async function crawl(ns: NS) {
       continue;
     }
     // Growth Phase
+    await killAll(ns);
+    ns.scriptKill("/basic/weaken.js", "home");
+    ns.scriptKill("/basic/hack.js", "home");
     let phaseStartTime = Date.now();
     while (ns.getServerMoneyAvailable(target) < maxMoney) {
       await deployToAll(ns, "/basic/grow.js", false, target);
@@ -40,6 +43,8 @@ async function crawl(ns: NS) {
 
     // Weaken Phase
     await killAll(ns);
+    ns.scriptKill("/basic/grow.js", "home");
+    ns.scriptKill("/basic/hack.js", "home");
     phaseStartTime = Date.now();
     while (ns.hackAnalyzeChance(target) < 0.5) {
       await deployToAll(ns, "/basic/weaken.js", false, target);
@@ -49,6 +54,8 @@ async function crawl(ns: NS) {
 
     // Hack Phase
     await killAll(ns);
+    ns.scriptKill("/basic/weaken.js", "home");
+    ns.scriptKill("/basic/grow.js", "home");
     phaseStartTime = Date.now();
     while (ns.getServerMoneyAvailable(target) > maxMoney / 2) {
       await deployToAll(ns, "/basic/hack.js", false, target);

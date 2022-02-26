@@ -80,6 +80,9 @@ function solve(
     case "Sanitize Parentheses in Expression":
       solution = solvers.sanitizeParentheses(data);
       break;
+    // case "Find All Valid Math Expressions":
+    //   solution = solvers.findMathExpression(data);
+    //   break;
     default:
       ns.tprint(`Unknown contract type: ${type}`);
       return "";
