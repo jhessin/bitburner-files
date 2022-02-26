@@ -10,8 +10,7 @@ const bestServerCheckDuration =
   24; // = 1 day
 const scriptUpdateDuration =
   1000 * // = 1 second
-  60 * // = 1 minute
-  30; // = 1/2 hour
+  30; // = 30 seconds
 const maxPhaseRuntime =
   1000 * // = 1 second
   60 * // = 1 minute
@@ -59,15 +58,19 @@ async function crawl(ns: NS) {
   }
 }
 
-async function getBestServer(ns: NS): Promise<[string, number]> {
+async function getBestServer(ns: NS): Promise<[string, number, number]> {
   const hackableServers = await getHackableServers(ns);
-  let bestServer: [string, number] = ["", 0];
+  let bestServer: [string, number, number] = ["", 0, 0];
 
   for (const s of hackableServers) {
     if (s === "home") continue;
-    const moneyAvailable = ns.getServerMoneyAvailable(s);
-    if (moneyAvailable > bestServer[1]) {
-      bestServer = [s, moneyAvailable];
+    const moneyAvailable = ns.getServerMaxMoney(s);
+    const hackChance = ns.hackAnalyzeChance(s);
+    if (moneyAvailable > bestServer[1] && hackChance > bestServer[2]) {
+      // TODO: use this to calculate hack time and figure out which server I can
+      // hack faster.
+      // ns.formulas.hacking.hackTime(ns.getServer(s), ns.getPlayer())
+      bestServer = [s, moneyAvailable, hackChance];
     }
   }
 

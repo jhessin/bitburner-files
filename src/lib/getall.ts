@@ -27,7 +27,8 @@ export async function getHackableServers(ns: NS) {
   return (await getAllServers(ns)).filter(
     (s) =>
       playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
-      ns.hasRootAccess(s)
+      ns.hasRootAccess(s) &&
+      ns.getServerMoneyAvailable(s) > 500
   );
 }
 
