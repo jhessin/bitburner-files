@@ -1,13 +1,18 @@
 import { NS } from "Bitburner";
-import { getAllServers } from "lib/getall";
+import { getHackableServers } from "lib/getall";
+import { deployToAll } from "lib/deploy";
+import { killAll } from "advanced/killall";
 
-const minCash = 100;
 const bestServerCheckDuration =
   1000 * // = 1 second
   60 * // = 1 minute
   60 * // = 1 hour
   24; // = 1 day
 const scriptUpdateDuration =
+  1000 * // = 1 second
+  60 * // = 1 minute
+  30; // = 1/2 hour
+const maxPhaseRuntime =
   1000 * // = 1 second
   60 * // = 1 minute
   60; // = 1 hour
@@ -17,62 +22,54 @@ export async function main(ns: NS) {
 }
 
 async function crawl(ns: NS) {
-  // Always share!
-
-  // Get common data to compare
-  const hackingLevel = ns.getHackingLevel();
-  const servers = await getAllServers(ns);
-  const hackableServers = servers.filter(
-    (s) =>
-      ns.getServerRequiredHackingLevel(s) <= hackingLevel &&
-      ns.hasRootAccess(s) &&
-      ns.getServerMaxMoney(s) >= minCash
-  );
-  const runnableServers = servers.filter((s) => ns.hasRootAccess(s));
-
-  // Start loop here:
+  let [target, maxMoney] = ["", 0];
+  // let scriptStartTime = Date.now();
   while (true) {
-    // Find the richest server
-    let richestServer: [string, number] = ["", 0];
-    for (const s of hackableServers) {
-      const maxMoney = ns.getServerMaxMoney(s);
-      if (maxMoney > richestServer[1]) {
-        richestServer = [s, maxMoney];
-      }
+    const oldTarget = target;
+    [target, maxMoney] = await getBestServer(ns);
+    if (target === oldTarget) {
+      await ns.sleep(bestServerCheckDuration);
+      continue;
     }
-    const [target, maxMoney]: [string, number] = richestServer;
-    // hack/grow/weaken it as appropriate from all servers
-    let scriptName = "";
-    let startTime = Date.now();
+    // Growth Phase
+    let phaseStartTime = Date.now();
+    while (ns.getServerMoneyAvailable(target) < maxMoney) {
+      await deployToAll(ns, "/basic/grow.js", false, target);
+      if (Date.now() - phaseStartTime > maxPhaseRuntime) break;
+      await ns.sleep(scriptUpdateDuration);
+    }
 
-    while (true) {
-      let oldScript = scriptName;
-      if (ns.getServerMoneyAvailable(target) < maxMoney * 0.75) {
-        // if the server has less than 75% their capacity grow it.
-        scriptName = "/basic/grownshare.js";
-      } else if (ns.hackAnalyzeChance(target) < 0.6) {
-        // if we have less than a 60% chance to successfully hack the server
-        // weaken it.
-        scriptName = "/basic/weaken.js";
-      } else {
-        // Otherwise we hack the server.
-        scriptName = "/basic/hacknshare.js";
-      }
+    // Weaken Phase
+    await killAll(ns);
+    phaseStartTime = Date.now();
+    while (ns.hackAnalyzeChance(target) < 0.5) {
+      await deployToAll(ns, "/basic/weaken.js", false, target);
+      if (Date.now() - phaseStartTime > maxPhaseRuntime) break;
+      await ns.sleep(scriptUpdateDuration);
+    }
 
-      if (scriptName === oldScript) continue;
-      for (const host of runnableServers) {
-        // Don't hog the home pc
-        if (host === "home") continue;
-        // kill everything on the host first
-        if (ns.scriptRunning(scriptName, host)) continue;
-        ns.killall(host);
-        ns.run("/official/deploy.js", 1, host, scriptName, target);
-        while (ns.scriptRunning("/official/deploy.js", host)) await ns.sleep(1);
-      }
-      if (Date.now() - startTime > bestServerCheckDuration) {
-        break;
-      }
+    // Hack Phase
+    await killAll(ns);
+    phaseStartTime = Date.now();
+    while (ns.getServerMoneyAvailable(target) > maxMoney / 2) {
+      await deployToAll(ns, "/basic/hack.js", false, target);
+      if (Date.now() - phaseStartTime > maxPhaseRuntime) break;
       await ns.sleep(scriptUpdateDuration);
     }
   }
+}
+
+async function getBestServer(ns: NS): Promise<[string, number]> {
+  const hackableServers = await getHackableServers(ns);
+  let bestServer: [string, number] = ["", 0];
+
+  for (const s of hackableServers) {
+    if (s === "home") continue;
+    const moneyAvailable = ns.getServerMoneyAvailable(s);
+    if (moneyAvailable > bestServer[1]) {
+      bestServer = [s, moneyAvailable];
+    }
+  }
+
+  return bestServer;
 }

@@ -11,7 +11,7 @@ export async function main(ns: NS) {
     // 'initHacking.ns',
     //
     // This needs work before I start it.
-    // 'stocks/daemon.js',
+    // "stocks/daemon.js",
   ];
 
   for (const script of scripts) ns.run(script);

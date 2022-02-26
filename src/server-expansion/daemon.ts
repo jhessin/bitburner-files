@@ -28,8 +28,8 @@ async function purchaseServer(ns: NS, ram: number) {
       var hostname = ns.purchaseServer("pserv-" + numServers, ram);
       ns.tprint(
         `Purchased ${hostname} for ${cost.toLocaleString(undefined, {
-          style: 'currency',
-          currency: 'USD',
+          style: "currency",
+          currency: "USD",
           maximumSignificantDigits: 3,
           compactDisplay: "short",
         })}.`
@@ -38,6 +38,4 @@ async function purchaseServer(ns: NS, ram: number) {
     }
     await ns.sleep(1000);
   }
-}
-
 }

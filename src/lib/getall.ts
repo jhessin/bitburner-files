@@ -39,3 +39,7 @@ export async function getNukableServers(ns: NS) {
       !ns.hasRootAccess(s)
   );
 }
+
+export async function getRunnableServers(ns: NS) {
+  return (await getAllServers(ns)).filter((s) => ns.hasRootAccess(s));
+}
