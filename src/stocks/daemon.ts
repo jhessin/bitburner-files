@@ -6,19 +6,19 @@ const budget = 0.9;
 const buyAt = 0.6;
 const sellBellow = 0.5;
 
-const stockToWatch = "MGCP"; // Megacorp
+// const stockToWatch = "MGCP"; // Megacorp
 
 // TODO short stocks
 // const shortAt = 40;
 export async function main(ns: NS) {
   while (true) {
-    manageStock(ns);
-    await ns.sleep(1000);
+    await manageStock(ns);
+    await ns.sleep(1);
   }
 }
 
 /** @param {number} n */
-function formatCurrency(n: number) {
+export function formatCurrency(n: number) {
   return n.toLocaleString(undefined, {
     style: "currency",
     currency: "USD",
@@ -28,7 +28,7 @@ function formatCurrency(n: number) {
   });
 }
 
-function formatNumber(n: number) {
+export function formatNumber(n: number) {
   return n.toLocaleString(undefined, {
     maximumSignificantDigits: 5,
     notation: "compact",
@@ -37,30 +37,45 @@ function formatNumber(n: number) {
 }
 
 /** @param {NS} ns **/
-function manageStock(ns: NS) {
-  let stock = stockToWatch;
-  let increaseChance = ns.stock.getForecast(stock);
-  let longOrders = ns.stock.getPosition(stock)[0];
-  let maxShares = getMaxShares(ns, stock);
+async function manageStock(ns: NS) {
+  // let stock = stockToWatch;
+  let folio = getFolio(ns);
 
-  if (longOrders > 0) {
-    if (increaseChance <= sellBellow) {
-      let total = ns.stock.sell(stock, longOrders);
-      ns.tprint(`${formatCurrency(
-        longOrders
-      )} of ${stock} sold for a total of ${formatCurrency(total * longOrders)} 
+  if (folio.length > 0) {
+    // we have a stock - get it and monitor if it is increasing/decreasing
+    let { sym, shares } = folio[0];
+    while (ns.stock.getPosition(sym)[0] > 0) {
+      let increaseChance = ns.stock.getForecast(sym);
+      if (increaseChance <= sellBellow) {
+        let total = ns.stock.sell(sym, shares);
+        ns.tprint(`${formatNumber(
+          shares
+        )} shares of ${sym} sold for a total of ${formatCurrency(
+          total * shares
+        )} 
                     because it's growth is stopping.`);
+      } else {
+        await ns.sleep(1);
+      }
     }
-  } else if (increaseChance >= buyAt && longOrders < maxShares) {
-    let cost = ns.stock.buy(stock, maxShares);
-    ns.tprint(`${formatNumber(
-      maxShares
-    )} shares of ${stock} purchased for a total of ${formatCurrency(
-      cost * maxShares
-    )}
-                because it has a ${increaseChance.toLocaleString(undefined, {
-                  style: "percent",
-                })}% chance of increasing.`);
+  } else {
+    // find a stock to get
+    for (const stock of ns.stock.getSymbols()) {
+      let increaseChance = ns.stock.getForecast(stock);
+      let maxShares = getMaxShares(ns, stock);
+      if (increaseChance >= buyAt && ns.stock.getPosition(stock)[0] === 0) {
+        let cost = ns.stock.buy(stock, maxShares);
+        ns.tprint(`${formatNumber(
+          maxShares
+        )} shares of ${stock} purchased for a total of ${formatCurrency(
+          cost * maxShares
+        )}
+        because it has a ${increaseChance.toLocaleString(undefined, {
+          style: "percent",
+        })}% chance of increasing.`);
+        break;
+      }
+    }
   }
 }
 
@@ -72,4 +87,27 @@ function getMaxShares(ns: NS, sym: string) {
     cashAvailable / stockCost
   );
   return maxPurchaseable;
+}
+
+export function getFolio(ns: NS): {
+  sym: string;
+  shares: number;
+}[] {
+  let folio: {
+    sym: string;
+    shares: number;
+  }[] = [];
+  for (const sym of ns.stock.getSymbols()) {
+    let shares = ns.stock.getPosition(sym)[0];
+
+    if (shares > 0) {
+      folio.push({
+        sym,
+        shares,
+      });
+    }
+  }
+  return folio;
+}
+
 }
