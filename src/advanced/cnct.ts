@@ -1,4 +1,4 @@
-import { NS } from "Bitburner";
+import { NS, AutocompleteData } from "Bitburner";
 import { getTree } from "lib/gettree.js";
 
 export async function main(ns: NS) {
@@ -33,4 +33,8 @@ export async function main(ns: NS) {
   const handler = Object.keys(terminalInput)[1];
   terminalInput[handler].onChange({ target: terminalInput });
   terminalInput[handler].onKeyDown({ keyCode: 13, preventDefault: () => null });
+}
+
+export function autocomplete(data: AutocompleteData, _args: string[]) {
+  return data.servers;
 }
