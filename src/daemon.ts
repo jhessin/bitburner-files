@@ -10,7 +10,7 @@ export async function main(ns: NS) {
     // 'initHacking.ns',
     //
     // This needs work before I start it.
-    // "stocks/daemon.js",
+    "stocks/daemon.js",
     //
     // This should always be the last script to run
     "advanced/daemon.js",

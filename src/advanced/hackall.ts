@@ -46,7 +46,7 @@ async function crawl(ns: NS) {
     ns.scriptKill("/basic/grow.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     phaseStartTime = Date.now();
-    while (ns.hackAnalyzeChance(target) < 0.5) {
+    while (ns.hackAnalyzeChance(target) < 1) {
       await deployToAll(ns, "/basic/weaken.js", false, target);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) break;
       await ns.sleep(scriptUpdateDuration);
