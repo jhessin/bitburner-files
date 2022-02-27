@@ -3,7 +3,8 @@
   "packageManager": "yarn@3.2.0",
   "scripts": {
     "help": "bitburner-sync --help",
-    "start": "multiview [ tsc --watch ] [bitburner-sync --watch]"
+    "start": "multiview [ tsc --watch ] [bitburner-sync --watch]",
+    "sync": "tsc && bitburner-sync"
   },
   "dependencies": {
     "@types/node": "^17.0.21",

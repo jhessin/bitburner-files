@@ -48,7 +48,7 @@ export async function deploy(
   );
 
   if (threads > 0) {
-    ns.tprint(
+    ns.print(
       `Launching script '${script}' on server '${host}' with ${threads} threads and the following arguments: ${script_args}`
     );
     await ns.scp(script, ns.getHostname(), host);
@@ -109,6 +109,7 @@ export async function deployToAll(
   for (const s of servers) {
     // Don't hog home - so I can still run things like find...
     if (s === "home") {
+      if (ns.scriptRunning(script, s)) continue;
       await deployHalf(ns, s, script, ...args);
       await ns.sleep(1);
       continue;
