@@ -72,7 +72,7 @@ async function manageStock(ns: NS) {
         )}
         because it has a ${increaseChance.toLocaleString(undefined, {
           style: "percent",
-        })}% chance of increasing.`);
+        })} chance of increasing.`);
         break;
       }
     }
@@ -108,6 +108,4 @@ export function getFolio(ns: NS): {
     }
   }
   return folio;
-}
-
 }
