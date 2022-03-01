@@ -14,10 +14,10 @@ export async function main(ns: NS) {
   );
 
   for (let server of nukableServers) {
-    ns.tprint(`Nuking ${server}!`);
+    ns.print(`Nuking ${server}!`);
     ns.run("/basic/nuke.js", 1, server);
   }
 
-  if (nukableServers.length === 0) ns.tprint("No nukable servers found.");
-  else ns.tprint("All servers nuked!");
+  if (nukableServers.length === 0) ns.print("No nukable servers found.");
+  else ns.print("All servers nuked!");
 }
