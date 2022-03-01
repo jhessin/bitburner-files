@@ -1,12 +1,14 @@
 import { NS } from "Bitburner";
 
 export async function main(ns: NS) {
-  const target = ns.args[0].toString();
+  const host = ns.args[0].toString();
 
   while (true) {
-    if (ns.hackAnalyzeChance(target) < 1) await ns.weaken(target);
-    else if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target))
-      await ns.grow(target);
-    else await ns.hack(target);
+    await basicHack(ns, host);
   }
+}
+
+async function basicHack(ns: NS, host: string) {
+  await ns.share();
+  await ns.hack(host);
 }

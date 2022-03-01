@@ -2,6 +2,7 @@ import { NS, Server } from "Bitburner";
 import { getHackableServers } from "lib/getall";
 import { deployToAll } from "lib/deploy";
 import { killAll } from "advanced/killall";
+import { analyzeServer } from "lib/analyze_server";
 
 const bestServerCheckDuration =
   1000 * // = 1 second
@@ -23,40 +24,19 @@ async function crawl(ns: NS) {
   // let scriptStartTime = Date.now();
   while (true) {
     ns.tprint(`${target.hostname} chosen as the hacking target.`);
-    function printServerStats(target: string) {
-      const cashStyle: Intl.NumberFormatOptions = {
-        style: "currency",
-        currency: "USD",
-        notation: "compact",
-        maximumSignificantDigits: 3,
-      };
-      const percentStyle: Intl.NumberFormatOptions = {
-        style: "percent",
-      };
-      const current = ns.getServerMoneyAvailable(target);
-      const total = ns.getServerMaxMoney(target);
-      const percentFull = current / total;
-      const hackChance = ns.hackAnalyzeChance(target);
-      ns.tprint(`
-      Current Cash:\t${current.toLocaleString(undefined, cashStyle)}
-      Total Cash:  \t${total.toLocaleString(undefined, cashStyle)}
-      Percent Full:\t${percentFull.toLocaleString(undefined, percentStyle)}
-      Hack Chance: \t${hackChance.toLocaleString(undefined, percentStyle)}
-      `);
-    }
+    ns.print(`${target.hostname} chosen as the hacking target.`);
     // Growth Phase
     ns.tprint("Begining growth phase.");
+    ns.print("Begining growth phase.");
     await killAll(ns);
     ns.scriptKill("/basic/weaken.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     let phaseStartTime = Date.now();
-    if (target.moneyAvailable < target.moneyMax) {
-      printServerStats(target.hostname);
-    }
+    analyzeServer(ns, target.hostname, false);
     while (target.moneyAvailable < target.moneyMax) {
       await deployToAll(ns, "/basic/grow.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
-        ns.tprint("Max phase time reached!");
+        ns.print("Max phase time reached!");
         break;
       }
       await ns.sleep(scriptUpdateDuration);
@@ -64,17 +44,16 @@ async function crawl(ns: NS) {
 
     // Weaken Phase
     ns.tprint("Beginning Weaken Phase");
+    ns.print("Beginning Weaken Phase");
     await killAll(ns);
     ns.scriptKill("/basic/grow.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     phaseStartTime = Date.now();
-    if (ns.hackAnalyzeChance(target.hostname) < 1) {
-      printServerStats(target.hostname);
-    }
+    analyzeServer(ns, target.hostname, false);
     while (ns.hackAnalyzeChance(target.hostname) < 1) {
       await deployToAll(ns, "/basic/weaken.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
-        ns.tprint("Max phase time reached!");
+        ns.print("Max phase time reached!");
         break;
       }
       await ns.sleep(scriptUpdateDuration);
@@ -82,12 +61,18 @@ async function crawl(ns: NS) {
 
     // Hack Phase
     ns.tprint("Benninging Hack Phase");
-    printServerStats(target.hostname);
+    ns.print("Benninging Hack Phase");
+    analyzeServer(ns, target.hostname, false);
     await killAll(ns);
     ns.scriptKill("/basic/weaken.js", "home");
     ns.scriptKill("/basic/grow.js", "home");
-    phaseStartTime = Date.now();
-    await deployToAll(ns, "/basic/hack.js", false, target.hostname);
+    while (
+      ns.getServerMoneyAvailable(target.hostname) >
+      ns.getServerMaxMoney(target.hostname) / 2
+    ) {
+      await deployToAll(ns, "/basic/hack.js", false, target.hostname);
+      await ns.sleep(scriptUpdateDuration);
+    }
     await ns.sleep(bestServerCheckDuration);
     target = await getBestServer(ns);
   }
