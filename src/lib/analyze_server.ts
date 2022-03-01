@@ -13,6 +13,9 @@ export async function main(ns: NS) {
   analyzeServer(ns, server);
 }
 
+export const getServerFreeRam = (ns: NS, host: string) =>
+  ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+
 export function analyzeServer(
   ns: NS,
   server: string,
@@ -45,4 +48,54 @@ ${server}:
     hack 50%   : ${(0.5 / ns.hackAnalyze(server)).toFixed(2)} threads
     hackChance : ${(ns.hackAnalyzeChance(server) * 100).toFixed(2)}%
 `);
+}
+
+export function hackThreads(ns: NS, server: string) {
+  return Math.ceil(0.9 / ns.hackAnalyze(server));
+}
+
+export function hackTime(ns: NS, host: string) {
+  return ns.getHackTime(host);
+}
+
+export function growThreads(ns: NS, s: string) {
+  // get the percentage of the server that is full
+  return ns.growthAnalyze(s, 10);
+}
+
+export function growTime(ns: NS, host: string) {
+  return ns.getGrowTime(host);
+}
+
+export function weakenThreads(ns: NS, server: string) {
+  return Math.max(
+    Math.ceil(
+      (ns.getServerSecurityLevel(server) -
+        ns.getServerMinSecurityLevel(server)) /
+        ns.weakenAnalyze(1)
+    ),
+    1
+  );
+}
+
+export function weakenTime(ns: NS, host: string) {
+  return ns.getWeakenTime(host);
+}
+
+export function getMemForHack(ns: NS, host: string) {
+  const hackMem = ns.getScriptRam("/basic/hack.js");
+  const hackCount = hackThreads(ns, host);
+  return hackMem * hackCount;
+}
+
+export function getMemForGrow(ns: NS, host: string) {
+  const growMem = ns.getScriptRam("/basic/grow.js");
+  const growCount = growThreads(ns, host);
+  return growMem * growCount;
+}
+
+export function getMemForWeaken(ns: NS, host: string) {
+  const weakenMem = ns.getScriptRam("/basic/weaken.js");
+  const weakenCount = weakenThreads(ns, host);
+  return weakenMem * weakenCount;
 }

@@ -26,6 +26,7 @@ export async function getHackableServers(ns: NS) {
   let playerData = getPlayerDetails(ns);
   return (await getAllServers(ns)).filter(
     (s) =>
+      s !== "home" &&
       playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
       ns.hasRootAccess(s) &&
       ns.getServerMoneyAvailable(s) > 500
