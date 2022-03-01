@@ -1,5 +1,5 @@
 import { NS } from "Bitburner";
-import { getFolio, formatCurrency } from "stocks/daemon";
+import { getFolio, formatCurrency } from "utils";
 
 export async function main(ns: NS) {
   ns.scriptKill("/stocks/daemon.js", "home");

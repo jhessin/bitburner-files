@@ -1,6 +1,7 @@
 import { NS } from "Bitburner";
+import { formatCurrency, formatNumber } from "utils";
 
-const allowancePercentage = 0.01;
+const allowancePercentage = 0.5;
 
 export async function main(ns: NS) {
   let ram = ns.args[0];
@@ -8,6 +9,12 @@ export async function main(ns: NS) {
     ram = parseInt(ram);
   } else {
     ram = ns.getPurchasedServerMaxRam();
+    let cost = ns.getPurchasedServerCost(ram);
+    ns.tprint(
+      `Purchasing servers with ${formatNumber(ram)} for ${formatCurrency(
+        cost
+      )} a piece.`
+    );
   }
   await purchaseServer(ns, ram);
 }

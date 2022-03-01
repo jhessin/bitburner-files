@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { formatCurrency, formatNumber, getFolio } from "utils";
 
 // % of money to use in buying stocks
 const budget = 0.9;
@@ -15,25 +16,6 @@ export async function main(ns: NS) {
     await manageStock(ns);
     await ns.sleep(1);
   }
-}
-
-/** @param {number} n */
-export function formatCurrency(n: number) {
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumSignificantDigits: 5,
-    notation: "compact",
-    compactDisplay: "short",
-  });
-}
-
-export function formatNumber(n: number) {
-  return n.toLocaleString(undefined, {
-    maximumSignificantDigits: 5,
-    notation: "compact",
-    compactDisplay: "short",
-  });
 }
 
 /** @param {NS} ns **/
@@ -85,27 +67,6 @@ function getMaxShares(ns: NS, sym: string) {
     cashAvailable / stockCost
   );
   return maxPurchaseable;
-}
-
-export function getFolio(ns: NS): {
-  sym: string;
-  shares: number;
-}[] {
-  let folio: {
-    sym: string;
-    shares: number;
-  }[] = [];
-  for (const sym of ns.stock.getSymbols()) {
-    let shares = ns.stock.getPosition(sym)[0];
-
-    if (shares > 0) {
-      folio.push({
-        sym,
-        shares,
-      });
-    }
-  }
-  return folio;
 }
 
 export function getBestStock(ns: NS): string {

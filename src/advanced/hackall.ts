@@ -50,8 +50,10 @@ async function crawl(ns: NS) {
     ns.scriptKill("/basic/weaken.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     let phaseStartTime = Date.now();
-    while (target.moneyAvailable < target.moneyMax) {
+    if (target.moneyAvailable < target.moneyMax) {
       printServerStats(target.hostname);
+    }
+    while (target.moneyAvailable < target.moneyMax) {
       await deployToAll(ns, "/basic/grow.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
         ns.tprint("Max phase time reached!");
@@ -66,8 +68,10 @@ async function crawl(ns: NS) {
     ns.scriptKill("/basic/grow.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     phaseStartTime = Date.now();
-    while (ns.hackAnalyzeChance(target.hostname) < 1) {
+    if (ns.hackAnalyzeChance(target.hostname) < 1) {
       printServerStats(target.hostname);
+    }
+    while (ns.hackAnalyzeChance(target.hostname) < 1) {
       await deployToAll(ns, "/basic/weaken.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
         ns.tprint("Max phase time reached!");
@@ -115,6 +119,8 @@ function cashPerSecond(ns: NS, server: string): number {
 function xpPerSecond(ns: NS, s: string): number {
   // requires formulas
   if (!ns.fileExists("Formulas.exe", "home")) {
+    // TODO: Create a function that analyzes growth without Formulas and use it
+    // here.
     return cashPerSecond(ns, s);
   }
   const server = ns.getServer(s);

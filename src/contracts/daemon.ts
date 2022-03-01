@@ -16,7 +16,7 @@ export async function main(ns: NS) {
       });
       return onServer;
     });
-    ns.tprint(`Found ${contracts.length} contracts`);
+    if (contracts.length > 0) ns.tprint(`Found ${contracts.length} contracts`);
     for (const contract of contracts) {
       ns.tprint(contract);
     }
