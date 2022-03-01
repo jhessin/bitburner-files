@@ -60,21 +60,19 @@ async function manageStock(ns: NS) {
     }
   } else {
     // find a stock to get
-    for (const stock of ns.stock.getSymbols()) {
-      let increaseChance = ns.stock.getForecast(stock);
-      let maxShares = getMaxShares(ns, stock);
-      if (increaseChance >= buyAt && ns.stock.getPosition(stock)[0] === 0) {
-        let cost = ns.stock.buy(stock, maxShares);
-        ns.tprint(`${formatNumber(
-          maxShares
-        )} shares of ${stock} purchased for a total of ${formatCurrency(
-          cost * maxShares
-        )}
+    const stock = getBestStock(ns);
+    let increaseChance = ns.stock.getForecast(stock);
+    let maxShares = getMaxShares(ns, stock);
+    if (increaseChance >= buyAt) {
+      let cost = ns.stock.buy(stock, maxShares);
+      ns.tprint(`${formatNumber(
+        maxShares
+      )} shares of ${stock} purchased for a total of ${formatCurrency(
+        cost * maxShares
+      )}
         because it has a ${increaseChance.toLocaleString(undefined, {
           style: "percent",
         })} chance of increasing.`);
-        break;
-      }
     }
   }
 }
@@ -108,4 +106,15 @@ export function getFolio(ns: NS): {
     }
   }
   return folio;
+}
+
+export function getBestStock(ns: NS): string {
+  let best: [string, number] = ["", 0];
+  for (const stock of ns.stock.getSymbols()) {
+    let increaseChance = ns.stock.getForecast(stock);
+    if (increaseChance > best[1]) {
+      best = [stock, increaseChance];
+    }
+  }
+  return best[0];
 }

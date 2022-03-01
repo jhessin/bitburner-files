@@ -1,4 +1,4 @@
-import { NS } from "Bitburner";
+import { NS, Server } from "Bitburner";
 import { getHackableServers } from "lib/getall";
 import { deployToAll } from "lib/deploy";
 import { killAll } from "advanced/killall";
@@ -8,9 +8,7 @@ const bestServerCheckDuration =
   60 * // = 1 minute
   60 * // = 1 hour
   24; // = 1 day
-const scriptUpdateDuration =
-  1000 * // = 1 second
-  30; // = 30 seconds
+const scriptUpdateDuration = 1000; // = 1 second
 const maxPhaseRuntime =
   1000 * // = 1 second
   60 * // = 1 minute
@@ -21,12 +19,10 @@ export async function main(ns: NS) {
 }
 
 async function crawl(ns: NS) {
-  let [target, maxMoney] = ["", 0];
+  let target: Server = await getBestServer(ns);
   // let scriptStartTime = Date.now();
   while (true) {
-    const oldTarget = target;
-    [target, maxMoney] = await getBestServer(ns);
-    ns.tprint(`${target} chosen as the hacking target.`);
+    ns.tprint(`${target.hostname} chosen as the hacking target.`);
     function printServerStats(target: string) {
       const cashStyle: Intl.NumberFormatOptions = {
         style: "currency",
@@ -48,21 +44,15 @@ async function crawl(ns: NS) {
       Hack Chance: \t${hackChance.toLocaleString(undefined, percentStyle)}
       `);
     }
-    printServerStats(target);
-    if (target === oldTarget) {
-      // if the target hasn't changed continue to hack the current one without
-      // restarting phases.
-      await ns.sleep(bestServerCheckDuration);
-      continue;
-    }
     // Growth Phase
     ns.tprint("Begining growth phase.");
     await killAll(ns);
     ns.scriptKill("/basic/weaken.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     let phaseStartTime = Date.now();
-    while (ns.getServerMoneyAvailable(target) < maxMoney) {
-      await deployToAll(ns, "/basic/grow.js", false, target);
+    while (target.moneyAvailable < target.moneyMax) {
+      printServerStats(target.hostname);
+      await deployToAll(ns, "/basic/grow.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
         ns.tprint("Max phase time reached!");
         break;
@@ -72,13 +62,13 @@ async function crawl(ns: NS) {
 
     // Weaken Phase
     ns.tprint("Beginning Weaken Phase");
-    printServerStats(target);
     await killAll(ns);
     ns.scriptKill("/basic/grow.js", "home");
     ns.scriptKill("/basic/hack.js", "home");
     phaseStartTime = Date.now();
-    while (ns.hackAnalyzeChance(target) < 1) {
-      await deployToAll(ns, "/basic/weaken.js", false, target);
+    while (ns.hackAnalyzeChance(target.hostname) < 1) {
+      printServerStats(target.hostname);
+      await deployToAll(ns, "/basic/weaken.js", false, target.hostname);
       if (Date.now() - phaseStartTime > maxPhaseRuntime) {
         ns.tprint("Max phase time reached!");
         break;
@@ -88,37 +78,51 @@ async function crawl(ns: NS) {
 
     // Hack Phase
     ns.tprint("Benninging Hack Phase");
-    printServerStats(target);
+    printServerStats(target.hostname);
     await killAll(ns);
     ns.scriptKill("/basic/weaken.js", "home");
     ns.scriptKill("/basic/grow.js", "home");
     phaseStartTime = Date.now();
-    while (ns.getServerMoneyAvailable(target) > maxMoney / 2) {
-      await deployToAll(ns, "/basic/hack.js", false, target);
-      if (Date.now() - phaseStartTime > maxPhaseRuntime) {
-        ns.tprint("Max phase time reached!");
-        break;
-      }
-      await ns.sleep(scriptUpdateDuration);
-    }
+    await deployToAll(ns, "/basic/hack.js", false, target.hostname);
+    await ns.sleep(bestServerCheckDuration);
+    target = await getBestServer(ns);
   }
 }
 
-async function getBestServer(ns: NS): Promise<[string, number, number]> {
+async function getBestServer(ns: NS): Promise<Server> {
   const hackableServers = await getHackableServers(ns);
-  let bestServer: [string, number, number] = ["", 0, 0];
+  let bestServer: [string, number] = ["", 0];
 
   for (const s of hackableServers) {
     if (s === "home") continue;
-    const moneyAvailable = ns.getServerMaxMoney(s);
-    const hackChance = ns.hackAnalyzeChance(s);
-    if (moneyAvailable > bestServer[1] && hackChance > bestServer[2]) {
-      // TODO: use this to calculate hack time and figure out which server I can
-      // hack faster.
-      // ns.formulas.hacking.hackTime(ns.getServer(s), ns.getPlayer())
-      bestServer = [s, moneyAvailable, hackChance];
+    let growth = xpPerSecond(ns, s);
+    if (growth > bestServer[1]) {
+      bestServer = [s, growth];
     }
   }
+  return ns.getServer(bestServer[0]);
+}
 
-  return bestServer;
+function cashPerSecond(ns: NS, server: string): number {
+  let hackTime = ns.formulas.hacking.hackTime(
+    ns.getServer(server),
+    ns.getPlayer()
+  );
+  let moneyAvailable = ns.getServerMaxMoney(server);
+  return moneyAvailable / hackTime;
+}
+
+function xpPerSecond(ns: NS, s: string): number {
+  // requires formulas
+  if (!ns.fileExists("Formulas.exe", "home")) {
+    return cashPerSecond(ns, s);
+  }
+  const server = ns.getServer(s);
+  const player = ns.getPlayer();
+  const hacking = ns.formulas.hacking;
+  let hack = hacking.hackTime(server, player);
+  let hackXP = hacking.hackExp(server, player);
+  let grow = hacking.growTime(server, player);
+  let weaken = hacking.weakenTime(server, player);
+  return hackXP / (hack + grow + weaken + grow);
 }
