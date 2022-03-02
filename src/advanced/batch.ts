@@ -116,5 +116,3 @@ async function deployWeaken(ns: NS, target: string) {
     }
   }
 }
-
-}

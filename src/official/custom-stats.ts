@@ -1,6 +1,10 @@
 import { NS } from "Bitburner";
 import { getPlayerDetails } from "lib/getDetails";
-import { getHackableServers, getNukableServers } from "lib/getall";
+import {
+  getAllServers,
+  getHackableServers,
+  getNukableServers,
+} from "lib/getall";
 
 const updateSeconds = 30;
 
@@ -57,7 +61,12 @@ export async function main(ns: NS) {
 
       // Add number of hackable servers
       headers.push("Hackable servers");
-      values.push((await getHackableServers(ns)).length.toString());
+      // values.push((await getHackableServers(ns)).length.toString());
+      values.push(
+        `${(await getHackableServers(ns)).length}/${
+          (await getAllServers(ns)).length
+        }`
+      );
 
       // Add the number of servers that need nuked
       headers.push("Servers Needing Nuked");
