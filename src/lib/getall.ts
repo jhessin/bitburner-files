@@ -14,11 +14,11 @@ export async function getAllServers(ns: NS) {
     if (localServers.length === 0) return;
     for (let server of localServers) {
       allServers.push(server);
+      await ns.sleep(1);
       await getServers(server);
     }
   }
   await getServers();
-
   return allServers;
 }
 
@@ -29,7 +29,8 @@ export async function getHackableServers(ns: NS) {
       s !== "home" &&
       playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
       ns.hasRootAccess(s) &&
-      ns.getServerMoneyAvailable(s) > 500
+      ns.getServerMaxMoney(s) > 0 &&
+      ns.getServerMoneyAvailable(s) > 0
   );
 }
 

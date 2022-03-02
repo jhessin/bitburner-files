@@ -51,7 +51,7 @@ ${server}:
 }
 
 export function hackThreads(ns: NS, server: string) {
-  return Math.ceil(0.9 / ns.hackAnalyze(server));
+  return Math.ceil(0.75 / ns.hackAnalyze(server));
 }
 
 export function hackTime(ns: NS, host: string) {

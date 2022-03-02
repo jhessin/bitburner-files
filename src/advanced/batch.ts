@@ -1,6 +1,5 @@
 import { NS } from "Bitburner";
 import { getRunnableServers } from "lib/getall";
-import { killAll } from "advanced/killall";
 import {
   analyzeServer,
   getMemForHack,
@@ -15,6 +14,7 @@ import {
   weakenTime,
 } from "lib/analyze_server";
 
+const bufferTime = 300;
 export async function main(ns: NS) {
   await batch(ns, ns.args[0].toString());
 }
@@ -23,17 +23,11 @@ async function batch(ns: NS, target: string) {
   let weakenThreads = 1;
   // Growth Phase
   ns.print("Begining growth phase.");
-  await killAll(ns);
-  ns.scriptKill("/basic/weaken.js", "home");
-  ns.scriptKill("/basic/hack.js", "home");
   analyzeServer(ns, target, false);
   weakenThreads = await deployGrow(ns, target);
 
   // Weaken Phase
   ns.print("Beginning Weaken Phase");
-  await killAll(ns);
-  ns.scriptKill("/basic/grow.js", "home");
-  ns.scriptKill("/basic/hack.js", "home");
   analyzeServer(ns, target, false);
   while (ns.hackAnalyzeChance(target) < 1) {
     await deployWeaken(ns, target);
@@ -42,9 +36,6 @@ async function batch(ns: NS, target: string) {
   // Hack Phase
   ns.print("Benninging Hack Phase");
   analyzeServer(ns, target, false);
-  await killAll(ns);
-  ns.scriptKill("/basic/weaken.js", "home");
-  ns.scriptKill("/basic/grow.js", "home");
   while (true) {
     await deployHack(ns, target, weakenThreads);
   }
@@ -70,7 +61,7 @@ async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
       // Start with a weaken
       if (ns.exec("/basic/weaken.js", host, threadsToWeaken, target)) {
         weakening = true;
-        await ns.sleep(timeToWeaken - timeToGrow - 2);
+        await ns.sleep(timeToWeaken - timeToGrow - bufferTime);
       }
     } else if (
       !growing &&
@@ -78,7 +69,7 @@ async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
     ) {
       if (ns.exec("/basic/grow.js", host, threadsToGrow, target)) {
         growing = true;
-        await ns.sleep(timeToGrow - timeToHack - 1);
+        await ns.sleep(timeToGrow - timeToHack - bufferTime);
       }
     } else if (
       !hacking &&
@@ -86,7 +77,7 @@ async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
     ) {
       if (ns.exec("/basic/hack.js", host, threadsToHack, target)) {
         hacking = true;
-        await ns.sleep(timeToHack + 4);
+        await ns.sleep(timeToHack + bufferTime);
         break;
       }
     }
@@ -95,7 +86,6 @@ async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
 
 async function deployGrow(ns: NS, target: string): Promise<number> {
   for (const host of await getRunnableServers(ns)) {
-    if (getServerFreeRam(ns, host) < getMemForGrow(ns, target)) continue;
     if (!ns.exec("/basic/grow.js", host, growThreads(ns, target), target))
       continue;
     await ns.sleep(growTime(ns, target));

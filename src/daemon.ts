@@ -3,6 +3,7 @@ import { NS } from "Bitburner";
 export async function main(ns: NS) {
   const scripts = [
     "advanced/killall.js",
+    "advanced/cpall",
     "contracts/daemon.js",
     // "hacknet/daemon.js",
     // "server-expansion/daemon.js",

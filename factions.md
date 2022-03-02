@@ -1,77 +1,319 @@
-# Sector-12
+# Early Game Factions (Done)
 
-## Notes
+## CyberSec
 
-Has field work that increases all stats while increasing reputation.
+### Joining
 
-## Augmentations
+Backdoor CSEC server.
 
-    (purchased) Wired Reflexes:
-        +5% dex
-        +5% agi
-    (purchased) Speech Processing Implant
-        +20% charisma
-    (purchased) Augmented Targeting I
-        +10% DEX
-    Augmented Targeting II
-        +20% Dex
-    CashRoot Starter Kit
-        After augmentation start with:
-            $1m
-            BruteSSH.exe
-    Neuralstimulator
-        +12% hacking exp
-        +2% faster hack(), grow(), and weaken()
-        +10% hack() success rate
-
-# CyberSec
-
-## Notes
+### Notes
 
 Starting faction - invited after backdooring CSEC.
 
-## Augmentations
+### Augmentations
 
-    Neurotrainer I:
-        +10% Exp for all skills
-    Synaptic Enhancement Implant:
-        +3% faster hack(), grow(), and weaken()
-    BitWire:
-        +5% hacking skill
-    Cranial Signal Processors - Gen I:
-        +5% hacking skill
-        +1% faster hack(), grow(), and weaken()
-    Cranial Signal Processors - Gen II:
-        +7% hacking skill
-        +2% faster hack(), grow(), and weaken()
-        +5% hack() success chance
+Cleaned out!
 
-# Tian Di Hui
+## Tian Di Hui
 
-        Obey Heaven and work righteusly.
+Obey Heaven and work righteusly.
 
-## Notes
+### Joining
 
-Seem to be invited once traveling to the Japan region.
+Hacking Level 50
+Have $1m
+Be in Chongqing, New Tokyo, or Ishima
 
-## Augmentations
+### Augmentations
 
-    Speech Enhancement:
-      +10% Charisma skill
-      +10% reputation from companies
-    ADR-V1 Pheromone Gene:
-      +10% reputation from factions and companies
-    Nuoptimal Nootropic Injector Implant:
-      +20% reputation from companies
-    Social Negotiation Assistant (S.N.A.):
-      +15% reputation from factions and companies
-      +10% work money
-    Nanofiber Weave:
-      +20% strength skill
-      +20% defense skill
-    Neuroreceptor Management Implant:
-      Removed penalty for not focusing on work.
+Cleaned out!
 
-# Netburners
+## Netburners
+
+### Joining
+
+Hacking Level 80
+Total Hacknet Levels of 100
+Total Hacknet RAM of 8
+Total Hacknet Cores of 4
 
 Cleared out of Augmentations! Hacknet node enhancement!
+
+# City Factions
+
+## Sector-12 (Done)
+
+### Joining
+
+Be in Sector-12
+have $15m
+
+### Locks out
+
+Chongqing
+New Tokyo
+Ishima
+Volhaven
+
+### Notes
+
+Has field work that increases all stats while increasing reputation.
+
+### Augmentations
+
+Cleaned out!
+
+## Chongqing
+
+### Joining
+
+Be in Chongqing
+have $20m
+
+### Locks Out
+
+Sector-12
+Aevum
+Volhaven
+
+### Augmentations
+
+TODO
+
+## New Tokyo
+
+### Joining
+
+Be in New Tokyo
+Have $20m
+
+### Augmentations
+
+TODO
+
+### Locks Out
+
+Sector-12
+Aevum
+Volhaven
+
+## Ishima
+
+### Joining
+
+Be in Ishima
+have $30m
+
+### Augmentations
+
+TODO
+
+### Locks Out
+
+Sector-12
+Aevum
+Volhaven
+
+## Aevum (Done)
+
+### Joining
+
+Be in Aevum
+Have $40m
+
+### Augmentations
+
+Cleaned Out!
+
+### Locks Out
+
+Chongqing
+New Tokyo
+Ishima
+Volhaven
+
+## Volhaven
+
+### Joining
+
+Be in Volhaven
+Have $50m
+
+### Augmentations
+
+TODO
+
+### Locks Out
+
+Sector-12
+Aevum
+Chongqing
+New Tokyo
+Ishima
+
+# Hacking Groups (Done)
+
+## NiteSec (Done)
+
+### Joining
+
+Backdoor on avmnite-02h
+
+### Augmentations
+
+Cleaned Out!
+
+## The Black Hand (Done)
+
+### Joining
+
+Backdoor I.I.I.I
+
+### Augmentations
+
+Cleaned Out!
+
+## BitRunners (Done)
+
+### Joining
+
+Backdoor run4theh111z
+
+### Augmentations
+
+Cleaned Out
+
+# Corparations
+
+Each of these factions require 200k reputation with the same named company -
+unless otherwise noted
+
+## MegaCorp
+
+- City: Sector-12
+
+## Four Sigma
+
+- City: Sector-12
+
+## Blade Industries
+
+- City: Sector-12
+
+## ECorp
+
+- City: Aevum
+
+## Bachman & Associates
+
+- City: Aevum
+
+## Clarke Incorporated
+
+- City: Aevum
+
+## Fulcrum Secret Technologies
+
+- City: Aevum
+
+- Special Requirements
+  - Need 250k reputation with the company
+  - Backdoor fulcrumassets
+
+## KuaiGong International
+
+- City: Chongqing
+
+## NWO
+
+- City: Volhaven
+
+## OmniTek Incorporated
+
+- City: Volhaven
+
+# Criminal Organizations
+
+## Slum Snakes
+
+### Joining
+
+All Combat Stats 30+
+-9 Karma
+$1m
+
+## Tetrads
+
+### Joining
+
+Be in Chongqing, New Tokyo, or Ishima
+All Combat stats of 75+
+-18 Karma
+
+## Silhouette
+
+### Joining
+
+CTO, CFO, or CEO of a company
+$15m
+-22 Karma
+
+## Speakers for the Dead
+
+### Joining
+
+Hacking Level 100
+All Combat Stats of 300
+30 People Killed
+-45 Karma
+Not working for CIA or NSA
+
+## The Dark Army
+
+### Joining
+
+Hacking Level 300
+All Combat Stats of 300
+Be in Chongqing
+5 people killed
+-45 Karma
+Not working for CIA or NSA
+
+## The Syndicate
+
+### Joining
+
+Hacking Level 200
+All Combat Stats of 200
+Be in Aevum or Sector-12
+$10m
+-90 Karma
+Not working for CIA or NSA
+
+# Endgame Factions
+
+## The Covenant
+
+### Joining
+
+20 Augmentations
+$75b
+Hacking: 850
+Combat: 850
+
+## Daedalus
+
+### Joining
+
+30 Augmentations
+$100b
+Hacking: 2500 OR Combat: 1500
+
+## Illuminati
+
+### Joining
+
+30 Augmentations
+$150b
+Hacking: 1500
+Combat: 1200
