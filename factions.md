@@ -188,7 +188,7 @@ Cleaned Out
 Each of these factions require 200k reputation with the same named company -
 unless otherwise noted
 
-## MegaCorp
+## MegaCorp (Joined)
 
 - City: Sector-12
 
@@ -200,7 +200,7 @@ unless otherwise noted
 
 - City: Sector-12
 
-## ECorp
+## ECorp (Joined)
 
 - City: Aevum
 
@@ -212,7 +212,7 @@ unless otherwise noted
 
 - City: Aevum
 
-## Fulcrum Secret Technologies
+## Fulcrum Secret Technologies (250k Needed)
 
 - City: Aevum
 
@@ -220,7 +220,7 @@ unless otherwise noted
   - Need 250k reputation with the company
   - Backdoor fulcrumassets
 
-## KuaiGong International
+## KuaiGong International (Joined)
 
 - City: Chongqing
 
