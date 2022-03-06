@@ -192,11 +192,11 @@ unless otherwise noted
 
 - City: Sector-12
 
-## Four Sigma
+## Four Sigma (Joined)
 
 - City: Sector-12
 
-## Blade Industries
+## Blade Industries (Joined)
 
 - City: Sector-12
 
@@ -204,15 +204,15 @@ unless otherwise noted
 
 - City: Aevum
 
-## Bachman & Associates
+## Bachman & Associates (Joined)
 
 - City: Aevum
 
-## Clarke Incorporated
+## Clarke Incorporated (Joined)
 
 - City: Aevum
 
-## Fulcrum Secret Technologies (250k Needed)
+## Fulcrum Secret Technologies (250k Needed) (Joined)
 
 - City: Aevum
 
@@ -224,11 +224,11 @@ unless otherwise noted
 
 - City: Chongqing
 
-## NWO
+## NWO (Joined)
 
 - City: Volhaven
 
-## OmniTek Incorporated
+## OmniTek Incorporated (Joined)
 
 - City: Volhaven
 

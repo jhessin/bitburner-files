@@ -29,7 +29,7 @@ export async function getHackableServers(ns: NS) {
       s !== "home" &&
       playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
       ns.hasRootAccess(s) &&
-      ns.getServerMaxMoney(s) > 0 &&
+      ns.getServerMaxMoney(s) > 1e9 &&
       ns.getServerMoneyAvailable(s) > 0
   );
 }
