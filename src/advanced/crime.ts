@@ -17,14 +17,21 @@ export async function main(ns: NS) {
   ];
   while (true) {
     for (const crime of crimes) {
-      if (ns.getCrimeChance(crime) > 0.9) {
+      if (ns.getCrimeChance(crime) > 0.9 && !ns.isBusy()) {
         ns.commitCrime(crime);
         break;
       }
+      await ns.sleep(1);
     }
     if (!ns.isBusy()) {
       ns.commitCrime("Shoplift");
     }
-    await ns.sleep(2000);
+    if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeRamCost()) {
+      ns.upgradeHomeRam();
+    }
+    if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeCoresCost()) {
+      ns.upgradeHomeCores();
+    }
+    await ns.sleep(30000);
   }
 }
