@@ -4,6 +4,7 @@ export async function main(ns: NS) {
   const scripts = [
     "advanced/killall.js",
     "basic/cpall.js",
+    "official/custom-stats.js",
     "advanced/daemon.js",
   ];
 

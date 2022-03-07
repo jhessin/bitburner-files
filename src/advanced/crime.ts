@@ -32,6 +32,6 @@ export async function main(ns: NS) {
     if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeCoresCost()) {
       ns.upgradeHomeCores();
     }
-    await ns.sleep(30000);
+    await ns.sleep(3000);
   }
 }

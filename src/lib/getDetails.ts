@@ -12,7 +12,6 @@ const programRequirements = [50, 100, 250, 500, 750];
 
 export function getPlayerDetails(ns: NS) {
   let portHacks = 0;
-  let programming = false;
   const hackingLevel = ns.getHackingLevel();
 
   for (const i in hackPrograms) {
@@ -21,8 +20,8 @@ export function getPlayerDetails(ns: NS) {
     if (ns.fileExists(hackProgram, "home")) {
       portHacks += 1;
     } else {
-      if (!programming && hackingLevel >= levelReq) {
-        programming = ns.createProgram(hackProgram, true);
+      if (!ns.isBusy() && hackingLevel >= levelReq) {
+        ns.createProgram(hackProgram, false);
       } else {
         ns.purchaseTor();
         ns.purchaseProgram(hackProgram);

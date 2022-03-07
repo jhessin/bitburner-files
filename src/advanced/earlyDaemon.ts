@@ -3,7 +3,7 @@ import { NS } from "Bitburner";
 const minuteInterval = 5;
 const nukeScript = "/advanced/nukeall.js";
 // const hackScript = "/advanced/hackrichest.js";
-const hackScript = "/advanced/crime.js";
+const hackScript = "/advanced/work.js";
 
 export async function main(ns: NS) {
   while (true) {

@@ -16,8 +16,10 @@ async function crawl(ns: NS) {
   while (true) {
     for (const target of await getHackableServers(ns)) {
       if (ns.isRunning("/advanced/batch.js", "home", target)) continue;
-      if (ns.run("/advanced/batch.js", 1, target)) await ns.sleep(bufferTime);
-      else break;
+      if (!ns.run("/advanced/batch.js", 1, target)) {
+        break;
+      }
+      await ns.sleep(bufferTime);
     }
     await ns.sleep(minutesToCheck * 60 * 1000);
   }

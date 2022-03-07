@@ -3,6 +3,10 @@ import { getHackableServers } from "lib/getall";
 import { analyzeServer } from "lib/analyze_server";
 
 export async function main(ns: NS) {
+  analyzeServer(ns, await getFastestServer(ns), true);
+}
+
+export async function getFastestServer(ns: NS) {
   let fastest: [string, number] = ["", 1e500];
 
   for (const s of await getHackableServers(ns)) {
@@ -11,6 +15,5 @@ export async function main(ns: NS) {
       fastest = [s, time];
     }
   }
-
-  analyzeServer(ns, fastest[0], true);
+  return fastest[0];
 }

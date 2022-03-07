@@ -2,6 +2,10 @@ import { NS } from "Bitburner";
 import { getRunnableServers } from "lib/getall";
 import {
   analyzeServer,
+  getMemForHack,
+  getMemForGrow,
+  getMemForWeaken,
+  getServerFreeRam,
   growThreads,
   hackThreads,
   weakenThreads,
@@ -35,7 +39,9 @@ async function batch(ns: NS, target: string) {
   // Hack Phase
   ns.print("Benninging Hack Phase");
   analyzeServer(ns, target, false);
-  await deployHack(ns, target, weakenThreads);
+  while (true) {
+    await deployHack(ns, target, weakenThreads);
+  }
 }
 
 async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
@@ -43,61 +49,48 @@ async function deployHack(ns: NS, target: string, threadsToWeaken: number) {
   const timeToHack = hackTime(ns, target);
   const timeToGrow = growTime(ns, target);
   const timeToWeaken = weakenTime(ns, target);
-  let threadsToHack = hackThreads(ns, target);
-  let threadsToGrow = growThreads(ns, target);
+  const threadsToHack = hackThreads(ns, target);
+  const threadsToGrow = growThreads(ns, target);
 
   let weakening = false;
   let growing = false;
   let hacking = false;
   let sleepTime = 1;
-  let firstRun = true;
-  while (true) {
-    for (const host of await getRunnableServers(ns)) {
-      if (!weakening) {
-        // Start with a weaken
-        if (ns.exec("/basic/weaken.js", host, threadsToWeaken, target)) {
-          weakening = true;
-          sleepTime = firstRun
-            ? timeToWeaken
-            : timeToWeaken - timeToGrow - bufferTime;
-          ns.print(
-            `${host} => ${target} weakening and sleeping for ${ns.tFormat(
-              sleepTime
-            )}`
-          );
-          await ns.sleep(Math.floor(sleepTime));
-          ns.print("Woke up from my nap...");
-        }
-      }
-      if (!growing) {
-        if (ns.exec("/basic/grow.js", host, threadsToGrow, target)) {
-          growing = true;
-          sleepTime = firstRun
-            ? timeToGrow
-            : timeToGrow - timeToHack - bufferTime;
-          ns.print(
-            `${host} => ${target} growing and sleeping for ${sleepTime}`
-          );
-          await ns.sleep(sleepTime);
-          if (firstRun) threadsToWeaken = weakenThreads(ns, target);
-        }
-      }
-      if (!hacking) {
-        if (ns.exec("/basic/hack.js", host, threadsToHack, target)) {
-          hacking = true;
-          sleepTime = firstRun ? timeToHack : timeToHack + bufferTime;
-          ns.print(
-            `${host} => ${target} hacking and sleeping for ${sleepTime}`
-          );
-          await ns.sleep(sleepTime);
-          if (firstRun) threadsToGrow = growThreads(ns, target);
-          firstRun = false;
-          break;
-        }
+  for (const host of await getRunnableServers(ns)) {
+    // first check if the server can successfully hack the target.
+    if (
+      !weakening &&
+      getServerFreeRam(ns, host) >= getMemForWeaken(ns, target)
+    ) {
+      // Start with a weaken
+      if (ns.exec("/basic/weaken.js", host, threadsToWeaken, target)) {
+        weakening = true;
+        sleepTime = timeToWeaken - timeToGrow - bufferTime;
+        ns.print(
+          `${host} => ${target} weakening and sleeping for ${sleepTime}`
+        );
+        await ns.sleep(sleepTime);
       }
     }
-    await ns.sleep(sleepTime);
+    if (!growing && getServerFreeRam(ns, host) >= getMemForGrow(ns, target)) {
+      if (ns.exec("/basic/grow.js", host, threadsToGrow, target)) {
+        growing = true;
+        sleepTime = timeToGrow - timeToHack - bufferTime;
+        ns.print(`${host} => ${target} growing and sleeping for ${sleepTime}`);
+        await ns.sleep(sleepTime);
+      }
+    }
+    if (!hacking && getServerFreeRam(ns, host) >= getMemForHack(ns, target)) {
+      if (ns.exec("/basic/hack.js", host, threadsToHack, target)) {
+        hacking = true;
+        sleepTime = timeToHack + bufferTime;
+        ns.print(`${host} => ${target} hacking and sleeping for ${sleepTime}`);
+        await ns.sleep(sleepTime);
+        break;
+      }
+    }
   }
+  await ns.sleep(sleepTime);
 }
 
 async function deployGrow(ns: NS, target: string): Promise<number> {
