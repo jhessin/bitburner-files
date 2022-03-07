@@ -63,7 +63,7 @@ Has field work that increases all stats while increasing reputation.
 
 Cleaned out!
 
-## Chongqing
+## Chongqing (Done)
 
 ### Joining
 
@@ -80,7 +80,7 @@ Volhaven
 
 TODO
 
-## New Tokyo
+## New Tokyo (Done)
 
 ### Joining
 
@@ -97,7 +97,7 @@ Sector-12
 Aevum
 Volhaven
 
-## Ishima
+## Ishima (Done)
 
 ### Joining
 
@@ -188,15 +188,15 @@ Cleaned Out
 Each of these factions require 200k reputation with the same named company -
 unless otherwise noted
 
-## MegaCorp (Joined)
+## MegaCorp (Joined) (Done)
 
 - City: Sector-12
 
-## Four Sigma (Joined)
+## Four Sigma (Joined) (Done)
 
 - City: Sector-12
 
-## Blade Industries (Joined)
+## Blade Industries (Joined) (Done)
 
 - City: Sector-12
 

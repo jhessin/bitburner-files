@@ -20,6 +20,8 @@ export async function main(ns: NS) {
 }
 
 async function batch(ns: NS, target: string) {
+  ns.disableLog("scan");
+  ns.disableLog("sleep");
   let weakenThreads = 1;
   // Growth Phase
   ns.print("Begining growth phase.");

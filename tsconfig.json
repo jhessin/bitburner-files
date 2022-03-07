@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "ES2020",
-    "rootDir": "src/",
-    "baseUrl": "src/",
+    "rootDir": "./src",
+    "baseUrl": "./src",
     "outDir": "home/",
     "moduleResolution": "Node",
     "strictNullChecks": true,

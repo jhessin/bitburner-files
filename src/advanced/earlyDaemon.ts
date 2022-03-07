@@ -2,7 +2,7 @@ import { NS } from "Bitburner";
 
 const minuteInterval = 5;
 const nukeScript = "/advanced/nukeall.js";
-const hackScript = "/advanced/hackall.js";
+const hackScript = "/advanced/hackrichest.js";
 
 export async function main(ns: NS) {
   ns.run(nukeScript);

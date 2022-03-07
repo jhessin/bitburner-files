@@ -1,23 +1,21 @@
 import { NS } from "Bitburner";
-import { getAllServers } from "lib/getall";
+import { getNukableServers } from "lib/getall";
 import { getPlayerDetails } from "lib/getDetails";
 
 export async function main(ns: NS) {
-  const servers = await getAllServers(ns);
+  const servers = await getNukableServers(ns);
   const player = getPlayerDetails(ns);
 
-  // get all the nukeable servers
-  let nukableServers: string[] = servers.filter(
-    (s) =>
-      ns.getServerNumPortsRequired(s) <= player.portHacks &&
-      !ns.hasRootAccess(s)
-  );
+  ns.tprint(`You can hack through ${player.portHacks} ports.`);
 
-  for (let server of nukableServers) {
+  for (let server of servers) {
     ns.print(`Nuking ${server}!`);
     ns.run("/basic/nuke.js", 1, server);
+    while (ns.scriptRunning("/basic/nuke.js", ns.getHostname()))
+      await ns.sleep(1);
   }
 
-  if (nukableServers.length === 0) ns.print("No nukable servers found.");
-  else ns.print("All servers nuked!");
+  if (servers.length === 0) ns.tprint("No nukable servers found.");
+  else ns.tprint("All servers nuked!");
 }
+

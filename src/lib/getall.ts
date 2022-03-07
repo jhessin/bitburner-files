@@ -13,7 +13,7 @@ export async function getAllServers(ns: NS) {
     localServers = localServers.filter((s) => !allServers.includes(s));
     if (localServers.length === 0) return;
     for (let server of localServers) {
-      allServers.push(server);
+      if (!allServers.includes(server)) allServers.push(server);
       await ns.sleep(1);
       await getServers(server);
     }
@@ -23,15 +23,23 @@ export async function getAllServers(ns: NS) {
 }
 
 export async function getHackableServers(ns: NS) {
+  let minCash = 1e3;
   let playerData = getPlayerDetails(ns);
-  return (await getAllServers(ns)).filter(
+  let servers = (await getAllServers(ns)).filter(
     (s) =>
       s !== "home" &&
       playerData.hackingLevel >= ns.getServerRequiredHackingLevel(s) &&
       ns.hasRootAccess(s) &&
-      ns.getServerMaxMoney(s) > 1e9 &&
+      ns.getServerMaxMoney(s) > minCash &&
       ns.getServerMoneyAvailable(s) > 0
   );
+
+  while (servers.length > 100) {
+    minCash *= 1e3;
+    servers = servers.filter((s) => ns.getServerMaxMoney(s) > minCash);
+  }
+
+  return servers;
 }
 
 export async function getNukableServers(ns: NS) {
