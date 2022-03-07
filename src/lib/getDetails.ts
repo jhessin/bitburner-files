@@ -8,15 +8,20 @@ const hackPrograms = [
   "SQLInject.exe",
 ];
 
+const programRequirements = [50, 100, 250, 500, 750];
+
 export function getPlayerDetails(ns: NS) {
   let portHacks = 0;
-  let programming = ns.isBusy();
+  let programming = false;
+  const hackingLevel = ns.getHackingLevel();
 
-  for (let hackProgram of hackPrograms) {
+  for (const i in hackPrograms) {
+    const hackProgram = hackPrograms[i];
+    const levelReq = programRequirements[i];
     if (ns.fileExists(hackProgram, "home")) {
       portHacks += 1;
     } else {
-      if (!programming) {
+      if (!programming && hackingLevel >= levelReq) {
         programming = ns.createProgram(hackProgram, true);
       } else {
         ns.purchaseTor();
@@ -26,7 +31,7 @@ export function getPlayerDetails(ns: NS) {
   }
 
   return {
-    hackingLevel: ns.getHackingLevel(),
+    hackingLevel,
     portHacks,
   };
 }
