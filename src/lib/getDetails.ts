@@ -10,17 +10,17 @@ const hackPrograms = [
 
 export function getPlayerDetails(ns: NS) {
   let portHacks = 0;
-  let programming = false;
+  let programming = ns.isBusy();
 
   for (let hackProgram of hackPrograms) {
     if (ns.fileExists(hackProgram, "home")) {
       portHacks += 1;
     } else {
       if (!programming) {
-        // programming = ns.createProgram(hackProgram, true);
-        // } else {
-        // ns.purchaseTor();
-        // ns.purchaseProgram(hackProgram);
+        programming = ns.createProgram(hackProgram, true);
+      } else {
+        ns.purchaseTor();
+        ns.purchaseProgram(hackProgram);
       }
     }
   }

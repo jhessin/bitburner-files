@@ -5,7 +5,7 @@ export async function main(ns: NS) {
     "/advanced/killall.js",
     "/basic/cpall.js",
     "/hacknet/daemon.js",
-    "/server-expansion/daemon.js",
+    // "/server-expansion/daemon.js",
     "/advanced/earlyDaemon.js",
   ];
 
