@@ -28,45 +28,56 @@ const crimes = [
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
-  // ns.enableLog("commitCrime");
+  ns.clearLog();
+  ns.tail();
+  ns.enableLog("commitCrime");
 
-  function getCommitableCrimes() {
-    const result: iCrime[] = [];
-    for (const crime of crimes) {
-      const stats = ns.getCrimeStats(crime);
-      const time = stats.time / 1000;
+  function getCrimeData(crime: string): iCrime {
+    const stats = ns.getCrimeStats(crime);
+    const time = stats.time / 1000;
 
-      result.push({
-        name: crime,
-        profit: stats.money / time,
-        hackGrowth: stats.hacking_exp / time,
-        strGrowth: stats.strength_exp / time,
-        defGrowth: stats.defense_exp / time,
-        dexGrowth: stats.dexterity_exp / time,
-        agiGrowth: stats.agility_exp / time,
-        chaGrowth: stats.charisma_exp / time,
-        successChance: ns.getCrimeChance(crime),
-      });
-    }
-    return result.filter((c) => c.successChance >= 1);
+    return {
+      name: crime,
+      profit: stats.money / time,
+      hackGrowth: stats.hacking_exp / time,
+      strGrowth: stats.strength_exp / time,
+      defGrowth: stats.defense_exp / time,
+      dexGrowth: stats.dexterity_exp / time,
+      agiGrowth: stats.agility_exp / time,
+      chaGrowth: stats.charisma_exp / time,
+      successChance: ns.getCrimeChance(crime),
+    };
   }
 
-  function crimeBreakdown() {
-    let commitableCrimes = getCommitableCrimes();
-    ns.print(`
-      There are ${commitableCrimes.length} crimes that you can commit right now with 100% chance of success.
-      `);
-    for (const crime of commitableCrimes) {
-      const combatGrowth =
-        crime.strGrowth + crime.defGrowth + crime.dexGrowth + crime.agiGrowth;
-      ns.print(
-        `${crime.name}:
-          ${ns.nFormat(crime.profit, "$0.000a")}/sec profit
-          ${ns.nFormat(crime.hackGrowth, "0.000a")} hacking/sec
-          ${ns.nFormat(combatGrowth, "0.000a")} combatGrowth/sec
-          ${ns.nFormat(crime.chaGrowth, "0.000a")} charisma/sec`
-      );
+  function getAllCrimes() {
+    const result: iCrime[] = [];
+    for (const crime of crimes) {
+      result.push(getCrimeData(crime));
     }
+    return result;
+  }
+
+  function getCommitableCrimes() {
+    return getAllCrimes().filter(
+      (c) =>
+        // either there is 100% chance of success
+        c.successChance >= 1 ||
+        // Or the the attempt takes less than a minute and there is at least a 50%
+        // success rate.
+        (ns.getCrimeStats(c.name).time < 60000 && c.successChance > 0.5)
+    );
+  }
+
+  function crimeBreakdown(crimeString: string) {
+    const crime = getCrimeData(crimeString);
+    const combatGrowth =
+      crime.strGrowth + crime.defGrowth + crime.dexGrowth + crime.agiGrowth;
+    ns.print(
+      `${crime.name}: ${ns.nFormat(crime.successChance, "0.00%")}
+        hacking XP/sec: ${ns.nFormat(crime.hackGrowth, "0.000a")}
+        combat XP/sec: ${ns.nFormat(combatGrowth, "0.000a")}
+        profit: ${ns.nFormat(crime.profit, "$0.000a")}/sec`
+    );
   }
 
   function mostProfitableCrime() {
@@ -77,7 +88,7 @@ export async function main(ns: NS) {
         best = crime;
       }
     }
-    return best;
+    return best?.name;
   }
 
   function bestHackingXp() {
@@ -88,7 +99,7 @@ export async function main(ns: NS) {
         best = crime;
       }
     }
-    return best;
+    return best?.name;
   }
 
   function bestCombatXp() {
@@ -104,47 +115,66 @@ export async function main(ns: NS) {
         best = crime;
       }
     }
-    return best;
+    return best?.name;
   }
 
-  let bestCrime: iCrime | undefined;
-  while (true) {
-    if (getCommitableCrimes().length < crimes.length) {
-      const newBest =
-        bestCombatXp() || bestHackingXp() || mostProfitableCrime();
-      if (newBest?.name !== bestCrime?.name) {
-        bestCrime = newBest;
-        crimeBreakdown();
+  const easiestCrime = "Shoplift";
+  // if (getCommitableCrimes().length < crimes.length) {
+  //   ns.stopAction();
+  //   while (getCommitableCrimes().length < crimes.length) {
+  //     ns.tail();
+  //     const bestCrime = bestCombatXp() || easiestCrime;
+  //     ns.print(
+  //       `You haven't unlocked all the crimes yet so we will focus on combat XP.`
+  //     );
+  //     crimeBreakdown(bestCrime);
+  //     await ns.sleep(3000);
+  //     // await workForFaction();
+  //     if (getCommitableCrimes().length < crimes.length) {
+  //       ns.clearLog();
+  //       if (!ns.isBusy()) ns.commitCrime(bestCrime);
+  //     }
+  //     joinFactions();
+  //   }
+  // } else
+  if (ns.getServerMaxRam("home") < 2 ** 30) {
+    ns.stopAction();
+    while (ns.getServerMaxRam("home") < 2 ** 30) {
+      ns.tail();
+      const bestCrime = mostProfitableCrime() || easiestCrime;
+      ns.print(
+        `You haven't maxed out your ram yet so we will focus on money until then.`
+      );
+      crimeBreakdown(bestCrime);
+      await ns.sleep(ns.getCrimeStats(bestCrime).time + 3000);
+      ns.clearLog();
+      if (!ns.isBusy()) ns.commitCrime(bestCrime);
+      // Always update the server if we can.
+      if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeRamCost()) {
+        ns.upgradeHomeRam();
       }
-    } else if (ns.getServerMaxRam("home") < 2 ** 30) {
-      const newBest =
-        mostProfitableCrime() || bestHackingXp() || bestCombatXp();
-      if (newBest?.name !== bestCrime?.name) {
-        bestCrime = newBest;
-        crimeBreakdown();
-      }
-    } else {
-      const newBest =
-        bestHackingXp() || bestCombatXp() || mostProfitableCrime();
-      if (newBest?.name !== bestCrime?.name) {
-        bestCrime = newBest;
-        crimeBreakdown();
+      if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeCoresCost()) {
+        ns.upgradeHomeCores();
       }
     }
-
-    // If we aren't busy commit the crime.
-    if (!ns.isBusy()) {
-      ns.commitCrime(bestCrime ? bestCrime.name : "Shoplift");
+  } else {
+    ns.stopAction();
+    while (true) {
+      ns.tail();
+      const bestCrime =
+        mostProfitableCrime() ||
+        bestHackingXp() ||
+        bestCombatXp() ||
+        easiestCrime;
+      ns.print(
+        `Okay - you've maxed your pc! Still focusing on money because that is the best use of crime!
+      The best hacking XP would be ${bestHackingXp()} though.
+      `
+      );
+      crimeBreakdown(bestCrime);
+      await ns.sleep(ns.getCrimeStats(bestCrime).time + 3000);
+      ns.clearLog();
+      if (!ns.isBusy()) ns.commitCrime(bestCrime);
     }
-
-    // Always update the server if we can.
-    if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeRamCost()) {
-      ns.upgradeHomeRam();
-    }
-    if (ns.getServerMoneyAvailable("home") >= ns.getUpgradeHomeCoresCost()) {
-      ns.upgradeHomeCores();
-    }
-    ns.tail();
-    await ns.sleep(3000);
   }
 }

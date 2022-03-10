@@ -6,7 +6,7 @@ export async function main(ns: NS) {
   const servers = await getNukableServers(ns);
   const player = getPlayerDetails(ns);
 
-  ns.tprint(`You can hack through ${player.portHacks} ports.`);
+  ns.print(`You can hack through ${player.portHacks} ports.`);
 
   for (let server of servers) {
     ns.print(`Nuking ${server}!`);
@@ -15,7 +15,6 @@ export async function main(ns: NS) {
       await ns.sleep(1);
   }
 
-  if (servers.length === 0) ns.tprint("No nukable servers found.");
-  else ns.tprint("All servers nuked!");
+  if (servers.length === 0) ns.print("No nukable servers found.");
+  else ns.print("All servers nuked!");
 }
-

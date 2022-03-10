@@ -5,6 +5,7 @@ export async function main(ns: NS) {
     "advanced/killall.js",
     "basic/cpall.js",
     "official/custom-stats.js",
+    "contracts/daemon.js",
     "advanced/daemon.js",
   ];
 

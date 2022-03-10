@@ -1,4 +1,4 @@
-import { NS } from "Bitburner";
+import { NS, AutocompleteData } from "Bitburner";
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -98,4 +98,8 @@ export function getMemForWeaken(ns: NS, host: string) {
   const weakenMem = ns.getScriptRam("/basic/weaken.js");
   const weakenCount = weakenThreads(ns, host);
   return weakenMem * weakenCount;
+}
+
+export function autocomplete(data: AutocompleteData, _args: string[]) {
+  return data.servers;
 }
