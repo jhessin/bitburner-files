@@ -1,4 +1,7 @@
 {
+  "exclude": [
+    "./archive"
+  ],
   "compilerOptions": {
     "incremental": true,
     "target": "ES2021",

@@ -1,17 +1,27 @@
 const gulp = require("gulp");
 const run = require("gulp-run");
+const del = require("del");
 const ts = require("gulp-typescript");
 
-exports.tsc = function tsc() {
+function clean() {
+  return del(["home/**/*.js"]);
+}
+
+function tsc() {
   const tsProject = ts.createProject("tsconfig.json");
   return tsProject.src().pipe(tsProject()).js.pipe(gulp.dest("home"));
-};
+}
 
-exports.sync = function sync() {
+function sync() {
   return run("yarn bitburner-sync").exec();
+}
+
+const push = gulp.series(clean, tsc, sync);
+
+module.exports = {
+  clean,
+  tsc,
+  sync,
+  push,
+  default: () => gulp.watch("src/**/*.ts", { ignoreInitial: false }, push),
 };
-
-exports.compile = gulp.series(exports.tsc, exports.sync);
-
-exports.default = () =>
-  gulp.watch("src/**/*.ts", { ignoreInitial: false }, exports.compile);
