@@ -38,7 +38,6 @@ export async function main(ns: NS) {
   function refreshLog() {
     ns.clearLog();
     ns.tail();
-    ns.print(`${failedContracts.length} Contracts failed:`);
     for (const cnt of failedContracts) {
       ns.print(`
       =========================
@@ -48,7 +47,6 @@ export async function main(ns: NS) {
       =========================
         `);
     }
-    ns.print(`${successfulContracts.length} Contracts Succeeded:`);
     for (const cnt of successfulContracts) {
       ns.print(`
       =========================
@@ -60,6 +58,8 @@ export async function main(ns: NS) {
       =========================
         `);
     }
+    ns.print(`Contracts failed: ${failedContracts.length}`);
+    ns.print(`Contracts Succeeded: ${successfulContracts.length}`);
   }
   while (true) {
     // await dfs(ns, null, "home", trySolveContracts, 0);

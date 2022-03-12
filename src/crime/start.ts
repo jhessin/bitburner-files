@@ -1,6 +1,11 @@
 import { NS } from "Bitburner";
 import { crimes, iCrime } from "consts";
 
+// The time to sample to find how long before we reach our goal.
+// The larger this number the more time you need to wait for an estimate.
+// But the more accurate that estimate will be.
+const deltaTimeSample = 1 * 60e3;
+
 export async function main(ns: NS) {
   const args = ns.flags([
     ["help", false],
@@ -31,17 +36,17 @@ export async function main(ns: NS) {
 
   function getCrimeData(crime: string): iCrime {
     const stats = ns.getCrimeStats(crime);
-    const time = stats.time / 1000;
+    const time = stats.time;
 
     return {
       name: crime,
-      profit: stats.money / time,
-      hackGrowth: stats.hacking_exp / time,
-      strGrowth: stats.strength_exp / time,
-      defGrowth: stats.defense_exp / time,
-      dexGrowth: stats.dexterity_exp / time,
-      agiGrowth: stats.agility_exp / time,
-      chaGrowth: stats.charisma_exp / time,
+      profit: (stats.money / time) * 1000,
+      hackGrowth: (stats.hacking_exp / time) * 1000,
+      strGrowth: (stats.strength_exp / time) * 1000,
+      defGrowth: (stats.defense_exp / time) * 1000,
+      dexGrowth: (stats.dexterity_exp / time) * 1000,
+      agiGrowth: (stats.agility_exp / time) * 1000,
+      chaGrowth: (stats.charisma_exp / time) * 1000,
       successChance: ns.getCrimeChance(crime),
     };
   }
@@ -64,25 +69,46 @@ export async function main(ns: NS) {
         (ns.getCrimeStats(c.name).time < 60000 && c.successChance > 0.5)
     );
   }
+  let deltaTimeStart = Date.now();
+  let deltaCashStart = ns.getServerMoneyAvailable("home");
+  let deltaTime = 0;
+  let deltaCash = 0;
+  let cashPerMs = 0;
+
+  function resetTimer() {
+    deltaTime = Date.now() - deltaTimeStart;
+    deltaCash = ns.getServerMoneyAvailable("home") - deltaCashStart;
+    if (cashPerMs !== 0) {
+      cashPerMs = (cashPerMs + deltaCash / deltaTime) / 2;
+    } else {
+      cashPerMs = deltaCash / deltaTime;
+    }
+    deltaTimeStart = Date.now();
+    deltaCashStart = ns.getServerMoneyAvailable("home");
+  }
 
   function crimeBreakdown(crimeString: string) {
     const crime = getCrimeData(crimeString);
     const combatGrowth =
       crime.strGrowth + crime.defGrowth + crime.dexGrowth + crime.agiGrowth;
     if (goal > 0) {
+      let timeToGoal: number | undefined;
+      if (Date.now() - deltaTimeStart >= deltaTimeSample) {
+        resetTimer();
+      }
+      if (cashPerMs > 0) {
+        timeToGoal = (goal - ns.getServerMoneyAvailable("home")) / cashPerMs;
+      }
       ns.print(
         `
 Commiting '${crime.name}' until you have ${ns.nFormat(goal, "$0.00a")}
 ${ns.nFormat(ns.getServerMoneyAvailable("home") / goal, "0.00%")} complete.
+Estimated Time to Completion: ${
+          timeToGoal ? ns.tFormat(timeToGoal) : "Calculating..."
+        }
       `
       );
     }
-    ns.print(
-      `${crime.name}: ${ns.nFormat(crime.successChance, "0.00%")}
-        hacking XP/sec: ${ns.nFormat(crime.hackGrowth, "0.000a")}
-        combat XP/sec: ${ns.nFormat(combatGrowth, "0.000a")}
-        profit: ${ns.nFormat(crime.profit, "$0.000a")}/sec`
-    );
   }
 
   function mostProfitableCrime() {
@@ -100,6 +126,7 @@ ${ns.nFormat(ns.getServerMoneyAvailable("home") / goal, "0.00%")} complete.
   if (crimeName) {
     if (crimes.includes(crimeName)) {
       if (ns.isBusy()) ns.stopAction();
+      resetTimer();
       while (ns.getServerMoneyAvailable("home") < goal || !goal) {
         ns.tail();
         ns.clearLog();
@@ -114,6 +141,7 @@ ${ns.nFormat(ns.getServerMoneyAvailable("home") / goal, "0.00%")} complete.
   } else {
     const crime = mostProfitableCrime() || easiestCrime;
     if (ns.isBusy()) ns.stopAction();
+    resetTimer();
     while (ns.getServerMoneyAvailable("home") < goal || !goal) {
       ns.clearLog();
       ns.tail();
