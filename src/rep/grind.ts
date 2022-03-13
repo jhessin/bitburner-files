@@ -76,6 +76,7 @@ export async function main(ns: NS) {
       }
     }
   }
+  ns.stopAction();
 }
 
 export function autocomplete() {

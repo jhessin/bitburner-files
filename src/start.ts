@@ -78,7 +78,8 @@ export async function main(ns: NS) {
       if (
         aug.price > targetAug.price &&
         aug.preReqs.length === 0 &&
-        ns.getAugmentationStats(aug.name).crime_money_mult
+        (ns.getAugmentationStats(aug.name).crime_money_mult ||
+          ns.getAugmentationStats(aug.name).crime_success_mult)
       ) {
         targetAug = aug;
       }

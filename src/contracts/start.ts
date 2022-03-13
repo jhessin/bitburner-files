@@ -37,7 +37,6 @@ export async function main(ns: NS) {
   }[] = [];
   function refreshLog() {
     ns.clearLog();
-    ns.tail();
     for (const cnt of failedContracts) {
       ns.print(`
       =========================
