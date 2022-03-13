@@ -8,13 +8,19 @@ function getServers(): Server[] {
 }
 
 export async function main(ns: NS) {
-  const args = ns.flags([["help", false]]);
+  const args = ns.flags([
+    ["help", false],
+    ["goal", 0],
+  ]);
   const faction = args._.join(" ");
+  const targetRep = args.goal;
   if (args.help || !faction) {
     ns.tprint(`
       This program will grind reputation from a given faction using every available
       system's resources.
-      USAGE: run ${ns.getScriptName()} FACTION_NAME
+
+      Can optionally take a goal reputation to stop.
+      USAGE: run ${ns.getScriptName()} [--goal=TARGET_REP] FACTION_NAME
       `);
     return;
   }
@@ -35,27 +41,38 @@ export async function main(ns: NS) {
     await ns.sleep(1);
   }
   if (ns.isBusy()) ns.stopAction();
-  while (true) {
+  while (
+    targetRep === 0 ||
+    ns.getFactionRep(faction) + ns.getPlayer().workRepGained < targetRep
+  ) {
     await ns.sleep(500);
+    ns.clearLog();
+    ns.tail();
+    ns.print(
+      `Working for ${faction} until you have ${ns.nFormat(
+        targetRep,
+        "0.00a"
+      )} rep.`
+    );
     if (!ns.isBusy()) {
       if (!ns.workForFaction(faction, "Hacking")) {
-        ns.tprint(`${faction} does not support hacking - trying Field Work.`);
+        ns.print(`${faction} does not support hacking - trying Field Work.`);
         if (!ns.workForFaction(faction, "Field")) {
-          ns.tprint(
+          ns.print(
             `${faction} does not support Field Work - trying Security Work.`
           );
           if (!ns.workForFaction(faction, "Security")) {
-            ns.tprint(
+            ns.print(
               `What kind of faction is ${faction} that doesn't support anything!?!`
             );
           } else {
-            ns.tprint(`Doing Security Work for ${faction}`);
+            ns.print(`Doing Security Work for ${faction}`);
           }
         } else {
-          ns.tprint(`Doing Field Work for ${faction}`);
+          ns.print(`Doing Field Work for ${faction}`);
         }
       } else {
-        ns.tprint(`Doing Hacking Contracts for ${faction}`);
+        ns.print(`Doing Hacking Contracts for ${faction}`);
       }
     }
   }

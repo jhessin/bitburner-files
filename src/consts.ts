@@ -60,3 +60,11 @@ export interface iCrime {
   chaGrowth: number;
   successChance: number;
 }
+
+export interface iAugmentation {
+  name: string;
+  price: number;
+  faction: string;
+  rep: number;
+  preReqs: string[];
+}
