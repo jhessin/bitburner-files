@@ -18,11 +18,14 @@ export const keys = {
   augmentationsInstalled: "augmentationsInstalled",
   // The sourceFiles the player has.
   sourceFiles: "source files",
+  // Are we programming?
+  isProgramming: "Is Programming",
 };
 
 export const PortHackPrograms = [
   "BruteSSH.exe",
   "FTPCrack.exe",
+  "relaySMTP.exe",
   "HTTPWorm.exe",
   "SQLInject.exe",
 ];

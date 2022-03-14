@@ -1,5 +1,5 @@
 import { NS, Server } from "Bitburner";
-import { keys, PortHackPrograms } from "consts";
+import { keys } from "consts";
 
 function getServers(): Server[] {
   const data = localStorage.getItem(keys.serverList);
@@ -47,12 +47,16 @@ function nukeAllServers(ns: NS) {
       exec: ns.ftpcrack,
     },
     {
-      name: "SQLInject.exe",
-      exec: ns.sqlinject,
+      name: "relaySMTP.exe",
+      exec: ns.relaysmtp,
     },
     {
       name: "HTTPWorm.exe",
       exec: ns.httpworm,
+    },
+    {
+      name: "SQLInject.exe",
+      exec: ns.sqlinject,
     },
   ];
 
