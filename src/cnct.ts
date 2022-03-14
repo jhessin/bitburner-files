@@ -44,8 +44,8 @@ export async function main(ns: NS) {
   }
 
   for (const i of route) {
-    await ns.sleep(500);
     if (ns.serverExists(i)) ns.connect(i);
+    await ns.sleep(500);
   }
 }
 

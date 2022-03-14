@@ -1,4 +1,4 @@
-import { AugmentationStats } from "Bitburner";
+import { AugmentationStats, NS } from "Bitburner";
 
 /**
  * This is a list of the keys for data that is stored in localStorage.
@@ -29,6 +29,45 @@ export const PortHackPrograms = [
   "HTTPWorm.exe",
   "SQLInject.exe",
 ];
+
+export async function CreateHackPrograms(ns: NS) {
+  const hackPrograms: {
+    program: string;
+    hackingLevel: number;
+  }[] = [
+    {
+      program: "BruteSSH.exe",
+      hackingLevel: 50,
+    },
+    {
+      program: "FTPCrack.exe",
+      hackingLevel: 100,
+    },
+    {
+      program: "relaySMTP.exe",
+      hackingLevel: 250,
+    },
+    {
+      program: "HTTPWorm.exe",
+      hackingLevel: 500,
+    },
+    {
+      program: "SQLInject.exe",
+      hackingLevel: 750,
+    },
+  ];
+
+  const hackingLevel = ns.getHackingLevel();
+  for (const program of hackPrograms) {
+    if (ns.fileExists(program.program)) continue;
+    if (hackingLevel >= program.hackingLevel) {
+      localStorage.setItem(keys.isProgramming, "true");
+      ns.createProgram(program.program);
+      while (ns.isBusy()) await ns.sleep(300);
+      localStorage.setItem(keys.isProgramming, "false");
+    }
+  }
+}
 
 export const crimes = [
   "Heist",

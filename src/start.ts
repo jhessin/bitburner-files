@@ -4,6 +4,16 @@ import { iAugmentation, keys } from "consts";
 const pollingInterval = 600; // time in ms to wait between polling
 const host = "home";
 
+interface iRequirements {
+  hacking?: number;
+  strength?: number;
+  defense?: number;
+  dexterity?: number;
+  agility?: number;
+  charisma?: number;
+  rep?: number;
+}
+
 function getServers(): Server[] {
   let data = localStorage.getItem(keys.serverList);
   if (!data) return [];
@@ -15,10 +25,63 @@ const setupScripts: string[] = [
   "/hacking/nukeAll.js",
 ];
 
-const moneyScripts: string[] = [
-  "/jobs/joesGuns.js",
-  "/crime/start.js",
-  //
+const moneyScripts: {
+  script: string;
+  requires: iRequirements;
+  args?: string[];
+}[] = [
+  {
+    script: "/crime/start.js",
+    requires: {
+      strength: 10,
+      defense: 10,
+      agility: 10,
+      dexterity: 10,
+    },
+  },
+  {
+    script: "/jobs/work.js",
+    requires: {
+      hacking: 250,
+      charisma: 250,
+    },
+    args: [
+      "--company=MegaCorp",
+      "--position=Business",
+      //
+    ],
+  },
+  {
+    script: "/jobs/work.js",
+    requires: {
+      hacking: 250,
+    },
+    args: [
+      "--company=MegaCorp",
+      "--position=IT",
+      //
+    ],
+  },
+  {
+    script: "/jobs/work.js",
+    requires: {
+      hacking: 150,
+    },
+    args: [
+      "--company=National Security Agency",
+      "--position=IT",
+      //
+    ],
+  },
+  {
+    script: "/jobs/work.js",
+    requires: {},
+    args: [
+      "--company=Joe's Guns",
+      "--position=part-time employee",
+      //
+    ],
+  },
 ];
 
 const lightScripts = [
@@ -68,7 +131,7 @@ export async function main(ns: NS) {
   let memory = 0;
   for (const script of [
     ...setupScripts,
-    ...moneyScripts,
+    ...moneyScripts.map((s) => s.script),
     ...allScripts,
     repScript,
   ]) {
@@ -86,7 +149,7 @@ export async function main(ns: NS) {
   memory = 0;
   for (const script of [
     ...setupScripts,
-    ...moneyScripts,
+    ...moneyScripts.map((s) => s.script),
     ...lightScripts,
     repScript,
   ]) {
@@ -134,6 +197,17 @@ export async function main(ns: NS) {
       ns.joinFaction(faction);
     }
 
+    // Now we get the augmentations that make crime pay!
+    // A good source of income.
+    await GetAugmentations(
+      ns,
+      (aug) =>
+        !!ns.getAugmentationStats(aug.name).crime_money_mult ||
+        !!ns.getAugmentationStats(aug.name).crime_success_mult
+    );
+
+    ns.print("Purchased all crime augmentations!");
+
     // Now for augmentations that improve hacking.
     await GetAugmentations(ns, (aug) => {
       let stats = ns.getAugmentationStats(aug.name);
@@ -148,17 +222,6 @@ export async function main(ns: NS) {
     });
 
     ns.print("Purchased all hacking augmentations!");
-
-    // Now we get the augmentations that make crime pay!
-    // A good source of income.
-    await GetAugmentations(
-      ns,
-      (aug) =>
-        !!ns.getAugmentationStats(aug.name).crime_money_mult ||
-        !!ns.getAugmentationStats(aug.name).crime_success_mult
-    );
-
-    ns.print("Purchased all crime augmentations!");
   }
 }
 
@@ -243,10 +306,26 @@ async function GetAugmentations(
         Working to be able to afford ${targetAug.name} from ${targetAug.faction}.
         `);
       ns.enableLog("run");
-      const script = moneyScripts[0];
-      ns.print(`running ${script}`);
-      if (!ns.scriptRunning(script, host))
-        ns.run(script, 1, `--goal=${targetAug.price}`);
+      for (const ms of moneyScripts) {
+        const { requires } = ms;
+        const { hacking, strength, defense, dexterity, agility, charisma } =
+          ns.getPlayer();
+        if (
+          (!requires.hacking || requires.hacking <= hacking) &&
+          (!requires.strength || requires.strength <= strength) &&
+          (!requires.defense || requires.defense <= defense) &&
+          (!requires.dexterity || requires.dexterity <= dexterity) &&
+          (!requires.agility || requires.agility <= agility) &&
+          (!requires.charisma || requires.charisma <= charisma)
+        ) {
+          const script = ms.script;
+          ns.tail();
+          ns.print(`running ${script}`);
+          if (!ns.scriptRunning(script, host))
+            ns.run(script, 1, `--goal=${targetAug.price}`, ...(ms.args || []));
+          break;
+        }
+      }
       continue;
     } else if (targetAug.rep > ns.getFactionRep(targetAug.faction)) {
       ns.tail();

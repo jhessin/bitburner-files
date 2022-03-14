@@ -1,5 +1,5 @@
 import { NS } from "Bitburner";
-import { PortHackPrograms, keys } from "consts";
+import { keys, CreateHackPrograms, PortHackPrograms } from "consts";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -20,21 +20,13 @@ export async function main(ns: NS) {
   while (true) {
     await ns.sleep(300);
     ns.clearLog();
-    let programCount = 0;
+    let count = 0;
+
+    await CreateHackPrograms(ns);
+
     for (const program of PortHackPrograms) {
-      if (ns.fileExists(program)) {
-        programCount++;
-        continue;
-      }
-      if (localStorage.getItem(keys.isProgramming) !== "true")
-        if (ns.createProgram(program)) {
-          localStorage.setItem(keys.isProgramming, "true");
-          while (ns.isBusy()) {
-            await ns.sleep(1);
-          }
-          localStorage.setItem(keys.isProgramming, "");
-        }
+      if (ns.fileExists(program)) count++;
     }
-    if (programCount === PortHackPrograms.length) return;
+    if (count === PortHackPrograms.length) return;
   }
 }

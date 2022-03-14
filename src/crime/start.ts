@@ -129,6 +129,7 @@ Estimated Time to Completion: ${
       resetTimer();
       while (ns.getServerMoneyAvailable("home") < goal || !goal) {
         ns.tail();
+        ns.tail("/start.js");
         ns.clearLog();
         crimeBreakdown(crimeName);
         if (!ns.isBusy()) ns.commitCrime(crimeName);

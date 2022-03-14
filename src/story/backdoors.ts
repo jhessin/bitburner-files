@@ -77,7 +77,8 @@ export async function main(ns: NS) {
       )
         await ns.sleep(1);
 
-      ns.installBackdoor();
+      await ns.installBackdoor();
+      ns.run("/cnct.js", 1, "home");
     }
   }
 }
