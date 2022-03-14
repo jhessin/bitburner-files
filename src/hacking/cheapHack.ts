@@ -14,7 +14,7 @@ function getRichestServer(hackingLevel: number): Server | undefined {
     if (
       (!richest || richest.moneyMax < server.moneyMax) &&
       server.hasAdminRights &&
-      server.requiredHackingSkill < hackingLevel
+      server.requiredHackingSkill <= hackingLevel
     ) {
       richest = server;
     }

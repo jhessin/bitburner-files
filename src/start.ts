@@ -2,6 +2,8 @@ import { NS } from "Bitburner";
 import { iAugmentation } from "consts";
 
 const pollingInterval = 600; // time in ms to wait between polling
+const setupScript = "/utils/updateStorage.js";
+const nukeScript = "/hacking/nukeAll.js";
 const cheapHack = "/hacking/cheapHack.js";
 const crimeScript = "/crime/start.js";
 const repScript = "/rep/grind.js";
@@ -30,6 +32,8 @@ export async function main(ns: NS) {
     // Run Appropriate scripts.
 
     // Always start by running cheapHack.js
+    ns.run(setupScript);
+    ns.run(nukeScript);
     if (!ns.scriptRunning(cheapHack, "home")) ns.run(cheapHack);
 
     // Next check if we have outstanding faction invitations.
@@ -37,9 +41,48 @@ export async function main(ns: NS) {
       ns.joinFaction(faction);
     }
 
-    // Next determine if we are part of any factions with uninstalled
+    // Now for augmentations that improve hacking.
+    await GetAugmentations(ns, (aug) => {
+      let stats = ns.getAugmentationStats(aug.name);
+      return (
+        !!stats.hacking_mult ||
+        !!stats.hacking_exp_mult ||
+        !!stats.hacking_money_mult ||
+        !!stats.hacking_speed_mult ||
+        !!stats.hacking_grow_mult ||
+        !!stats.hacking_chance_mult
+      );
+    });
+
+    ns.print("Purchased all hacking augmentations!");
+
+    // Now we get the augmentations that make crime pay!
+    // A good source of income.
+    await GetAugmentations(
+      ns,
+      (aug) =>
+        !!ns.getAugmentationStats(aug.name).crime_money_mult ||
+        !!ns.getAugmentationStats(aug.name).crime_success_mult
+    );
+
+    ns.print("Purchased all crime augmentations!");
+  }
+}
+
+async function GetAugmentations(
+  ns: NS,
+  filter: (aug: iAugmentation) => boolean
+) {
+  while (true) {
+    await ns.sleep(pollingInterval);
+    ns.clearLog();
+    // determine if we are part of any factions with uninstalled
     // augmentations.
     const { factions } = ns.getPlayer();
+    if (factions.length === 0) {
+      // We aren't in any factions!
+      return;
+    }
     const ownedAugs = ns.getOwnedAugmentations(true);
 
     const neededAugs: iAugmentation[] = factions.flatMap((faction) => {
@@ -65,6 +108,11 @@ export async function main(ns: NS) {
       });
     });
 
+    if (neededAugs.length === 0) {
+      // We don't need anything our factions have to offer!
+      return;
+    }
+
     // find the most expensive augmentation and work to earn it.
     let targetAug: iAugmentation = {
       name: "",
@@ -78,8 +126,7 @@ export async function main(ns: NS) {
       if (
         aug.price > targetAug.price &&
         aug.preReqs.length === 0 &&
-        (ns.getAugmentationStats(aug.name).crime_money_mult ||
-          ns.getAugmentationStats(aug.name).crime_success_mult)
+        filter(aug)
       ) {
         targetAug = aug;
       }
@@ -106,7 +153,7 @@ export async function main(ns: NS) {
         ns.run(repScript, 1, `--goal=${targetAug.rep}`, targetAug.faction);
       }
       continue;
-    } else {
+    } else if (targetAug.name !== "") {
       ns.tail();
       ns.print(`
         Purchasing ${targetAug.name} from ${targetAug.faction} for ${ns.nFormat(
@@ -117,6 +164,8 @@ export async function main(ns: NS) {
       ns.enableLog("purchaseAugmentation");
       ns.purchaseAugmentation(targetAug.faction, targetAug.name);
       continue;
+    } else {
+      break;
     }
   }
 }

@@ -1,5 +1,5 @@
 import { NS, Server } from "Bitburner";
-import { iFaction, keys } from "consts";
+import { iFaction, keys, PortHackPrograms } from "consts";
 
 let servers: Server[] = [];
 
@@ -33,12 +33,7 @@ function getServers(ns: NS) {
 function getPorts(ns: NS) {
   // get the ports
   let ports = 0;
-  let programs = [
-    "BruteSSH.exe",
-    "FTPCrack.exe",
-    "HTTPWorm.exe",
-    "SQLInject.exe",
-  ];
+  let programs = PortHackPrograms;
   for (const p of programs) {
     if (ns.fileExists(p)) ports++;
   }

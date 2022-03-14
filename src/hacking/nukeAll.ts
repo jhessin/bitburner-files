@@ -37,11 +37,30 @@ export async function main(ns: NS) {
 
 function nukeAllServers(ns: NS) {
   const servers = getNukableServers();
+  let programs = [
+    {
+      name: "BruteSSH.exe",
+      exec: ns.brutessh,
+    },
+    {
+      name: "FTPCrack.exe",
+      exec: ns.ftpcrack,
+    },
+    {
+      name: "SQLInject.exe",
+      exec: ns.sqlinject,
+    },
+    {
+      name: "HTTPWorm.exe",
+      exec: ns.httpworm,
+    },
+  ];
 
   for (const host of servers) {
-    for (const program of PortHackPrograms) {
-      if (ns.fileExists(program)) ns.exec(program, host.hostname);
+    for (const program of programs) {
+      if (ns.fileExists(program.name)) program.exec(host.hostname);
     }
-    ns.exec("NUKE.exe", host.hostname);
+    ns.print(`NUKEing ${host.hostname}`);
+    ns.nuke(host.hostname);
   }
 }
