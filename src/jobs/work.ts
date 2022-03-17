@@ -28,24 +28,25 @@ export async function main(ns: NS) {
     return;
   }
   ns.disableLog("ALL");
+  ns.enableLog("workForCompany");
   ns.clearLog();
 
   const company = args.company.trim('"');
   const position = args.position.trim('"');
-
-  // apply to work or for promotion.
-  ns.applyToCompany(company, position);
 
   // work at joes guns on a loop.
   while (goal === 0 || ns.getServerMoneyAvailable("home") < goal) {
     await ns.sleep(300);
     ns.tail();
     ns.clearLog();
-    ns.enableLog("workForCompany");
     ns.print(
       `Working at ${company} until we have ${ns.nFormat(goal, "$0.00a")}`
     );
-    if (!ns.isBusy()) ns.workForCompany(company, false);
+    if (!ns.isBusy()) {
+      // apply to work or for promotion.
+      ns.applyToCompany(company, position);
+      ns.workForCompany(company, false);
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { NS, Server, SourceFileLvl } from "Bitburner";
+import { NS, Server } from "Bitburner";
 
 export interface iAugmentationList {
   queued: string[];
@@ -142,6 +142,24 @@ export class GM {
     }
 
     this.ns.nuke(host);
+    return true;
+  }
+
+  public async backdoor(host: string) {
+    // check if the backdoor is already installed.
+    if (this.ns.getServer(host).backdoorInstalled) return true;
+
+    // check if we have/can get admin priviledges.
+    if (!this.nuke(host)) return false;
+
+    // We know we have admin priviledges now...
+    if (this.ns.getServerRequiredHackingLevel(host) > this.ns.getHackingLevel())
+      // We can't backdoor the server yet.
+      return false;
+
+    await this.connect(host);
+    await this.ns.installBackdoor();
+    await this.connect("home");
     return true;
   }
 

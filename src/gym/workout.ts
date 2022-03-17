@@ -75,28 +75,7 @@ export async function main(ns: NS) {
 
     for (const g of gyms) {
       const { server, gym } = g;
-      const serverData = ns.getServer(server);
-      if (!serverData.backdoorInstalled) {
-        // the backdoor is not installed.
-        // determine if the backdoor can be installed.
-        // first we nuke it.
-        if (!gm.nuke(serverData.hostname)) {
-          // gym is not nukable
-          continue;
-        }
-
-        if (
-          serverData.requiredHackingSkill > ns.getHackingLevel() ||
-          !serverData.hasAdminRights
-        ) {
-          // if not - continue;
-          continue;
-        }
-        // if so do it and work out in that gym.
-        await gm.connect(serverData.hostname);
-        await ns.installBackdoor();
-        await gm.connect("home");
-
+      if (await gm.backdoor(server)) {
         // now work out here.
         if (goal > 0) {
           if (nodebt) {
@@ -115,16 +94,13 @@ export async function main(ns: NS) {
           );
         }
         if (!ns.isBusy()) ns.gymWorkout(gym, stat, false);
-      } else {
-        // the backdoor is installed so work out at this gym.
-        if (!ns.isBusy()) ns.gymWorkout(gym, stat, false);
       }
     }
 
     // check if we are busy.
     if (!ns.isBusy()) {
       // we couldn't find a gym we could backdoor.
-      // we should workout at the last gym.
+      // we should workout at the last gym as it is the cheapest.
       const { gym } = gyms[gyms.length - 1];
       ns.gymWorkout(gym, stat, false);
     }
