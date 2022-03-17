@@ -106,6 +106,40 @@ const crimeFocused: iMoneyScript[] = [
     ],
   },
   {
+    script: "/gym/workout.js",
+    requires: {
+      strength: 125,
+      defense: 125,
+      dexterity: 125,
+      charisma: 75,
+    },
+    args: ["--goal=125", "--stat=agi"],
+  },
+  {
+    script: "/gym/workout.js",
+    requires: {
+      strength: 125,
+      defense: 125,
+      charisma: 75,
+    },
+    args: ["--goal=125", "--stat=dex"],
+  },
+  {
+    script: "/gym/workout.js",
+    requires: {
+      strength: 125,
+      charisma: 75,
+    },
+    args: ["--goal=125", "--stat=def"],
+  },
+  {
+    script: "/gym/workout.js",
+    requires: {
+      charisma: 75,
+    },
+    args: ["--goal=125", "--stat=str"],
+  },
+  {
     script: "/jobs/work.js",
     requires: {},
     args: [
