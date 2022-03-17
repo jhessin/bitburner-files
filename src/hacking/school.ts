@@ -17,6 +17,7 @@ export async function main(ns: NS) {
   const course = "Study Computer Science";
 
   while (true) {
+    await ns.sleep(300);
     if (!ns.isBusy()) {
       ns.universityCourse(school, course, false);
     }

@@ -31,9 +31,22 @@ export async function main(ns: NS) {
       `);
 }
 
+/**
+ * This is the main wrapper Game Manager class.
+ * It holds all the data and functionality of common actions in the game.
+ */
 export class GM {
   private _ns: NS;
 
+  /**
+   * These are the HackPrograms used to open ports for hacking and executing
+   * scripts.
+   *
+   * It is an array of simple objects holding:
+   * filename: the name of the file.
+   * execute: the ns fuction to use the program.
+   * programmingLevel: the required programmingLevel to create the program.
+   */
   public get HackPrograms(): {
     filename: string;
     execute(host: string): void;
@@ -68,15 +81,47 @@ export class GM {
     ];
   }
 
+  /**
+   * This function creates hacking programs if it can. Does nothing if it can't
+   * or if they are already created.
+   */
+  public async createPrograms() {
+    // check if we have nothing to program.
+    if (this.hackablePorts === this.HackPrograms.length) return;
+
+    // otherwise create hack programs.
+    for (const p of this.HackPrograms) {
+      if (this.ns.fileExists(p.filename)) continue;
+      if (p.programmingLevel > this.ns.getHackingLevel()) break;
+      // here we know we have the programming chops and the file doesn't already
+      // exist.
+      this.isProgramming = true;
+      while (!this.ns.fileExists(p.filename)) {
+        if (!this.ns.isBusy()) this.ns.createProgram(p.filename);
+        await this.ns.sleep(500);
+      }
+      this.isProgramming = false;
+    }
+  }
+
+  /**
+   * The primary constructor loads basic data for the gm.
+   */
   constructor(ns: NS) {
     this._ns = ns;
     this.updateStorage();
   }
 
+  /**
+   * This is the Netscript instance used to create the Game Manager.
+   */
   public get ns(): NS {
     return this._ns;
   }
 
+  /**
+   * The list of all available servers. Used for hacking purposes.
+   */
   public get serverList(): Server[] {
     return getData(keys.serverList) || [];
   }
@@ -85,6 +130,9 @@ export class GM {
     setData(keys.serverList, data);
   }
 
+  /**
+   * This is simply the count of all our hacking programs.
+   */
   public get hackablePorts(): number {
     let count = 0;
     for (const p of this.HackPrograms.map((p) => p.filename)) {
@@ -93,6 +141,15 @@ export class GM {
     return count;
   }
 
+  /**
+   * The augmentations that we currently have. This is split into:
+   * installed: those augmentations we have installed.
+   * queued: those augmentations we have purchased and have not yet installed.
+   *
+   * There is also a helper method:
+   * includes(aug) -> boolean
+   * This tests if an augmentation is in either {installed} or {queued} lists.
+   */
   public get augmentations(): iAugmentationList {
     let installed = this.ns.getOwnedAugmentations(false);
     let queued = this.ns
@@ -107,25 +164,37 @@ export class GM {
     };
   }
 
+  /**
+   * This is a flag to let other operations know if we are working on a program.
+   */
   public get isProgramming(): boolean {
     return getData(keys.isProgramming);
   }
 
-  public set isProgramming(data: boolean) {
+  private set isProgramming(data: boolean) {
     setData(keys.isProgramming, data);
   }
 
+  /**
+   * This updates the stored variables.
+   * Currently it only updates the serverList.
+   */
   public updateStorage() {
     // This method will pull data from localStorage and update it if necessary.
     // The only data that should be stored are things that take some time to
     // calculate - or things that can't be calculated.
     //
     // Generate serverList if necessary.
-    if (this.serverList.length === 0) {
-      this.recursiveScan();
-    }
+    this.recursiveScan();
   }
 
+  /**
+   * This will return true if the server is nuked.
+   * If the server is not nuked but can be this will nuke it and return true.
+   * If the server cannot be nuked this will return false.
+   *
+   * TLDR; true = you have root access. false = you can't get root access yet.
+   */
   public nuke(host: string) {
     if (this.ns.hasRootAccess(host)) {
       // already nuked
@@ -145,6 +214,14 @@ export class GM {
     return true;
   }
 
+  /**
+   * This will return true if a backdoor is installed.
+   * If not and a backdoor can be installed this installs it and returns true.
+   * If we can't backdoor the server yet this returns false.
+   *
+   * TLDR; true = this server has the backdoor installed. false = we can't
+   * install the backdoor yet.
+   */
   public async backdoor(host: string) {
     // check if the backdoor is already installed.
     if (this.ns.getServer(host).backdoorInstalled) return true;
@@ -163,21 +240,34 @@ export class GM {
     return true;
   }
 
+  /**
+   * This kills every script on every host - including the script that calls it.
+   */
   public killEverything() {
     for (const { hostname } of this.serverList) {
       this.ns.killall(hostname);
     }
   }
 
+  /**
+   * This kills every script on every host except the script that calls it.
+   */
   public killEverythingElse() {
     for (const { hostname } of this.serverList) {
       for (const ps of this.ns.ps(hostname)) {
-        if (this.ns.getScriptName() === ps.filename) continue;
+        if (
+          this.ns.getScriptName() === ps.filename &&
+          this.ns.getHostname() === hostname
+        )
+          continue;
         this.ns.scriptKill(ps.filename, hostname);
       }
     }
   }
 
+  /**
+   * This connects to any valid server regardless of path.
+   */
   public async connect(target: string) {
     let route = [];
     if (!this.ns.serverExists(target)) return;
@@ -193,11 +283,15 @@ export class GM {
     return true;
   }
 
+  /**
+   * This is a helper method to find the path to a server.
+   * Used by connect()
+   */
   private find(
     target: string,
     route: string[] = [],
     parent: string = "",
-    server: string = "home"
+    server: string = ""
   ) {
     const children = this.ns.scan(server);
     for (let child of children) {
@@ -218,7 +312,10 @@ export class GM {
     return false;
   }
 
-  recursiveScan(parent: string = "home", server: string = "home") {
+  /**
+   * This is a helper method used to generate the exhaustive server list.
+   */
+  private recursiveScan(parent: string = "", server: string = "home") {
     const children = this.ns.scan(server);
     if (!this.serverList.map((s) => s.hostname).includes(server))
       this.serverList.push(this.ns.getServer(server));

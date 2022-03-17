@@ -1,5 +1,5 @@
 import { NS } from "Bitburner";
-import { keys } from "consts";
+import { GM } from "gameManager/earlyGM";
 
 const FactionData: {
   faction: string;
@@ -28,6 +28,7 @@ const FactionData: {
 ];
 
 export async function main(ns: NS) {
+  const gm = new GM(ns);
   ns.disableLog("ALL");
   const args = ns.flags([["help", false]]);
   const ram = ns.getScriptRam(ns.getScriptName()) * 1e9;
@@ -45,46 +46,9 @@ export async function main(ns: NS) {
     await ns.sleep(300);
     ns.clearLog();
     const { factions } = ns.getPlayer();
-    const hackingLevel = ns.getHackingLevel();
-    const portHacks = getPortHacks();
     for (const fd of FactionData) {
       if (factions.includes(fd.faction)) continue;
-
-      if (
-        ns.getServerRequiredHackingLevel(fd.server) > hackingLevel ||
-        ns.getServerNumPortsRequired(fd.server) > portHacks
-      ) {
-        // can't backdoor the server
-        ns.print(`
-          cannot backdoor ${
-            fd.server
-          } because it needs ${ns.getServerNumPortsRequired(
-          fd.server
-        )} ports openned
-          and ${ns.getServerRequiredHackingLevel(fd.server)} hacking level.
-          `);
-        continue;
-      }
-
-      // We can backdoor the server.
-      // first make sure we have nuked everything!
-      ns.run("/hacking/nukeAll.js");
-      ns.run("/cnct.js", 1, fd.server);
-      // make sure we are connected and nuked.
-      while (
-        ns.scriptRunning("/cnct.js", ns.getHostname()) ||
-        ns.scriptRunning("/hacking/nukeAll.js", ns.getHostname())
-      )
-        await ns.sleep(1);
-
-      await ns.installBackdoor();
-      ns.run("/cnct.js", 1, "home");
+      await gm.backdoor(fd.server);
     }
   }
-}
-
-function getPortHacks(): number {
-  const data = localStorage.getItem(keys.hackablePorts);
-  if (!data) return 0;
-  return JSON.parse(data);
 }
