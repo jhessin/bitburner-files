@@ -327,6 +327,12 @@ async function GetAugmentations(
     return false;
   }
 
+  // if we are taking a class stop
+  if (ns.scriptRunning(learningScript, host)) {
+    ns.scriptKill(learningScript, host);
+    ns.stopAction();
+  }
+
   // determine if we are part of any factions with uninstalled
   // augmentations.
   const { factions } = ns.getPlayer();
@@ -412,9 +418,30 @@ async function GetAugmentations(
         (!requires.agility || requires.agility <= agility) &&
         (!requires.charisma || requires.charisma <= charisma)
       ) {
-        const script = ms.script;
         ns.tail();
-        ns.print(`running ${script}`);
+        // kill any other running moneyScripts
+        // And stop their coresponding actions.
+        for (const { script, args } of moneyScripts) {
+          if (script === ms.script && args === ms.args) continue;
+          if (
+            ns.isRunning(
+              script,
+              host,
+              `--goal=${targetAug.price}`,
+              ...(args || [])
+            )
+          ) {
+            ns.kill(script, host, `--goal=${targetAug.price}`, ...(args || []));
+            ns.stopAction();
+          }
+        }
+
+        // Also kill any repScript that may be running.
+        if (ns.scriptRunning(repScript, host)) {
+          ns.scriptKill(repScript, host);
+          ns.stopAction();
+        }
+        const script = ms.script;
         if (!ns.scriptRunning(script, host))
           ns.run(script, 1, `--goal=${targetAug.price}`, ...(ms.args || []));
         break;
@@ -429,6 +456,14 @@ async function GetAugmentations(
       "0.00a"
     )} so we can buy ${targetAug.name}
         `);
+    // kill any running moneyScripts
+    // And stop their coresponding actions.
+    for (const { script } of moneyScripts) {
+      if (ns.scriptRunning(script, host)) {
+        ns.scriptKill(script, host);
+        ns.stopAction();
+      }
+    }
     if (!ns.scriptRunning(repScript, host)) {
       ns.run(repScript, 1, `--goal=${targetAug.rep}`, targetAug.faction);
     }
