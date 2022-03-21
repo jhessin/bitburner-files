@@ -269,6 +269,12 @@ export class GM {
    * This connects to any valid server regardless of path.
    */
   public async connect(target: string) {
+    // always start from home
+    this.ns.connect("home");
+
+    // check if our job is done?
+    if (target === "home") return true;
+
     let route = [];
     if (!this.ns.serverExists(target)) return;
     if (!this.find(target, route)) {
