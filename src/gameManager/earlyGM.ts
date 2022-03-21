@@ -291,7 +291,7 @@ export class GM {
     target: string,
     route: string[] = [],
     parent: string = "",
-    server: string = ""
+    server: string = "home"
   ) {
     const children = this.ns.scan(server);
     for (let child of children) {
