@@ -37,10 +37,10 @@ const crimeFocused: iMoneyScript[] = [
   {
     script: "/crime/start.js",
     requires: {
-      strength: 350,
-      defense: 350,
-      agility: 350,
-      dexterity: 350,
+      strength: 150,
+      defense: 150,
+      agility: 150,
+      dexterity: 150,
     },
   },
   {
@@ -264,37 +264,37 @@ export async function main(ns: NS) {
     }
     ns.print("All factions joined!");
 
-    // Now we get the augmentations that make crime pay!
-    // A good source of income.
-    if (
-      !(await GetAugmentations(
-        ns,
-        (aug) =>
-          !!ns.getAugmentationStats(aug.name).crime_money_mult ||
-          !!ns.getAugmentationStats(aug.name).crime_success_mult
-      ))
-    )
-      continue;
+    // // Now we get the augmentations that make crime pay!
+    // // A good source of income.
+    // if (
+    //   !(await GetAugmentations(
+    //     ns,
+    //     (aug) =>
+    //       !!ns.getAugmentationStats(aug.name).crime_money_mult ||
+    //       !!ns.getAugmentationStats(aug.name).crime_success_mult
+    //   ))
+    // )
+    //   continue;
 
-    ns.print("Purchased all crime augmentations!");
+    // ns.print("Purchased all crime augmentations!");
 
-    // Now for augmentations that improve hacking.
-    if (
-      !(await GetAugmentations(ns, (aug) => {
-        let stats = ns.getAugmentationStats(aug.name);
-        return (
-          !!stats.hacking_mult ||
-          !!stats.hacking_exp_mult ||
-          !!stats.hacking_money_mult ||
-          !!stats.hacking_speed_mult ||
-          !!stats.hacking_grow_mult ||
-          !!stats.hacking_chance_mult
-        );
-      }))
-    )
-      continue;
+    // // Now for augmentations that improve hacking.
+    // if (
+    //   !(await GetAugmentations(ns, (aug) => {
+    //     let stats = ns.getAugmentationStats(aug.name);
+    //     return (
+    //       !!stats.hacking_mult ||
+    //       !!stats.hacking_exp_mult ||
+    //       !!stats.hacking_money_mult ||
+    //       !!stats.hacking_speed_mult ||
+    //       !!stats.hacking_grow_mult ||
+    //       !!stats.hacking_chance_mult
+    //     );
+    //   }))
+    // )
+    //   continue;
 
-    ns.print("Purchased all hacking augmentations!");
+    // ns.print("Purchased all hacking augmentations!");
 
     // Now go for broke and install everything else!
     if (!(await GetAugmentations(ns))) continue;
@@ -482,7 +482,6 @@ async function GetAugmentations(
 }
 
 function killAll(ns: NS) {
-  ns.stopAction();
   for (const host of getServers()) {
     if (host.hostname === "home") {
       for (const ps of ns.ps(host.hostname)) {
