@@ -1,52 +1,51 @@
 import { NS, AutocompleteData } from "Bitburner";
-
-function recursiveScan(
-  ns: NS,
-  parent: string,
-  server: string,
-  target: string,
-  route: string[]
-) {
-  const children = ns.scan(server);
-  for (let child of children) {
-    if (parent == child) {
-      continue;
-    }
-    if (child == target) {
-      route.unshift(child);
-      route.unshift(server);
-      return true;
-    }
-
-    if (recursiveScan(ns, server, child, target, route)) {
-      route.unshift(server);
-      return true;
-    }
-  }
-  return false;
-}
+import { getTree } from "lib/gettree.js";
 
 export async function main(ns: NS) {
-  const args = ns.flags([["help", false]]);
-  let route: string[] = [];
-  let server = args._[0];
-  if (!server || args.help) {
-    ns.tprint("This script helps you connect to any server on the network.");
-    ns.tprint(`Usage: run ${ns.getScriptName()} SERVER`);
-    ns.tprint("Example:");
-    ns.tprint(`> run ${ns.getScriptName()} n00dles`);
-    return;
+  let target: string = ns.args[0].toString();
+  let path = "";
+
+  function iterate(obj: Object, stack: string = "") {
+    for (let property in obj) {
+      if (obj.hasOwnProperty(property)) {
+        if (typeof obj[property] === "object") {
+          iterate(
+            obj[property],
+            (stack ? stack + "; connect " : stack) + property
+          );
+        }
+      }
+    }
+    if (stack.includes(target)) {
+      path = stack;
+    }
   }
 
-  if (!recursiveScan(ns, "", "home", server, route)) {
-    ns.tprint(`Could not find server ${server}!`);
+  iterate(await getTree(ns));
+
+  const terminalInput: any = document.getElementById("terminal-input");
+  if (!terminalInput) {
+    ns.tprint("Couldn't get terminal-input field.");
     return;
   }
+  terminalInput.value = path;
 
-  for (const i of route) {
-    if (ns.serverExists(i)) ns.connect(i);
-    await ns.sleep(500);
+  const handler = Object.keys(terminalInput)[1];
+  terminalInput[handler].onChange({ target: terminalInput });
+  terminalInput[handler].onKeyDown({ keyCode: 13, preventDefault: () => null });
+}
+
+export async function home(ns: NS) {
+  const terminalInput: any = document.getElementById("terminal-input");
+  if (!terminalInput) {
+    ns.tprint("Couldn't get terminal-input field.");
+    return;
   }
+  terminalInput.value = "home";
+
+  const handler = Object.keys(terminalInput)[1];
+  terminalInput[handler].onChange({ target: terminalInput });
+  terminalInput[handler].onKeyDown({ keyCode: 13, preventDefault: () => null });
 }
 
 export function autocomplete(data: AutocompleteData, _args: string[]) {
