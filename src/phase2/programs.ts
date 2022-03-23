@@ -33,9 +33,9 @@ export async function main(ns: NS) {
         ) {
           // we have source file 4 or we are in bitNodeN 4
           if (
-            !ns.scriptRunning("phase1/actions/programming.js", ns.getHostname())
+            !ns.scriptRunning("phase2/actions/programming.js", ns.getHostname())
           )
-            ns.run("phase1/actions/programming.js", 1, program.filename);
+            ns.run("phase2/actions/programming.js", 1, program.filename);
         } else {
           // we don't have access to singularity.
           ns.tail();

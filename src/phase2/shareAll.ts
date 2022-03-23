@@ -1,5 +1,5 @@
 import { NS } from "Bitburner";
-import { getRunnableServers } from "phase1/cnct";
+import { getRunnableServers } from "phase2/cnct";
 
 export async function main(ns: NS) {
   ns.clearLog();

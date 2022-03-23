@@ -10,6 +10,10 @@ augmentations that will increase money earned.
 
 # Needed Scripts
 
+- ../contracts/list.js: Solving contracts is expensive, but listing them is not.
+  Phase 1 should involve manually solving contracts as this is a great way to
+  make money and rep.
+
 - backdoor.js: This is a deamon that connects and installs the backdoor on
   servers that need it. It will also nuke any servers that need it as well. We
   can just backdoor everything as we unlock it. If we have Source File 4 this
