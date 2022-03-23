@@ -31,6 +31,10 @@ At this point we could probably finish the node whenever we want.
 
 ## Common Scripts
 
+- utils/\*.ts: These are not scripts but simple libraries with common functions
+  that can be called by other scripts. None of them should use any serious
+  memory. Each class or function should be small.
+
 - cnct.ts/js: This script is a common script that we will use throughout to
   connect to servers. It will double as a library that finds the proper server
   for hacking, nuking, running scripts, etc.
@@ -38,3 +42,8 @@ At this point we could probably finish the node whenever we want.
 - hacknet.ts/js: This script will automatically purchase and expand hacknet
   servers. This is an optionally script that must be manually started as it is
   not cost effective on some bitnodes.
+
+- hack.ts: This is a script to hack a given server. Nothing fancy, but it can be
+  run from any server easily.
+
+- share.ts: This is a script to continuously share a computers resources.

@@ -2,16 +2,15 @@ import { NS } from "Bitburner";
 
 const scripts = [
   "hacknet.js",
-  "/phase1/cnct.js",
-  "/phase1/backdoor.js",
-  "/phase1/programs.js",
-  "/phase1/basicHack.js",
-  // `expandServer.js` and `actions/programming.js` is currently failing until we can level up Source File 4
-  // '/phase1/expandServer.js',
-  // '/actions/programming.js',
+  "/phase2/cnct.js",
+  "/phase2/backdoor.js",
+  "/phase2/programs.js",
+  "/phase2/basicHack.js",
+  "/phase2/expandServer.js",
+  "/actions/programming.js",
 ];
 
-const maxRam = 32e9;
+const maxRam = 1e12;
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
