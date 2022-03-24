@@ -29,14 +29,15 @@ export class ServerNode {
   // This finds a node with a given name and returns the path to it as an array
   // of strings.
   find(name: string, path: string[] = []): string[] {
-    path.push(this.name);
     // check if we are found.
     if (this.name === name) {
+      path.push(this.name);
       return path;
     }
 
     // shallow search first
     if (this.children.map((c) => c.name).includes(name)) {
+      path.push(this.name);
       path.push(name);
       return path;
     }
@@ -47,7 +48,7 @@ export class ServerNode {
       let branch = child.find(name, path);
       if (branch.length > 0) {
         // we have found our server.
-        return [...path, ...branch];
+        return [this.name, ...branch];
       }
     }
 

@@ -19,6 +19,12 @@ export async function main(ns: NS) {
   }
 
   let tree = new ServerTree(ns);
+  // first copy the cnct.ts script to all the servers if necessary
+  for (const s of tree.home.list()) {
+    if (!ns.fileExists(ns.getScriptName(), s.hostname))
+      await ns.scp(ns.getScriptName(), s.hostname);
+  }
+
   let path = tree.home.find(target).map((name) => {
     if (name === "home") return "home;";
     else return `connect ${name};`;
