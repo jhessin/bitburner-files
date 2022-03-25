@@ -62,7 +62,8 @@ async function getTargetServer(ns: NS, tree: ServerTree) {
       s.hasAdminRights &&
       s.requiredHackingSkill <= ns.getHackingLevel() &&
       s.hostname !== "home" &&
-      !ns.getPurchasedServers().includes(s.hostname)
+      !ns.getPurchasedServers().includes(s.hostname) &&
+      s.moneyMax > 0
   )) {
     ns.scriptKill(analyzeScript, ns.getHostname());
     ns.run(analyzeScript, 1, t.hostname);

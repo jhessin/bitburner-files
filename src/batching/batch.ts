@@ -79,9 +79,11 @@ export async function prepareServer(ns: NS, target: any) {
   const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
 
   let weakenThreads = 0;
+  let targetDelta = growSecurityDelta + hackSecurityDelta;
+
   while (
-    ns.weakenAnalyze(weakenThreads) <
-    growSecurityDelta + hackSecurityDelta
+    ns.weakenAnalyze(weakenThreads) < targetDelta &&
+    targetDelta !== Infinity
   ) {
     await ns.sleep(1);
     weakenThreads += 1;
@@ -92,7 +94,7 @@ export async function prepareServer(ns: NS, target: any) {
         weakenThreads
       )}`
     );
-    ns.print(`Target security is ${growSecurityDelta + hackSecurityDelta}`);
+    ns.print(`Target security is ${targetDelta}`);
   }
 
   ns.print(`Preparing ${target} for hacking...`);
