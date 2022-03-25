@@ -2,7 +2,7 @@ import { NS } from "Bitburner";
 import { ServerTree } from "utils/ServerTree";
 
 const bufferTime = 300;
-const scriptName = "/batching/spawner.js";
+const spawnerName = "/batching/spawner.js";
 const growScript = "/batching/grow.js";
 const weakenScript = "/batching/weaken.js";
 
@@ -62,11 +62,11 @@ export async function main(ns: NS) {
   await prepareServer(ns, target);
 
   ns.print("Hacking...");
-  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime * 3);
+  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3);
   await ns.sleep(weakenTime - growTime + bufferTime);
-  ns.run(scriptName, 1, "grow", target, growThreads, bufferTime * 3);
+  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime * 3);
   await ns.sleep(growTime - hackTime + bufferTime);
-  ns.run(scriptName, 1, "hack", target, hackThreads, bufferTime * 3);
+  ns.run(spawnerName, 1, "hack", target, hackThreads, bufferTime * 3);
 }
 
 export async function prepareServer(ns: NS, target: any) {
@@ -99,20 +99,13 @@ export async function prepareServer(ns: NS, target: any) {
 
   ns.print(`Preparing ${target} for hacking...`);
   ns.print("Growing...");
-  killall(ns, scriptName);
-  ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
-  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
+  killall(ns, spawnerName);
+  let growPid = ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
+  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     await ns.sleep(bufferTime);
   }
-  killall(
-    ns,
-    scriptName,
-    "grow",
-    target,
-    growThreads.toString(),
-    bufferTime.toString()
-  );
+  ns.kill(growPid);
   killall(ns, growScript);
   ns.print("Weakening...");
   while (
@@ -120,7 +113,7 @@ export async function prepareServer(ns: NS, target: any) {
   ) {
     await ns.sleep(bufferTime);
   }
-  killall(ns, scriptName);
+  killall(ns, spawnerName);
   killall(ns, weakenScript);
 }
 
