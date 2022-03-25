@@ -105,10 +105,16 @@ export async function prepareServer(ns: NS, target: any) {
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     await ns.sleep(bufferTime);
   }
-  killall(ns, scriptName);
+  killall(
+    ns,
+    scriptName,
+    "grow",
+    target,
+    growThreads.toString(),
+    bufferTime.toString()
+  );
   killall(ns, growScript);
   ns.print("Weakening...");
-  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
@@ -118,9 +124,10 @@ export async function prepareServer(ns: NS, target: any) {
   killall(ns, weakenScript);
 }
 
-function killall(ns: NS, scriptName: string) {
+function killall(ns: NS, scriptName: string, ...args: string[]) {
   const tree = new ServerTree(ns);
   for (const s of tree.home.list()) {
-    ns.scriptKill(scriptName, s.hostname);
+    if (args.length > 0) ns.kill(scriptName, s.hostname, ...args);
+    else ns.scriptKill(scriptName, s.hostname);
   }
 }

@@ -65,9 +65,9 @@ async function getTargetServer(ns: NS, tree: ServerTree) {
       !ns.getPurchasedServers().includes(s.hostname) &&
       s.moneyMax > 0
   )) {
-    ns.scriptKill(analyzeScript, ns.getHostname());
     ns.run(analyzeScript, 1, t.hostname);
     await prepareServer(ns, t.hostname);
+    ns.scriptKill(analyzeScript, ns.getHostname());
   }
 
   let bestServer: Server | undefined = undefined;
