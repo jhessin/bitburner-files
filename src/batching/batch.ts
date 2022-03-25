@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { ServerTree } from "utils/ServerTree";
 
 const scriptName = "/batching/spawner.js";
 const growScript = "/batching/grow.js";
@@ -23,7 +24,7 @@ export async function main(ns: NS) {
 
   // now find the required number of threads for each action.
   const growThreads = Math.ceil(ns.growthAnalyze(target, 2));
-  const hackThreads = Math.ceil(0.5 / ns.hackAnalyze(target));
+  const hackThreads = Math.ceil(0.1 / ns.hackAnalyze(target));
 
   const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
   const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
@@ -62,19 +63,24 @@ export async function main(ns: NS) {
   ns.clearLog();
   ns.print(`Preparing ${target} for hacking...`);
   ns.print("Growing...");
+  killall(ns, scriptName);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
-    ns.run(growScript, 1, target, Date.now());
+    if (!ns.scriptRunning(scriptName, ns.getHostname()))
+      ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
     await ns.sleep(100);
   }
-  ns.scriptKill(growScript, ns.getHostname());
+  killall(ns, scriptName);
+  killall(ns, growScript);
   ns.print("Weakening...");
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
-    ns.run(weakenScript, 1, target, Date.now());
+    if (!ns.scriptRunning(scriptName, ns.getHostname()))
+      ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
     await ns.sleep(100);
   }
-  ns.scriptKill(weakenScript, ns.getHostname());
+  killall(ns, scriptName);
+  killall(ns, weakenScript);
 
   ns.print("Hacking...");
   ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
@@ -82,4 +88,11 @@ export async function main(ns: NS) {
   ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
   await ns.sleep(bufferTime * 3);
   ns.run(scriptName, 1, "hack", target, hackThreads, bufferTime);
+}
+
+function killall(ns: NS, scriptName: string) {
+  const tree = new ServerTree(ns);
+  for (const s of tree.home.list()) {
+    ns.scriptKill(scriptName, s.hostname);
+  }
 }

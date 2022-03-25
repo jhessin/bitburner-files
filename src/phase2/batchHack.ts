@@ -21,10 +21,7 @@ export async function main(ns: NS) {
   }
   const tree = new ServerTree(ns);
 
-  // Step 1: Kill all scripts on remote servers.
-  killAll(ns, tree);
-
-  // Step 3: Find the richest server that we have enough memory to effectively
+  // Find the richest server that we have enough memory to effectively
   // batch.
   const targetServer = await getTargetServer(ns, tree);
 
@@ -37,17 +34,13 @@ export async function main(ns: NS) {
   ns.spawn("/batching/batch.js", 1, targetServer.hostname);
 }
 
-function killAll(ns: NS, tree: ServerTree) {
-  for (const s of tree.home.list()) {
-    if (s.hostname === ns.getHostname()) continue;
-    ns.killall(s.hostname);
-  }
-}
-
 async function getTargetServer(ns: NS, tree: ServerTree) {
   let bestServer: Server | undefined = undefined;
   for (const s of tree.home.filter(
-    (s) => s.hasAdminRights && s.requiredHackingSkill <= ns.getHackingLevel()
+    (s) =>
+      s.hasAdminRights &&
+      s.requiredHackingSkill <= ns.getHackingLevel() &&
+      ns.getWeakenTime(s.hostname) < 60000
   )) {
     if (!bestServer) {
       bestServer = s;
