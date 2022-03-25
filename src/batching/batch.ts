@@ -1,6 +1,7 @@
 import { NS } from "Bitburner";
 import { ServerTree } from "utils/ServerTree";
 
+const bufferTime = 300;
 const scriptName = "/batching/spawner.js";
 const growScript = "/batching/grow.js";
 const weakenScript = "/batching/weaken.js";
@@ -57,17 +58,50 @@ export async function main(ns: NS) {
     return;
   }
 
-  const bufferTime = 300;
-
   // Prepare the server
+  await prepareServer(ns, target);
+
+  ns.print("Hacking...");
+  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime * 3);
+  await ns.sleep(weakenTime - growTime + bufferTime);
+  ns.run(scriptName, 1, "grow", target, growThreads, bufferTime * 3);
+  await ns.sleep(growTime - hackTime + bufferTime);
+  ns.run(scriptName, 1, "hack", target, hackThreads, bufferTime * 3);
+}
+
+export async function prepareServer(ns: NS, target: any) {
   ns.clearLog();
+  // now find the required number of threads for each action.
+  const growThreads = Math.ceil(ns.growthAnalyze(target, 2));
+  const hackThreads = Math.ceil(0.1 / ns.hackAnalyze(target));
+
+  const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
+  const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
+
+  let weakenThreads = 0;
+  while (
+    ns.weakenAnalyze(weakenThreads) <
+    growSecurityDelta + hackSecurityDelta
+  ) {
+    await ns.sleep(1);
+    weakenThreads += 1;
+    ns.clearLog();
+    ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
+    ns.print(
+      `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
+        weakenThreads
+      )}`
+    );
+    ns.print(`Target security is ${growSecurityDelta + hackSecurityDelta}`);
+  }
+
   ns.print(`Preparing ${target} for hacking...`);
   ns.print("Growing...");
   killall(ns, scriptName);
   ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
   ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
-    await ns.sleep(100);
+    await ns.sleep(bufferTime);
   }
   killall(ns, scriptName);
   killall(ns, growScript);
@@ -76,17 +110,10 @@ export async function main(ns: NS) {
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
-    await ns.sleep(100);
+    await ns.sleep(bufferTime);
   }
   killall(ns, scriptName);
   killall(ns, weakenScript);
-
-  ns.print("Hacking...");
-  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
-  await ns.sleep(bufferTime * 3);
-  ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
-  await ns.sleep(bufferTime * 3);
-  ns.run(scriptName, 1, "hack", target, hackThreads, bufferTime);
 }
 
 function killall(ns: NS, scriptName: string) {
