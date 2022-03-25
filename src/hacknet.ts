@@ -4,6 +4,8 @@ const allowancePercentage = 0.01;
 /** @param {NS} ns **/
 export async function main(ns: NS) {
   while (true) {
+    ns.disableLog("ALL");
+    ns.clearLog();
     for (let i = 0; i < ns.hacknet.numNodes(); i++) {
       let gain = [0, 0, 0];
       let currentCash = ns.getServerMoneyAvailable("home");
@@ -12,6 +14,10 @@ export async function main(ns: NS) {
       if (ns.hacknet.getPurchaseNodeCost() <= currentCash) {
         ns.hacknet.purchaseNode();
         continue;
+      } else {
+        ns.print(
+          `Cannot afford a new node with ${ns.nFormat(currentCash, "$0.00a")}`
+        );
       }
 
       const node = ns.hacknet.getNodeStats(i);
@@ -49,9 +55,9 @@ export async function main(ns: NS) {
         gain[2] = 0;
       }
 
-      ns.print(`Level Upgrade: ${gain[0]}`);
-      ns.print(`Ram Upgrade: ${gain[1]}`);
-      ns.print(`Core Upgrade: ${gain[2]}`);
+      // ns.print(`Level Upgrade: ${gain[0]}`);
+      // ns.print(`Ram Upgrade: ${gain[1]}`);
+      // ns.print(`Core Upgrade: ${gain[2]}`);
 
       let topgain = 0;
 
@@ -63,7 +69,7 @@ export async function main(ns: NS) {
 
       if (topgain === 0) {
         ns.print(`All Gains maxed on Node ${i}`);
-        break;
+        continue;
       }
 
       if (
@@ -87,9 +93,14 @@ export async function main(ns: NS) {
         ns.print(`Upgrading Cores on Node ${i}`);
         ns.hacknet.upgradeCore(i, 1);
       } else {
-        ns.print(`Cannot afford upgrades on Node ${i}`);
+        ns.print(
+          `Cannot afford to upgrade Node ${i} with ${ns.nFormat(
+            currentCash,
+            "$0.00a"
+          )}`
+        );
       }
     }
-    await ns.sleep(1000);
+    await ns.sleep(1);
   }
 }
