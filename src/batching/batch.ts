@@ -64,19 +64,18 @@ export async function main(ns: NS) {
   ns.print(`Preparing ${target} for hacking...`);
   ns.print("Growing...");
   killall(ns, scriptName);
+  ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
+  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
-    if (!ns.scriptRunning(scriptName, ns.getHostname()))
-      ns.run(scriptName, 1, "grow", target, growThreads, bufferTime);
     await ns.sleep(100);
   }
   killall(ns, scriptName);
   killall(ns, growScript);
   ns.print("Weakening...");
+  ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
-    if (!ns.scriptRunning(scriptName, ns.getHostname()))
-      ns.run(scriptName, 1, "weaken", target, weakenThreads, bufferTime);
     await ns.sleep(100);
   }
   killall(ns, scriptName);

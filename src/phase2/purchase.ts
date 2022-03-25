@@ -35,4 +35,6 @@ export async function main(ns: NS) {
       );
     }
   }
+  ns.clearLog();
+  ns.print("All servers have been purchased!");
 }
