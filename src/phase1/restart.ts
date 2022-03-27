@@ -13,13 +13,13 @@ const day = days;
 let restartDuration = 1 * day;
 
 const scripts = [
+  "/backdoor.js",
   "hacknet.js",
-  "backdoor.js",
   "/contracts/start.js",
-  "/phase3/programs.js",
-  "/phase3/purchase.js",
-  "/phase3/batchHack.js",
+  "/phase1/programs.js",
 ];
+
+const restartScripts = ["/phase1/basicHack.js"];
 
 const singularityScripts = [
   "/expandServer.js",
@@ -40,9 +40,13 @@ export async function main(ns: NS) {
     return;
   }
 
+  for (const script of scripts) {
+    ns.run(script);
+    // This delay is to keep the scripts from colliding.
+    await ns.sleep(5000);
+  }
   while (true) {
-    for (const script of scripts) {
-      ns.scriptKill(script, ns.getHostname());
+    for (const script of restartScripts) {
       ns.run(script);
       // This delay is to keep the scripts from colliding.
       await ns.sleep(5000);

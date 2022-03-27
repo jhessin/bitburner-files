@@ -1,5 +1,5 @@
 import { NS, Server } from "Bitburner";
-import { getItem, setItem, keys } from "utils/localStorage.js";
+import { setItem, keys } from "utils/localStorage.js";
 
 export class ServerNode {
   name: string;
@@ -30,7 +30,7 @@ export class ServerNode {
   // of strings.
   find(name: string, path: string[] = []): string[] {
     // check if we are found.
-    if (this.name === name) {
+    if (this.name.includes(name)) {
       path.push(this.name);
       return path;
     }

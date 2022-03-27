@@ -2,13 +2,14 @@ import { NS } from "Bitburner";
 
 const scripts = [
   "hacknet.js",
+  "shareAll.js",
   "/contracts/list.js",
   "/phase1/cnct.js",
-  "/phase1/backdoor.js",
+  "/backdoor.js",
   "/phase1/programs.js",
   "/phase1/basicHack.js",
   // `expandServer.js` and `actions/programming.js` is currently failing until we can level up Source File 4
-  // '/phase1/expandServer.js',
+  // '/expandServer.js',
   // '/actions/programming.js',
 ];
 

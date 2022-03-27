@@ -1,5 +1,7 @@
 import { NS } from "Bitburner";
-import { getRunnableServers } from "phase1/cnct";
+import { getRunnableServers } from "cnct";
+
+const serverPercent = 0.75;
 
 export async function main(ns: NS) {
   ns.clearLog();
@@ -17,15 +19,20 @@ export async function main(ns: NS) {
 
   // copy the share script to all the servers we have admin priveledges to.
   for (const server of getRunnableServers(ns)) {
-    if (!server || server.hostname === "home") continue;
-    ns.killall(server.hostname);
+    // if (!server || server.hostname === "home") continue;
+    if (!server) continue;
     const shareScript = "share.js";
     await ns.scp(shareScript, server.hostname);
     // calculate the maximum number of threads.
-    let maxThreads = Math.floor(
-      server.maxRam / ns.getScriptRam(shareScript, server.hostname)
+    server.ramUsed = ns.getServerUsedRam(server.hostname);
+    let maxThreads = Math.max(
+      Math.floor(
+        (server.maxRam * serverPercent - server.ramUsed) /
+          ns.getScriptRam(shareScript, server.hostname)
+      ),
+      1
     );
-    // hack the richest server
-    if (maxThreads > 0) ns.exec(shareScript, server.hostname, maxThreads);
+    // run the share script if possible.
+    ns.exec(shareScript, server.hostname, maxThreads);
   }
 }

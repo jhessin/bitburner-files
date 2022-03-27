@@ -1,10 +1,13 @@
-import { NS } from "Bitburner";
+import { AutocompleteData, NS } from "Bitburner";
+import { Command, CommandType } from "utils/command";
 import { ServerTree } from "utils/ServerTree";
 
-const bufferTime = 300;
+const bufferTime = 3000;
+const growMultiplier = 4;
+const hackPercent = 0.5;
+
 const spawnerName = "/batching/spawner.js";
-const growScript = "/batching/grow.js";
-const weakenScript = "/batching/weaken.js";
+const analyzeScript = "/analyzeServer.js";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -23,68 +26,22 @@ export async function main(ns: NS) {
     return;
   }
 
+  // analyze the server
+  ns.run(analyzeScript, 1, target, `Batch attack!`);
+
   // now find the required number of threads for each action.
-  const growThreads = Math.ceil(ns.growthAnalyze(target, 2));
-  const hackThreads = Math.ceil(0.1 / ns.hackAnalyze(target));
+  const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
+  const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
 
   const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
   const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
 
   let weakenThreads = 0;
-  while (
-    ns.weakenAnalyze(weakenThreads) <
-    growSecurityDelta + hackSecurityDelta
-  ) {
-    await ns.sleep(1);
-    weakenThreads += 1;
-    ns.clearLog();
-    ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
-    ns.print(
-      `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
-        weakenThreads
-      )}`
-    );
-    ns.print(`Target security is ${growSecurityDelta + hackSecurityDelta}`);
-  }
+  let targetDelta = Math.max(growSecurityDelta, hackSecurityDelta);
+  // pin targetDelta to 100 to prevent infinity
+  if (targetDelta > 100) targetDelta = 100;
 
-  // calculate timing
-  const hackTime = ns.getHackTime(target);
-  const growTime = ns.getGrowTime(target);
-  const weakenTime = ns.getWeakenTime(target);
-
-  // sanity check
-  if (hackTime > growTime || hackTime > weakenTime || growTime > weakenTime) {
-    ns.tprint(`Something screwing going on with ${target} timing`);
-    return;
-  }
-
-  // Prepare the server
-  await prepareServer(ns, target);
-
-  ns.print("Hacking...");
-  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3);
-  await ns.sleep(weakenTime - growTime + bufferTime);
-  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime * 3);
-  await ns.sleep(growTime - hackTime + bufferTime);
-  ns.run(spawnerName, 1, "hack", target, hackThreads, bufferTime * 3);
-}
-
-export async function prepareServer(ns: NS, target: any) {
-  ns.clearLog();
-  // now find the required number of threads for each action.
-  const growThreads = Math.ceil(ns.growthAnalyze(target, 2));
-  const hackThreads = Math.ceil(0.1 / ns.hackAnalyze(target));
-
-  const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
-  const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
-
-  let weakenThreads = 0;
-  let targetDelta = growSecurityDelta + hackSecurityDelta;
-
-  while (
-    ns.weakenAnalyze(weakenThreads) < targetDelta &&
-    targetDelta !== Infinity
-  ) {
+  while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     await ns.sleep(1);
     weakenThreads += 1;
     ns.clearLog();
@@ -97,30 +54,101 @@ export async function prepareServer(ns: NS, target: any) {
     ns.print(`Target security is ${targetDelta}`);
   }
 
-  ns.print(`Preparing ${target} for hacking...`);
-  ns.print("Growing...");
-  killall(ns, spawnerName);
-  let growPid = ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
+  // calculate timing
+  const { hackTime, growTime, weakenTime } = getTiming(ns, target);
+
+  // sanity check
+  if (hackTime > growTime || hackTime > weakenTime || growTime > weakenTime) {
+    ns.tprint(`Something screwy going on with ${target} timing`);
+    return;
+  }
+
+  // Prepare the server
+  await prepareServer(ns, target);
+
+  ns.print("Hacking...");
+  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3, 1);
+  await ns.sleep(weakenTime - bufferTime * 2);
+  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3, 2);
+  await ns.sleep(weakenTime - growTime - bufferTime);
+  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime * 3);
+  await ns.sleep(growTime - hackTime - bufferTime * 2);
+  ns.run(spawnerName, 1, "hack", target, hackThreads, bufferTime * 3);
+}
+
+function getTiming(ns: NS, target: any) {
+  let hackTime = 1;
+  let growTime = 1;
+  let weakenTime = 1;
+  if (ns.fileExists("Formulas.exe")) {
+    const server = ns.getServer(target);
+    server.hackDifficulty = server.minDifficulty;
+    const player = ns.getPlayer();
+
+    hackTime = ns.formulas.hacking.hackTime(server, player);
+    growTime = ns.formulas.hacking.growTime(server, player);
+    weakenTime = ns.formulas.hacking.weakenTime(server, player);
+  } else {
+    hackTime = ns.getHackTime(target);
+    growTime = ns.getGrowTime(target);
+    weakenTime = ns.getWeakenTime(target);
+  }
+  return { hackTime, growTime, weakenTime };
+}
+
+export async function prepareServer(ns: NS, target: any) {
+  // now find the required number of threads for each action.
+  const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
+  const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
+
+  const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
+  const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
+
+  let weakenThreads = 0;
+  let targetDelta = Math.max(growSecurityDelta, hackSecurityDelta);
+  // pin targetDelta to 100 to prevent infinity
+  if (targetDelta > 100) targetDelta = 100;
+
+  while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
+    await ns.sleep(1);
+    weakenThreads += 1;
+    // ns.clearLog();
+    // ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
+    // ns.print(
+    //   `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
+    //     weakenThreads
+    //   )}`
+    // );
+    // ns.print(`Target security is ${targetDelta}`);
+  }
+
+  // ns.print(`Preparing ${target} for hacking...`);
+  // ns.print("Growing...");
+  await killMsg(ns, "hack", target);
+  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
   ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     await ns.sleep(bufferTime);
   }
-  ns.kill(growPid);
-  killall(ns, growScript);
-  ns.print("Weakening...");
+  // ns.kill(growPid);
+  await killMsg(ns, "grow", target);
+  // ns.print("Weakening...");
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
     await ns.sleep(bufferTime);
   }
-  killall(ns, spawnerName);
-  killall(ns, weakenScript);
+  // ns.kill(weakenPid);
+  await killMsg(ns, "weaken", target);
 }
 
-function killall(ns: NS, scriptName: string, ...args: string[]) {
-  const tree = new ServerTree(ns);
-  for (const s of tree.home.list()) {
-    if (args.length > 0) ns.kill(scriptName, s.hostname, ...args);
-    else ns.scriptKill(scriptName, s.hostname);
-  }
+async function killMsg(ns: NS, cmd: string, target: any) {
+  const port = ns.getPortHandle(1);
+  const command = new Command(CommandType.KillSpawner, cmd, target);
+  port.write(JSON.stringify(command));
+  await ns.sleep(5000);
+}
+
+export function autocomplete(data: AutocompleteData) {
+  return data.servers;
 }

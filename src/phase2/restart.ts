@@ -16,10 +16,11 @@ const scripts = [
   "hacknet.js",
   "backdoor.js",
   "/contracts/start.js",
-  "/phase3/programs.js",
-  "/phase3/purchase.js",
-  "/phase3/batchHack.js",
+  "/phase2/programs.js",
+  "/phase2/purchase.js",
 ];
+
+const restartScripts = ["/phase2/batchHack.js"];
 
 const singularityScripts = [
   "/expandServer.js",
@@ -39,10 +40,13 @@ export async function main(ns: NS) {
       `);
     return;
   }
-
+  for (const script of scripts) {
+    ns.run(script);
+    // This delay is to keep the scripts from colliding.
+    await ns.sleep(5000);
+  }
   while (true) {
-    for (const script of scripts) {
-      ns.scriptKill(script, ns.getHostname());
+    for (const script of restartScripts) {
       ns.run(script);
       // This delay is to keep the scripts from colliding.
       await ns.sleep(5000);

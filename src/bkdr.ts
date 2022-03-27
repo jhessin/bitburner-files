@@ -1,5 +1,4 @@
 import { NS, AutocompleteData } from "Bitburner";
-// import { copyCmd, ServerTree, ProgramData } from "utils/index";
 import { copyCmd } from "utils/terminal";
 import { ServerNode, ServerTree } from "utils/ServerTree";
 import { ProgramData } from "utils/ProgramData";
@@ -19,17 +18,12 @@ export async function main(ns: NS) {
   }
 
   let tree = new ServerTree(ns);
-  // first copy the cnct.ts script to all the servers if necessary
-  for (const s of tree.home.list()) {
-    if (!ns.fileExists(ns.getScriptName(), s.hostname))
-      await ns.scp(ns.getScriptName(), s.hostname);
-  }
 
   let path = tree.home.find(target).map((name) => {
     if (name === "home") return "home;";
     else return `connect ${name};`;
   });
-  copyCmd(ns, path.join(""));
+  copyCmd(ns, path.join("") + "backdoor;");
 }
 
 export function autocomplete(data: AutocompleteData, _args: string[]) {

@@ -2,11 +2,11 @@ import { NS } from "Bitburner";
 
 const scripts = [
   "hacknet.js",
-  "/phase2/cnct.js",
-  "/phase2/backdoor.js",
-  "/phase2/programs.js",
-  "/phase2/basicHack.js",
-  "/phase2/expandServer.js",
+  "/phase3/cnct.js",
+  "/backdoor.js",
+  "/phase3/programs.js",
+  "/phase3/batchHack.js",
+  "/phase3/expandServer.js",
   "/actions/programming.js",
 ];
 

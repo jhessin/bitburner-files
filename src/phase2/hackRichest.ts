@@ -1,5 +1,5 @@
 import { NS, Server } from "Bitburner";
-import { getHackableServers, getRunnableServers } from "phase2/cnct";
+import { getHackableServers, getRunnableServers } from "cnct";
 
 export async function main(ns: NS) {
   ns.clearLog();

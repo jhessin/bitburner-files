@@ -12,17 +12,20 @@ will go toward expanding the server. Phase 2 begins once we have 1TB of RAM.
 
 ### Phase 2 has 1 TB of RAM and can do more advanced hacking and contracts.
 
+Here is where we start batching and buying large servers to support said
+batching. Once we buy our first large server we can start phase 3 where we can
+batch multiple targets.
+
+### Phase 3 has at least 1 large server.
+
 Here is where we focus on augs that increase money earned and skill
 growth. Once we have all those augs installed we can focus on growing the
-server again. This will begin phase 3.
+server again. This will begin phase 4.
 
-### Phase 3 back to server growth.
+### Phase 4 max augs - max servers. (TODO)
 
 Here we want to max out our server, both memory(2^30GB) and cores(8). Earn money any way we
-can and expand the server. No augs involved in this, though we will be joining
-as many factions as possible to gain favor/rep.
-
-### Phase 4 involves grinding as many augs as possible in one go.
+can and expand the server.
 
 We shouldn't be filtering augs here, just get everything.
 We are going for the "It's time to install"

@@ -1,5 +1,8 @@
 import { NS } from "Bitburner";
+import { Command, CommandType } from "utils/command";
 import { ServerTree } from "utils/ServerTree";
+
+const cnctScript = "cnct.js";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -25,7 +28,24 @@ export async function main(ns: NS) {
       `);
     return;
   }
-
+  function shouldKill(): boolean {
+    const port = ns.getPortHandle(1);
+    if (port.empty()) return false;
+    const line = port.read();
+    // numbers aren't for us.
+    if (typeof line === "number") return false;
+    const command = JSON.parse(line);
+    if (command instanceof Command) {
+      if (
+        command.cmd === CommandType.KillSpawner &&
+        command.args.includes(target) &&
+        command.args.includes(cmd)
+      )
+        return true;
+    }
+    return false;
+  }
+  let spawnedScripts: number[] = [];
   const tree = new ServerTree(ns);
 
   let scriptName = `/batching/${cmd}.js`;
@@ -37,12 +57,15 @@ export async function main(ns: NS) {
   // calculate the memory.
   const memory = threads * ns.getScriptRam(scriptName);
 
-  while (true) {
+  while (!shouldKill()) {
     const host = tree.home.filter((s) => {
       if (!s.hasAdminRights) return false;
       const { hostname } = s;
       return (
-        ns.getServerMaxRam(hostname) - ns.getServerUsedRam(hostname) >= memory
+        ns.getServerMaxRam(hostname) -
+          ns.getServerUsedRam(hostname) -
+          ns.getScriptRam(cnctScript) >=
+        memory
       );
     })[0];
 
@@ -57,7 +80,16 @@ export async function main(ns: NS) {
     ns.print(
       `Launching ${scriptName} on ${host.hostname} with target ${target}`
     );
-    ns.exec(scriptName, host.hostname, threads, target, Date.now());
-    await ns.sleep(bufferTime * 3);
+    let pid = ns.exec(scriptName, host.hostname, threads, target, Date.now());
+    if (pid) {
+      spawnedScripts.push(pid);
+      await ns.sleep(bufferTime * 3);
+    } else {
+      await ns.sleep(1);
+    }
+  }
+
+  for (const script of spawnedScripts) {
+    ns.kill(script);
   }
 }

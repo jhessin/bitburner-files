@@ -19,11 +19,6 @@ export async function main(ns: NS) {
   }
 
   let tree = new ServerTree(ns);
-  // first copy the cnct.ts script to all the servers if necessary
-  for (const s of tree.home.list()) {
-    if (!ns.fileExists(ns.getScriptName(), s.hostname))
-      await ns.scp(ns.getScriptName(), s.hostname);
-  }
 
   let path = tree.home.find(target).map((name) => {
     if (name === "home") return "home;";
@@ -44,12 +39,42 @@ export function getNukableServers(ns: NS) {
   );
 }
 
-// This returns all the servers that we can hack.
+// This returns all the servers that we can hack sorted by the amount of money
+// we can make off them.
 export function getHackableServers(ns: NS) {
   const tree = new ServerNode(ns);
-  return tree.filter(
-    (s) => s.requiredHackingSkill <= ns.getHackingLevel() && s.hasAdminRights
-  );
+  return tree
+    .filter(
+      (s) =>
+        s.requiredHackingSkill <= ns.getHackingLevel() &&
+        s.hasAdminRights &&
+        s.hostname !== "home" &&
+        !ns.getPurchasedServers().includes(s.hostname) &&
+        s.moneyMax > 0
+    )
+    .sort((a, b) => {
+      const formulas = ns.fileExists("Formulas.exe");
+      if (formulas) {
+        a.hackDifficulty = a.minDifficulty;
+        b.hackDifficulty = b.minDifficulty;
+        const player = ns.getPlayer();
+        const aValue =
+          (a.moneyMax * ns.formulas.hacking.hackChance(a, player)) /
+          ns.formulas.hacking.hackTime(a, player);
+        const bValue =
+          (b.moneyMax * ns.formulas.hacking.hackChance(b, player)) /
+          ns.formulas.hacking.hackTime(b, player);
+        return bValue - aValue;
+      } else {
+        const aValue =
+          (a.moneyMax * ns.hackAnalyzeChance(a.hostname)) /
+          ns.getHackTime(a.hostname);
+        const bValue =
+          (b.moneyMax * ns.hackAnalyzeChance(b.hostname)) /
+          ns.getHackTime(b.hostname);
+        return bValue - aValue;
+      }
+    });
 }
 
 export function getBackdoorableServers(ns: NS) {
