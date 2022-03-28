@@ -13,7 +13,7 @@ export async function main(ns: NS) {
   }
   const msg = ns.args[1] as string;
   const loop = ns.args[2] as boolean;
-  if (loop) analyzeServerLoop(ns, server, msg);
+  if (loop) await analyzeServerLoop(ns, server, msg);
   else analyzeServer(ns, server, msg);
 }
 
@@ -51,8 +51,13 @@ ${server}:
 `);
 }
 
-export function analyzeServerLoop(ns: NS, server: string, msg: string = "") {
+export async function analyzeServerLoop(
+  ns: NS,
+  server: string,
+  msg: string = ""
+) {
   while (true) {
+    await ns.sleep(1000);
     ns.clearLog();
     ns.tail();
     const ram = [ns.getServerMaxRam(server), ns.getServerUsedRam(server)];

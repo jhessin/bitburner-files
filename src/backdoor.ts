@@ -22,8 +22,7 @@ export async function main(ns: NS) {
   const programs = new ProgramData(ns);
 
   while (true) {
-    // 30 seconds should be a perfectly reasonable update time.
-    await ns.sleep(30000);
+    await ns.sleep(1);
     let servers = new ServerNode(ns);
 
     // find nukable servers.
@@ -46,7 +45,8 @@ export async function main(ns: NS) {
           s.hasAdminRights &&
           !s.backdoorInstalled &&
           s.requiredHackingSkill < ns.getHackingLevel() &&
-          s.hostname !== "home"
+          s.hostname !== "home" &&
+          !ns.getPurchasedServers().includes(s.hostname)
       );
     // show the log if we have servers to backdoor
     if (backdoors.length === 0) {

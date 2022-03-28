@@ -8,6 +8,7 @@ const scripts = [
   "/backdoor.js",
   "/phase1/programs.js",
   "/phase1/basicHack.js",
+  "/stocks/start.js",
   // `expandServer.js` and `actions/programming.js` is currently failing until we can level up Source File 4
   // '/expandServer.js',
   // '/actions/programming.js',

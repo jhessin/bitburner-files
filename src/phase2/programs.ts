@@ -21,27 +21,22 @@ export async function main(ns: NS) {
   while (true) {
     await ns.sleep(30 * 1000);
     ns.clearLog();
+    let neededPrograms: string[] = [];
     for (const program of data.programs) {
-      if (!program.exists && program.hackingLevel <= ns.getHackingLevel()) {
+      if (!program.exists) neededPrograms.push(program.filename);
+      else continue;
+
+      if (program.hackingLevel <= ns.getHackingLevel()) {
         // this program needs created.
-        if (
-          ns
-            .getOwnedSourceFiles()
-            .map((s) => s.n)
-            .includes(4) ||
-          ns.getPlayer().bitNodeN === 4
-        ) {
-          // we have source file 4 or we are in bitNodeN 4
-          if (
-            !ns.scriptRunning("/actions/programming.js", ns.getHostname())
-          )
-            ns.run("/actions/programming.js", 1, program.filename);
-        } else {
-          // we don't have access to singularity.
-          ns.tail();
-          ns.print(`Please create ${program.filename}`);
-        }
+        if (!ns.scriptRunning("/actions/programming.js", ns.getHostname()))
+          ns.run("/actions/programming.js", 1, program.filename);
       }
+    }
+
+    if (neededPrograms.length === 0) return;
+    else {
+      ns.print(`Need these programs:
+        ${neededPrograms.join("\n")}`);
     }
   }
 }

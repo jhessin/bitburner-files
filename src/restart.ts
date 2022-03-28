@@ -21,7 +21,7 @@ export async function main(ns: NS) {
   }
 
   // kill all scripts to start.
-  killScripts(ns, Scope.OTHER);
+  killScripts(ns, Scope.ALL);
   if (
     ns.getOwnedSourceFiles().filter((sf) => sf.n === 4).length > 0 ||
     ns.getPlayer().bitNodeN === 4

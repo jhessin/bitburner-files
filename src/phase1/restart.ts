@@ -17,6 +17,7 @@ const scripts = [
   "hacknet.js",
   "/contracts/start.js",
   "/phase1/programs.js",
+  "/stocks/start.js",
 ];
 
 const restartScripts = ["/phase1/basicHack.js"];
@@ -72,6 +73,7 @@ export async function main(ns: NS) {
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
       if (Date.now() >= restartTime) break;
+      if (ns.getServerMaxRam("home") > 1e6) ns.spawn("restart.js");
     }
   }
 }

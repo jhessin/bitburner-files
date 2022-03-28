@@ -13,11 +13,13 @@ const day = days;
 let restartDuration = 1 * day;
 
 const scripts = [
+  "shareAll.js",
   "hacknet.js",
   "backdoor.js",
   "/contracts/start.js",
   "/phase2/programs.js",
   "/phase2/purchase.js",
+  "/stocks/start.js",
 ];
 
 const restartScripts = ["/phase2/batchHack.js"];
@@ -52,7 +54,8 @@ export async function main(ns: NS) {
       await ns.sleep(5000);
     }
 
-    if (ns.fileExists("Formulas.exe")) {
+    let hasFormulas = ns.fileExists("Formulas.exe");
+    if (hasFormulas) {
       restartDuration = 30 * minutes;
     }
 
@@ -72,6 +75,11 @@ export async function main(ns: NS) {
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
       if (Date.now() >= restartTime) break;
+      if (!hasFormulas && ns.fileExists("Formulas.exe")) {
+        restartDuration = 30 * minutes;
+        break;
+      }
+      if (ns.getPurchasedServers().length > 1) ns.spawn("restart.js");
     }
   }
 }
