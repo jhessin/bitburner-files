@@ -30,7 +30,7 @@ export class ServerNode {
   // of strings.
   find(name: string, path: string[] = []): string[] {
     // check if we are found.
-    if (this.name.includes(name)) {
+    if (this.name === name) {
       path.push(this.name);
       return path;
     }

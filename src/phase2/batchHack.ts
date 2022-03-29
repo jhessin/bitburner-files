@@ -60,16 +60,13 @@ async function getTargetServer(ns: NS, tree: ServerTree) {
     const hackServers = tree.home.filter(getHackServerFilter(ns));
     let count = 1;
     for (const t of hackServers) {
-      ns.run(
-        analyzeScript,
-        1,
-        t.hostname,
-        `Preparing Server: ${count} of ${hackServers.length}`,
-        true
+      ns.clearLog();
+      ns.tail();
+      ns.print(
+        `Preparing Server: ${count} of ${hackServers.length}: ${t.hostname}`
       );
       await prepareServer(ns, t.hostname);
       count++;
-      ns.scriptKill(analyzeScript, ns.getHostname());
     }
   }
 

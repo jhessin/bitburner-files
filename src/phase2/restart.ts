@@ -72,6 +72,12 @@ export async function main(ns: NS) {
     while (true) {
       ns.clearLog();
       ns.tail();
+      ns.print(
+        `
+      Hack Profit  : ${ns.nFormat(ns.getScriptIncome()[0], "$0.000a")} / sec.
+      Hack XP      : ${ns.nFormat(ns.getScriptExpGain(), "0.000a")} / sec.
+`
+      );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
       if (Date.now() >= restartTime) break;

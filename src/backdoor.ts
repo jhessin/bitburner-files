@@ -54,13 +54,13 @@ export async function main(ns: NS) {
       continue;
     }
     ns.tail();
-    ns.print(`The following servers need to have the backdoor installed:`);
-    ns.print(`==========================================================`);
+    ns.print(`Backdoor the following servers:`);
+    ns.print(`===============================`);
     // find backdoorable servers.
     for (const server of backdoors) {
       // list them.
       ns.print(server.hostname);
     }
-    ns.print(`==========================================================`);
+    ns.print(`===============================`);
   }
 }

@@ -1,4 +1,4 @@
-# Early Game Factions (Done)
+# Early Game Factions
 
 ## CyberSec
 
@@ -41,7 +41,7 @@ Cleared out of Augmentations! Hacknet node enhancement!
 
 # City Factions
 
-## Sector-12 (Done)
+## Sector-12
 
 ### Joining
 
@@ -63,7 +63,7 @@ Has field work that increases all stats while increasing reputation.
 
 Cleaned out!
 
-## Chongqing (Done)
+## Chongqing
 
 ### Joining
 
@@ -80,7 +80,7 @@ Volhaven
 
 TODO
 
-## New Tokyo (Done)
+## New Tokyo
 
 ### Joining
 
@@ -97,7 +97,7 @@ Sector-12
 Aevum
 Volhaven
 
-## Ishima (Done)
+## Ishima
 
 ### Joining
 
@@ -114,7 +114,7 @@ Sector-12
 Aevum
 Volhaven
 
-## Aevum (Done)
+## Aevum
 
 ### Joining
 
@@ -151,9 +151,9 @@ Chongqing
 New Tokyo
 Ishima
 
-# Hacking Groups (Done)
+# Hacking Groups
 
-## NiteSec (Done)
+## NiteSec
 
 ### Joining
 
@@ -163,7 +163,7 @@ Backdoor on avmnite-02h
 
 Cleaned Out!
 
-## The Black Hand (Done)
+## The Black Hand
 
 ### Joining
 
@@ -173,7 +173,7 @@ Backdoor I.I.I.I
 
 Cleaned Out!
 
-## BitRunners (Done)
+## BitRunners
 
 ### Joining
 
@@ -188,31 +188,31 @@ Cleaned Out
 Each of these factions require 200k reputation with the same named company -
 unless otherwise noted
 
-## MegaCorp (Joined) (Done)
+## MegaCorp
 
 - City: Sector-12
 
-## Four Sigma (Joined) (Done)
+## Four Sigma
 
 - City: Sector-12
 
-## Blade Industries (Joined) (Done)
+## Blade Industries
 
 - City: Sector-12
 
-## ECorp (Joined)
+## ECorp
 
 - City: Aevum
 
-## Bachman & Associates (Joined)
+## Bachman & Associates
 
 - City: Aevum
 
-## Clarke Incorporated (Joined)
+## Clarke Incorporated
 
 - City: Aevum
 
-## Fulcrum Secret Technologies (250k Needed) (Joined)
+## Fulcrum Secret Technologies (250k Needed)
 
 - City: Aevum
 
@@ -220,15 +220,15 @@ unless otherwise noted
   - Need 250k reputation with the company
   - Backdoor fulcrumassets
 
-## KuaiGong International (Joined)
+## KuaiGong International
 
 - City: Chongqing
 
-## NWO (Joined)
+## NWO
 
 - City: Volhaven
 
-## OmniTek Incorporated (Joined)
+## OmniTek Incorporated
 
 - City: Volhaven
 

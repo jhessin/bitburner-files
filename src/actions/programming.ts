@@ -23,7 +23,7 @@ export async function main(ns: NS) {
     if (hasSourceFile(ns, 4)) {
       if (!ns.isBusy() || !ns.getPlayer().workType.includes("Program"))
         ns.createProgram(programName);
-    } else {
+    } else if (!ns.getPlayer().workType.includes("Program")) {
       ns.toast(`please create or purchase ${programName}`);
     }
     await ns.sleep(1000);

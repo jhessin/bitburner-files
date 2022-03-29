@@ -37,14 +37,16 @@ async function manageStock(ns: NS) {
       if (increaseChance <= sellBellow) {
         let total = ns.stock.sell(sym, shares);
         ns.tail();
-        ns.print(`${ns.nFormat(
-          shares,
-          "0.00a"
-        )} shares of ${sym} sold for a total of ${ns.nFormat(
-          total * shares,
-          "$0.000a"
-        )} 
-                    because it's growth is stopping.`);
+        ns.print(
+          `Sold:
+        shares    : ${ns.nFormat(shares, "0.00a")} 
+        stock     : ${sym}
+        total     : ${ns.nFormat(total * shares, "$0.000a")} 
+        increase%   : ${increaseChance.toLocaleString(undefined, {
+          style: "percent",
+        })}
+          `
+        );
       } else {
         await ns.sleep(1);
       }
@@ -59,16 +61,16 @@ async function manageStock(ns: NS) {
       if (cost === 0) {
       }
       ns.tail();
-      ns.print(`${ns.nFormat(
-        maxShares,
-        "0.000a"
-      )} shares of ${stock} purchased for a total of ${ns.nFormat(
-        cost * maxShares,
-        "$0.000a"
-      )}
-        because it has a ${increaseChance.toLocaleString(undefined, {
+      ns.print(
+        `Bought:
+        shares      : ${ns.nFormat(maxShares, "0.000a")}
+        stock       : ${stock} 
+        total       : ${ns.nFormat(cost * maxShares, "$0.000a")}
+        increase%   : ${increaseChance.toLocaleString(undefined, {
           style: "percent",
-        })} chance of increasing.`);
+        })}
+        `
+      );
     }
   }
 }
