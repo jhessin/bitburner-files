@@ -16,7 +16,7 @@ const scripts = [
   "/backdoor.js",
   "hacknet.js",
   "/contracts/start.js",
-  "/phase1/programs.js",
+  "programs.js",
   "/stocks/start.js",
 ];
 

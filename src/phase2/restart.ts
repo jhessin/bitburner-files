@@ -14,11 +14,11 @@ let restartDuration = 1 * day;
 
 const scripts = [
   "shareAll.js",
-  "hacknet.js",
   "backdoor.js",
+  "hacknet.js",
   "/contracts/start.js",
-  "/phase2/programs.js",
-  "/phase2/purchase.js",
+  "programs.js",
+  "purchase.js",
   "/stocks/start.js",
 ];
 

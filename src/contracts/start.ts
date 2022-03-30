@@ -68,33 +68,39 @@ export async function main(ns: NS) {
           server.hostname
         );
         const data = ns.codingcontract.getData(contract, server.hostname);
-        const reward = solve(type, data, server.hostname, contract, ns);
-        if (!reward) {
-          failedContracts.push({
-            server: server.hostname,
-            contract,
-            type,
-          });
-          refreshLog();
-        } else {
-          successfulContracts.push({
-            server: server.hostname,
-            contract,
-            type,
-            reward,
-          });
-          refreshLog();
-        }
-        return `${server} - ${contract} - ${type} - ${reward || "FAILED!"}`;
+        return {
+          type,
+          data,
+          server,
+          contract,
+        };
       });
       return onServer;
     });
-    if (contracts.length > 0) ns.print(`Found ${contracts.length} contracts`);
+    for (const { type, data, server, contract } of contracts) {
+      const reward = await solve(type, data, server.hostname, contract, ns);
+      if (!reward) {
+        failedContracts.push({
+          server: server.hostname,
+          contract,
+          type,
+        });
+        refreshLog();
+      } else {
+        successfulContracts.push({
+          server: server.hostname,
+          contract,
+          type,
+          reward,
+        });
+        refreshLog();
+      }
+    }
     await ns.sleep(minuteInterval * 60 * 1000);
   }
 }
 
-function solve(
+async function solve(
   type: string,
   data: any,
   server: string,
@@ -149,9 +155,9 @@ function solve(
     case "Sanitize Parentheses in Expression":
       solution = solvers.sanitizeParentheses(data);
       break;
-    case "Find All Valid Math Expressions":
-      solution = solvers.findMathExpression(data);
-      break;
+    // case "Find All Valid Math Expressions":
+    //   solution = await solvers.findMathExpression(ns, data);
+    //   break;
     default:
       ns.print(`Unknown contract type: ${type}`);
       return "";

@@ -4,9 +4,9 @@ const scripts = [
   "hacknet.js",
   "shareAll.js",
   "/contracts/list.js",
-  "/phase1/cnct.js",
-  "/backdoor.js",
-  "/phase1/programs.js",
+  "cnct.js",
+  "backdoor.js",
+  "programs.js",
   "/phase1/basicHack.js",
   "/stocks/start.js",
   // `expandServer.js` and `actions/programming.js` is currently failing until we can level up Source File 4

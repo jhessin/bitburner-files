@@ -17,8 +17,8 @@ const scripts = [
   "hacknet.js",
   "backdoor.js",
   "/contracts/start.js",
-  "/phase3/programs.js",
-  "/phase3/purchase.js",
+  "programs.js",
+  "purchase.js",
 ];
 
 const restartScripts = [
@@ -29,7 +29,7 @@ const restartScripts = [
 ];
 
 const singularityScripts = [
-  "/expandServer.js",
+  "expandServer.js",
   //
 ];
 
