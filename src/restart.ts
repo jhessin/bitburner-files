@@ -1,10 +1,6 @@
 import { NS } from "Bitburner";
-import { killScripts, Scope } from "utils/scriptKilling";
-
-const singularityScripts = [
-  "/phase1/expandServer.js",
-  //
-];
+import { getMinRam } from "purchase";
+import { kill } from "utils/scriptKilling";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -21,24 +17,24 @@ export async function main(ns: NS) {
   }
 
   // kill all scripts to start.
-  killScripts(ns, Scope.OTHER);
-  if (
-    ns.getOwnedSourceFiles().filter((sf) => sf.n === 4).length > 0 ||
-    ns.getPlayer().bitNodeN === 4
-  )
-    for (const script of singularityScripts) {
-      ns.scriptKill(script, ns.getHostname());
-      ns.run(script);
-    }
-  if (ns.getServerMaxRam("home") < 1e3) {
+  kill(ns, (ps) => ps.filename !== ns.getScriptName());
+  if (ns.getServerMaxRam("home") >= 128 && getTotalRam(ns) > 1e3) {
     // phase1
-    ns.spawn("/phase1/restart.js");
-  }
-
-  if (ns.getPurchasedServers().length < 3) {
-    // phase2
     ns.spawn("/phase2/restart.js");
   }
 
-  ns.spawn("/phase3/restart.js");
+  if (getMinRam(ns) >= ns.getPurchasedServerMaxRam()) {
+    // phase2
+    ns.spawn("/phase3/restart.js");
+  }
+
+  ns.spawn("/phase1/restart.js");
+}
+
+function getTotalRam(ns: NS) {
+  let total = ns.getServerMaxRam("home");
+  if (ns.getPurchasedServers().length === 0) return total;
+  for (const ram of ns.getPurchasedServers().map((s) => ns.getServerMaxRam(s)))
+    total += ram;
+  return total;
 }

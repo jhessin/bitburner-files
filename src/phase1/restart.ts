@@ -14,9 +14,12 @@ let restartDuration = 1 * day;
 
 const scripts = [
   "/backdoor.js",
+  "/phase1/basicHack.js",
   "hacknet.js",
+  // "/contracts/list.js",
   "/contracts/start.js",
   "programs.js",
+  "purchase.js",
   "/stocks/start.js",
 ];
 
@@ -72,14 +75,25 @@ export async function main(ns: NS) {
       ns.tail();
       ns.print(
         `
-      Hack Profit  : ${ns.nFormat(ns.getScriptIncome()[0], "$0.000a")} / sec.
-      Hack XP      : ${ns.nFormat(ns.getScriptExpGain(), "0.000a")} / sec.
+      Hack Profit     : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
+      Hack XP         : ${ns.nFormat(ns.getScriptExpGain(), "0.0a")} / sec.
+      Home RAM        : ${ns.nFormat(ns.getServerMaxRam("home") * 1e9, "0.0b")}
+      Servers Owned   : ${ns.getPurchasedServers().length}
+      Total RAM       : ${ns.nFormat(getTotalRam(ns) * 1e9, "0.0b")}
 `
       );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
-      if (Date.now() >= restartTime) break;
-      if (ns.getServerMaxRam("home") > 1e6) ns.spawn("restart.js");
+      if (Date.now() >= restartTime) ns.spawn("restart.js");
+      if (getTotalRam(ns) > 1e6) ns.spawn("restart.js");
     }
   }
+}
+function getTotalRam(ns: NS) {
+  let total = ns.getServerMaxRam("home");
+  if (ns.getPurchasedServers().length === 0) return total;
+  for (const host of ns.getPurchasedServers()) {
+    total += ns.getServerMaxRam(host);
+  }
+  return total;
 }

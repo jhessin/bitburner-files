@@ -14,7 +14,17 @@ const sellBellow = 0.5;
 export async function main(ns: NS) {
   ns.disableLog("ALL");
   ns.clearLog();
-  if (!ns.stock.purchase4SMarketDataTixApi()) {
+  try {
+    if (
+      !ns.stock.purchase4SMarketData() ||
+      !ns.stock.purchase4SMarketDataTixApi()
+    ) {
+      ns.tprint(
+        "You need 4S Maket Data Api access to effectively trade stocks!"
+      );
+      return;
+    }
+  } catch (error) {
     ns.tprint("You need 4S Maket Data Api access to effectively trade stocks!");
     return;
   }

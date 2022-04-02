@@ -16,16 +16,7 @@ export async function main(ns: NS) {
   }
 
   // find the richest server.
-  let richest: Server | undefined = undefined;
-
-  for (const server of getHackableServers(ns)) {
-    if (!richest || richest.moneyMax < server.moneyMax) richest = server;
-  }
-
-  if (!richest) {
-    ns.tprint(`ERROR! You don't have any servers!`);
-    return;
-  }
+  let richest: Server = getHackableServers(ns)[0];
 
   const hackScript = "hack.js";
   // calculate the maximum number of threads.

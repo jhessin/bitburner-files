@@ -3,5 +3,3 @@ Fulcrum -         1.625m
 NWO -             1.25m
 MegaCorp -        1.125m
 OmniTek -         625k
-
-KuaiGong -        562.5k

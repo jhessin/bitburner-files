@@ -1,7 +1,6 @@
 import { NS, AutocompleteData } from "Bitburner";
 import { copyCmd } from "utils/terminal";
-import { ServerNode, ServerTree } from "utils/ServerTree";
-import { ProgramData } from "utils/ProgramData";
+import { ServerTree } from "utils/ServerTree";
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -28,32 +27,4 @@ export async function main(ns: NS) {
 
 export function autocomplete(data: AutocompleteData, _args: string[]) {
   return data.servers;
-}
-
-export function getNukableServers(ns: NS) {
-  let programs = new ProgramData(ns);
-  let tree = new ServerTree(ns);
-  return tree.home.filter(
-    (s) => !s.hasAdminRights && s.numOpenPortsRequired <= programs.hackablePorts
-  );
-}
-
-// This returns all the servers that we can hack.
-export function getHackableServers(ns: NS) {
-  const tree = new ServerNode(ns);
-  return tree.filter(
-    (s) => s.requiredHackingSkill <= ns.getHackingLevel() && s.hasAdminRights
-  );
-}
-
-export function getBackdoorableServers(ns: NS) {
-  let tree = new ServerTree(ns);
-  return (
-    tree.home.filter((s) => !s.backdoorInstalled && s.hasAdminRights) || []
-  );
-}
-
-export function getRunnableServers(ns: NS) {
-  const tree = new ServerNode(ns);
-  return tree.list().filter((s) => s.hasAdminRights);
 }

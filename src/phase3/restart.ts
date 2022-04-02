@@ -11,14 +11,16 @@ const days = 24 * hours;
 const day = days;
 
 let restartDuration = 1 * day;
+restartDuration = 30 * minutes;
 
 const scripts = [
-  "shareAll.js",
   "hacknet.js",
   "backdoor.js",
+  "/phase3/batchHack.js",
   "/contracts/start.js",
   "programs.js",
   "purchase.js",
+  "shareAll.js",
 ];
 
 const restartScripts = [

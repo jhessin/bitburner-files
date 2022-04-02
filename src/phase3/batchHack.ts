@@ -40,6 +40,7 @@ export async function main(ns: NS) {
 
 function getTargetServers(ns: NS): Server[] {
   const numServers = ns.getPurchasedServers().length + 1;
+  // const numServers = 1;
 
   return getHackableServers(ns).slice(0, numServers);
 }

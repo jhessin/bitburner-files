@@ -1,6 +1,6 @@
 import { AutocompleteData, NS } from "Bitburner";
-import { Command, CommandType } from "utils/command";
-import { ServerTree } from "utils/ServerTree";
+import { kill } from "utils/scriptKilling";
+import { prepBatch } from "batching/prepBatch";
 
 const bufferTime = 3000;
 const growMultiplier = 4;
@@ -64,7 +64,7 @@ export async function main(ns: NS) {
   }
 
   // Prepare the server
-  await prepareServer(ns, target);
+  await prepBatch(ns, target);
 
   ns.print("Hacking...");
   ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3, 1);
@@ -143,10 +143,16 @@ export async function prepareServer(ns: NS, target: any) {
 }
 
 async function killMsg(ns: NS, cmd: string, target: any) {
-  const port = ns.getPortHandle(1);
-  const command = new Command(CommandType.KillSpawner, cmd, target);
-  port.write(JSON.stringify(command));
-  await ns.sleep(5000);
+  kill(ns, (ps) => {
+    if (
+      ps.filename.includes(spawnerName) &&
+      ps.args.includes(cmd) &&
+      ps.args.includes(target)
+    )
+      return true;
+    if (ps.filename.includes(cmd) && ps.args.includes(target)) return true;
+    return false;
+  });
 }
 
 export function autocomplete(data: AutocompleteData) {

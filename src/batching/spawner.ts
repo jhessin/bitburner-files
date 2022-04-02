@@ -1,8 +1,15 @@
 import { NS } from "Bitburner";
-import { Command, CommandType } from "utils/command";
+import { getRunnableServers } from "cnct";
 import { ServerTree } from "utils/ServerTree";
 
 const cnctScript = "cnct.js";
+const bkdrScript = "bkdr.js";
+
+// time constants
+// const second = 1000;
+// const seconds = second;
+// const minute = 60 * seconds;
+// const minutes = minute;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -28,68 +35,65 @@ export async function main(ns: NS) {
       `);
     return;
   }
-  function shouldKill(): boolean {
-    const port = ns.getPortHandle(1);
-    if (port.empty()) return false;
-    const line = port.read();
-    // numbers aren't for us.
-    if (typeof line === "number") return false;
-    const command = JSON.parse(line);
-    if (command instanceof Command) {
-      if (
-        command.cmd === CommandType.KillSpawner &&
-        command.args.includes(target) &&
-        command.args.includes(cmd)
-      )
-        return true;
-    }
-    return false;
-  }
-  let spawnedScripts: number[] = [];
-  const tree = new ServerTree(ns);
 
   let scriptName = `/batching/${cmd}.js`;
-
-  for (const host of tree.home.list()) {
-    await ns.scp(scriptName, host.hostname);
-  }
+  let threadsLeft = threads;
 
   // calculate the memory.
-  const memory = threads * ns.getScriptRam(scriptName);
+  while (true) {
+    // copy script to all servers (even those that have been purchased recently.)
+    const tree = new ServerTree(ns);
+    for (const host of tree.home.list()) {
+      await ns.scp(scriptName, host.hostname);
+    }
 
-  while (!shouldKill()) {
-    const host = tree.home.filter((s) => {
-      if (!s.hasAdminRights) return false;
-      const { hostname } = s;
-      return (
-        ns.getServerMaxRam(hostname) -
-          ns.getServerUsedRam(hostname) -
-          ns.getScriptRam(cnctScript) >=
-        memory
-      );
-    })[0];
-
+    const threadsUsed = spawnScript(ns, scriptName, threads, target);
     ns.clearLog();
-    if (!host) {
-      ns.print(
-        `No host with enough ram to run ${scriptName} with ${threads} threads.`
-      );
-      await ns.sleep(bufferTime);
+    if (threadsUsed === 0) {
+      ns.print(`No host with enough ram to run ${scriptName}.`);
+      await ns.sleep(1);
       continue;
     }
-    ns.print(
-      `Launching ${scriptName} on ${host.hostname} with target ${target}`
-    );
-    let pid = ns.exec(scriptName, host.hostname, threads, target, Date.now());
-    if (pid) {
-      spawnedScripts.push(pid);
-      await ns.sleep(bufferTime * 3);
-    } else {
-      await ns.sleep(1);
+    threadsLeft -= threadsUsed;
+    if (threadsLeft <= 0) {
+      threadsLeft = threads;
+      await ns.sleep(bufferTime);
     }
   }
+}
 
-  for (const script of spawnedScripts) {
-    ns.kill(script);
+// Spawns a given script on the server with the most free ram up to a maximum
+// number of threads. Returns the number of threads that were spawned or 0 if
+// none could be spawned.
+function spawnScript(
+  ns: NS,
+  script: string,
+  maxThreads: number,
+  target: string
+) {
+  for (const host of getRunnableServers(ns)) {
+    // calculate available ram
+    const ramAvailable =
+      host.maxRam - host.ramUsed - reservedRam(ns, host.hostname);
+    // calculate threads to use
+    const threads = Math.min(
+      maxThreads,
+      Math.floor(ramAvailable / ns.getScriptRam(script))
+    );
+    // run the script
+    ns.print(`Launching ${script} on ${host.hostname} with target ${target}`);
+    if (
+      threads > 0 &&
+      ns.exec(script, host.hostname, threads, target, Date.now())
+    )
+      // if successfully run return the number of threads used
+      return threads;
   }
+  return 0;
+}
+
+function reservedRam(ns: NS, host: string) {
+  return host === "home"
+    ? Math.max(ns.getScriptRam(cnctScript), ns.getScriptRam(bkdrScript))
+    : 0;
 }

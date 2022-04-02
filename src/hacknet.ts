@@ -3,6 +3,9 @@ const allowancePercentage = 0.01;
 
 /** @param {NS} ns **/
 export async function main(ns: NS) {
+  // buy our first node if needed.
+  if (ns.hacknet.numNodes() === 0) ns.hacknet.purchaseNode();
+
   while (true) {
     ns.disableLog("ALL");
     ns.clearLog();

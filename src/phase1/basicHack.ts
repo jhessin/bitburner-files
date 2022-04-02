@@ -1,8 +1,10 @@
 import { NS, Server } from "Bitburner";
-import { getHackableServers, getRunnableServers } from "cnct";
+import { getHackableServers } from "cnct";
 
 export async function main(ns: NS) {
+  ns.disableLog("ALL");
   ns.clearLog();
+  ns.tail();
   const args = ns.flags([["help", false]]);
   const ram = ns.getScriptRam(ns.getScriptName()) * 1e9;
   if (args.help) {
@@ -16,29 +18,37 @@ export async function main(ns: NS) {
   }
 
   // find the richest server.
-  let richest: Server | undefined = undefined;
-
-  for (const server of getHackableServers(ns)) {
-    if (!richest || richest.moneyMax < server.moneyMax) richest = server;
-  }
+  let richest: Server = getHackableServers(ns)[0];
 
   if (!richest) {
     ns.tprint(`ERROR! You don't have any servers!`);
     return;
   }
 
-  // copy the hack script to all the servers we have admin priveledges to.
-  for (const server of getRunnableServers(ns)) {
-    if (!server || server.hostname === "home") continue;
-    ns.killall(server.hostname);
-    const hackScript = "hack.js";
-    await ns.scp(hackScript, server.hostname);
-    // calculate the maximum number of threads.
-    let maxThreads = Math.floor(
-      server.maxRam / ns.getScriptRam(hackScript, server.hostname)
-    );
-    // hack the richest server
-    if (maxThreads > 0)
-      ns.exec(hackScript, server.hostname, maxThreads, richest.hostname);
+  // prepare the target server
+  if (!ns.isRunning("batching/prepBatch.js", "home", richest.hostname))
+    ns.run("batching/prepBatch.js", 1, richest.hostname);
+  while (ns.isRunning("batching/prepBatch.js", "home", richest.hostname)) {
+    serverStatus(ns, richest.hostname);
+    await ns.sleep(1);
   }
+  ns.spawn("batching/batch.js", 1, richest.hostname);
+}
+
+function serverStatus(ns: NS, host: string) {
+  const currentSecurity = ns.getServerSecurityLevel(host);
+  const minSecurity = ns.getServerMinSecurityLevel(host);
+  const currentCash = ns.getServerMoneyAvailable(host);
+  const maxCash = ns.getServerMaxMoney(host);
+
+  ns.print(`${host}:
+  Cash: ${ns.nFormat(currentCash, "$0.000a")}/${ns.nFormat(
+    maxCash,
+    "$0.000a"
+  )}(${ns.nFormat(currentCash / maxCash, "0.0%")})
+  Security: ${minSecurity} / ${currentSecurity} (${ns.nFormat(
+    minSecurity / currentSecurity,
+    "0.0%"
+  )})
+  `);
 }

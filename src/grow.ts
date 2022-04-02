@@ -6,7 +6,7 @@ export async function main(ns: NS) {
   const ram = ns.getScriptRam(ns.getScriptName()) * 1e9;
   if (args.help || !hostname) {
     ns.tprint(`
-      This script will continuously hack a given prepared server.
+      This script will grow a server until it's full.
 
       This script uses ${ns.nFormat(ram, "0.000b")} of RAM.
       USAGE: run ${ns.getScriptName()} ARGS_HERE
@@ -14,14 +14,13 @@ export async function main(ns: NS) {
     return;
   }
 
-  // now HACK
-  while (true) {
+  while (
+    ns.getServerMoneyAvailable(hostname) < ns.getServerMaxMoney(hostname)
+  ) {
     ns.clearLog();
-    await ns.hack(hostname);
-    await ns.weaken(hostname);
     await ns.grow(hostname);
-    await ns.weaken(hostname);
   }
+  ns.print("${hostname} is full of cash!");
 }
 
 export function autocomplete(data: AutocompleteData, _args: string[]) {

@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { getMinRam } from "purchase";
 
 // timing constants
 const seconds = 1000; //milliseconds
@@ -13,16 +14,20 @@ const day = days;
 let restartDuration = 1 * day;
 
 const scripts = [
-  "shareAll.js",
   "backdoor.js",
   "hacknet.js",
   "/contracts/start.js",
   "programs.js",
   "purchase.js",
+  "/phase2/batchHack.js",
   "/stocks/start.js",
+  // "shareAll.js",
 ];
 
-const restartScripts = ["/phase2/batchHack.js"];
+const restartScripts = [
+  "/phase2/batchHack.js",
+  //
+];
 
 const singularityScripts = [
   "/expandServer.js",
@@ -85,7 +90,8 @@ export async function main(ns: NS) {
         restartDuration = 30 * minutes;
         break;
       }
-      if (ns.getPurchasedServers().length > 1) ns.spawn("restart.js");
+      if (getMinRam(ns) === ns.getPurchasedServerMaxRam())
+        ns.spawn("restart.js");
     }
   }
 }

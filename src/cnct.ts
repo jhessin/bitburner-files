@@ -42,8 +42,8 @@ export function getNukableServers(ns: NS) {
 // This returns all the servers that we can hack sorted by the amount of money
 // we can make off them.
 export function getHackableServers(ns: NS) {
-  const tree = new ServerNode(ns);
-  return tree
+  const tree = new ServerTree(ns);
+  return tree.home
     .filter(
       (s) =>
         s.requiredHackingSkill <= ns.getHackingLevel() &&
@@ -51,6 +51,8 @@ export function getHackableServers(ns: NS) {
         s.hostname !== "home" &&
         !ns.getPurchasedServers().includes(s.hostname) &&
         s.moneyMax > 0
+      // &&
+      //   s.moneyAvailable > 0 // Exclude dead servers.
     )
     .sort((a, b) => {
       const formulas = ns.fileExists("Formulas.exe");
@@ -86,5 +88,8 @@ export function getBackdoorableServers(ns: NS) {
 
 export function getRunnableServers(ns: NS) {
   const tree = new ServerNode(ns);
-  return tree.list().filter((s) => s.hasAdminRights);
+  return tree
+    .list()
+    .filter((s) => s.hasAdminRights)
+    .sort((a, b) => b.maxRam - b.ramUsed - (a.maxRam - a.ramUsed));
 }
