@@ -18,16 +18,31 @@ export async function main(ns: NS) {
 
   // kill all scripts to start.
   kill(ns, (ps) => ps.filename !== ns.getScriptName());
-  if (ns.getServerMaxRam("home") >= 128 && getTotalRam(ns) > 1e3) {
-    // phase1
-    ns.spawn("/phase2/restart.js");
-  }
 
-  if (getMinRam(ns) >= ns.getPurchasedServerMaxRam()) {
-    // phase2
+  const homeRAM = ns.getServerMaxRam("home") * 1e9;
+  const minRAM = getMinRam(ns) * 1e9;
+  const totalRAM = getTotalRam(ns) * 1e9;
+  const purchasedServerMaxRAM = ns.getPurchasedServerMaxRam() * 1e9;
+
+  ns.tprint(`
+    Home RAM: ${ns.nFormat(homeRAM, "0.0b")}
+    Min RAM: ${ns.nFormat(minRAM, "0.0b")}
+    Total RAM: ${ns.nFormat(totalRAM, "0.0b")}
+    Purchased Server MAX RAM: ${ns.nFormat(purchasedServerMaxRAM, "0.0b")}
+    `);
+
+  // test for phase3
+  if (minRAM >= purchasedServerMaxRAM) {
     ns.spawn("/phase3/restart.js");
   }
 
+  // test for phase2
+  if (homeRAM >= 128 && totalRAM > 1e3) {
+    // phase2
+    ns.spawn("/phase2/restart.js");
+  }
+
+  // if all else fails run phase1
   ns.spawn("/phase1/restart.js");
 }
 

@@ -1,7 +1,8 @@
-import { NS } from "Bitburner";
+import { NS, Server } from "Bitburner";
 import { nuke } from "utils/nuke";
-import { ServerNode } from "utils/ServerTree";
+import { ServerNode, ServerTree } from "utils/ServerTree";
 import { ProgramData } from "utils/ProgramData";
+import { bkdr } from "bkdr";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -53,14 +54,43 @@ export async function main(ns: NS) {
       ns.print("No servers require a backdoor at this time.");
       continue;
     }
-    ns.tail();
-    ns.print(`Backdoor the following servers:`);
-    ns.print(`===============================`);
-    // find backdoorable servers.
-    for (const server of backdoors) {
-      // list them.
-      ns.print(server.hostname);
+    if (
+      ns
+        .getOwnedSourceFiles()
+        .map((sf) => sf.n)
+        .includes(4) ||
+      ns.getPlayer().bitNodeN === 4
+    ) {
+      await bn4(ns, backdoors);
+    } else await noBn4(ns, backdoors);
+  }
+}
+
+async function noBn4(ns: NS, backdoors: Server[]) {
+  ns.tail();
+  ns.print(`Backdoor the following servers:`);
+  ns.print(`===============================`);
+  // find backdoorable servers.
+  for (const server of backdoors) {
+    // list them.
+    ns.print(server.hostname);
+    await bkdr(ns, server.hostname);
+  }
+  ns.print(`===============================`);
+}
+
+async function bn4(ns: NS, backdoors: Server[]) {
+  const tree = new ServerTree(ns);
+  for (const host of backdoors) {
+    const path = tree.home.find(host.hostname);
+    // go to the target
+    for (const host of path) {
+      // ns.connect(host);
     }
-    ns.print(`===============================`);
+    // await ns.installBackdoor();
+    // return home
+    for (const host of path.reverse()) {
+      // ns.connect(host);
+    }
   }
 }

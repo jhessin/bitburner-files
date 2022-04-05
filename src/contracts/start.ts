@@ -155,9 +155,9 @@ async function solve(
     case "Sanitize Parentheses in Expression":
       solution = solvers.sanitizeParentheses(data);
       break;
-    // case "Find All Valid Math Expressions":
-    //   solution = await solvers.findMathExpression(ns, data);
-    //   break;
+    case "Find All Valid Math Expressions":
+      solution = await solvers.findMathExpression(ns, data);
+      break;
     default:
       ns.print(`Unknown contract type: ${type}`);
       return "";

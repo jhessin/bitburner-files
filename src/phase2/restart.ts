@@ -19,7 +19,6 @@ const scripts = [
   "/contracts/start.js",
   "programs.js",
   "purchase.js",
-  "/phase2/batchHack.js",
   "/stocks/start.js",
   // "shareAll.js",
 ];
@@ -69,7 +68,6 @@ export async function main(ns: NS) {
       ns.getPlayer().bitNodeN === 4
     )
       for (const script of singularityScripts) {
-        ns.scriptKill(script, ns.getHostname());
         ns.run(script);
       }
 
@@ -85,13 +83,11 @@ export async function main(ns: NS) {
       );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
-      if (Date.now() >= restartTime) break;
+      if (Date.now() >= restartTime) ns.spawn("restart.js");
       if (!hasFormulas && ns.fileExists("Formulas.exe")) {
         restartDuration = 30 * minutes;
         break;
       }
-      if (getMinRam(ns) === ns.getPurchasedServerMaxRam())
-        ns.spawn("restart.js");
     }
   }
 }

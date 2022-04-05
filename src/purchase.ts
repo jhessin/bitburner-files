@@ -1,5 +1,7 @@
 import { NS } from "Bitburner";
 
+const budgetPercent = 1;
+
 export async function main(ns: NS) {
   ns.disableLog("ALL");
   const args = ns.flags([["help", false]]);
@@ -79,13 +81,18 @@ export async function main(ns: NS) {
 }
 
 async function calculateRam(ns: NS) {
+  // get budget
+  const budget = ns.getServerMoneyAvailable("home") * budgetPercent;
+  for (let ram = ns.getPurchasedServerMaxRam(); ram >= getMinRam(ns); ram /= 2)
+    if (ns.getPurchasedServerCost(ram) <= budget) return ram;
   return getMinRam(ns) * 2;
 }
 
 export function getMinRam(ns: NS) {
-  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) return 32;
+  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+    return ns.getServerMaxRam("home");
   const serverName = ns
     .getPurchasedServers()
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
-  return ns.getServerMaxRam(serverName) || 32;
+  return ns.getServerMaxRam(serverName) || ns.getServerMaxRam("home");
 }

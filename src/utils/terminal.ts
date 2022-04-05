@@ -5,7 +5,7 @@ export function copyCmd(ns: NS, cmd: string) {
     "terminal-input"
   ) as HTMLInputElement;
   if (!terminalInput) {
-    ns.tprint("Couldn't get terminal-input field.");
+    ns.print("Couldn't get terminal-input field.");
     return;
   }
   terminalInput.value = cmd;

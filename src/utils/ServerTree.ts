@@ -1,5 +1,4 @@
 import { NS, Server } from "Bitburner";
-import { setItem, keys } from "utils/localStorage.js";
 
 export class ServerNode {
   name: string;
@@ -88,6 +87,5 @@ export class ServerTree {
   // Initializes the server tree and saves it to local storage.
   constructor(ns: NS) {
     this.home = new ServerNode(ns);
-    setItem(keys.serverNodes, this.home);
   }
 }

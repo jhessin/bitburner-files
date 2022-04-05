@@ -3,10 +3,10 @@ import { NS } from "Bitburner";
 // timing constants
 const seconds = 1000; //milliseconds
 const second = seconds;
-const minutes = 60 * seconds;
-const minute = minutes;
-const hours = 60 * minutes;
-const hour = hours;
+const minute = 60 * seconds;
+const minutes = minute;
+const hour = 60 * minutes;
+const hours = hour;
 const days = 24 * hours;
 const day = days;
 

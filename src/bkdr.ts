@@ -16,6 +16,10 @@ export async function main(ns: NS) {
     return;
   }
 
+  await bkdr(ns, target);
+}
+
+export async function bkdr(ns: NS, target: string) {
   let tree = new ServerTree(ns);
 
   let path = tree.home.find(target).map((name) => {

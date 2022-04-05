@@ -1,12 +1,13 @@
 import { AutocompleteData, NS } from "Bitburner";
 import { kill } from "utils/scriptKilling";
 import { prepBatch } from "batching/prepBatch";
+import { runSpawner, spawnerName } from "batching/runSpawner";
+import { ps } from "ps";
 
 const bufferTime = 3000;
 const growMultiplier = 4;
 const hackPercent = 0.5;
 
-const spawnerName = "/batching/spawner.js";
 const analyzeScript = "/analyzeServer.js";
 
 export async function main(ns: NS) {
@@ -25,6 +26,18 @@ export async function main(ns: NS) {
       `);
     return;
   }
+
+  // check if this server is already being batched.
+  if (
+    ps(ns).find(
+      (ps) =>
+        ps.ps.args.includes(target) &&
+        ps.ps.filename === spawnerName &&
+        ps.ps.args.includes("hack")
+    )
+  )
+    // already hacking
+    return;
 
   // analyze the server
   ns.run(analyzeScript, 1, target, `Batch attack!`);
@@ -67,13 +80,13 @@ export async function main(ns: NS) {
   await prepBatch(ns, target);
 
   ns.print("Hacking...");
-  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3, 1);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 1);
   await ns.sleep(weakenTime - bufferTime * 2);
-  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime * 3, 2);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 2);
   await ns.sleep(weakenTime - growTime - bufferTime);
-  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime * 3);
+  await runSpawner(ns, "grow", target, growThreads, bufferTime * 3);
   await ns.sleep(growTime - hackTime - bufferTime * 2);
-  ns.run(spawnerName, 1, "hack", target, hackThreads, bufferTime * 3);
+  await runSpawner(ns, "hack", target, hackThreads, bufferTime * 3);
 }
 
 function getTiming(ns: NS, target: any) {
@@ -145,7 +158,7 @@ export async function prepareServer(ns: NS, target: any) {
 async function killMsg(ns: NS, cmd: string, target: any) {
   kill(ns, (ps) => {
     if (
-      ps.filename.includes(spawnerName) &&
+      ps.filename === spawnerName &&
       ps.args.includes(cmd) &&
       ps.args.includes(target)
     )

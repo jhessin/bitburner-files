@@ -1,10 +1,10 @@
 import { AutocompleteData, NS } from "Bitburner";
 import { kill } from "utils/scriptKilling";
+import { runSpawner, spawnerName } from "batching/runSpawner";
 
 const bufferTime = 3000;
 const growMultiplier = 4;
 
-const spawnerName = "/batching/spawner.js";
 const analyzeScript = "/analyzeServer.js";
 
 export async function main(ns: NS) {
@@ -64,12 +64,12 @@ export async function prepBatch(ns: NS, target: string) {
   }
 
   ns.print("Preparing...");
-  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime, 1);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime);
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   )
     await ns.sleep(bufferTime);
-  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
+  await runSpawner(ns, "grow", target, growThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target))
     await ns.sleep(bufferTime);
   kill(

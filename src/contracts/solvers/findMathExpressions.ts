@@ -21,14 +21,42 @@ import { NS } from "Bitburner";
 // Input: digits = "105", target = 5
 // Output: [1*0+5, 10-5]
 //
-// export async function main(ns: any) {
-//   const testData: [string, number] = ["288074550300", 99];
+export async function main(ns: NS) {
+  const testData: [string, number] = ["288074550300", 99];
 
-//   ns.tprint(findMathExpression(testData));
-// }
+  ns.tprint(await findMathExpression(ns, testData));
+}
 // TODO: Fix this as it freezes the ui.
 
 export async function findMathExpression(ns: NS, data: [string, number]) {
+  const digits = data[0].split("");
+  // [1, 2, 3, 4, 5]
+  const operators = ["+", "-", "*", ""];
+  // [+, -, *, ]
+  let expressions = [digits[0], "-" + digits[0]].flatMap((d) =>
+    operators.map((op) => d + op)
+  );
+  // [1+, 1-, 1*, 1, -1+, -1-, -1*, -1]
+  for (let i = 1; i < digits.length - 1; i++) {
+    await ns.sleep(1);
+    expressions = expressions.flatMap((e) =>
+      operators.map((op) => e + digits[i] + op)
+    );
+    // [1+2+, 1+2-, 1+2*, 1+2, 1-2+, ...]
+  }
+  let finalExpressions: string[] = [];
+  for (const e of expressions.map((e) => e + digits[digits.length - 1])) {
+    await ns.sleep(1);
+    try {
+      if (eval(e) === data[1]) finalExpressions.push(e);
+    } catch (e) {
+      continue;
+    }
+  }
+  return finalExpressions;
+}
+
+export async function _findMathExpression(ns: NS, data: [string, number]) {
   const digits = data[0].split("");
   const operators = ["+", "-", "*", ""];
   let expressions = [digits[0], "-" + digits[0]].flatMap((d) =>
