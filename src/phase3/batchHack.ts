@@ -7,7 +7,6 @@ import { getHackableServers } from "cnct";
 //   attack on the target server.
 
 const batchScript = "/batching/batch.js";
-const bufferTime = 5 * 60 * 1000;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -36,7 +35,7 @@ export async function main(ns: NS) {
   for (const targetServer of targetServers) {
     ns.tprint(`Hacking ${targetServer.hostname}`);
     ns.run(batchScript, 1, targetServer.hostname);
-    await ns.sleep(bufferTime);
+    while (ns.scriptRunning(batchScript, ns.getHostname())) await ns.sleep(1);
   }
 }
 

@@ -41,58 +41,58 @@ async function manageStock(ns: NS) {
 
   if (folio.length > 0) {
     // we have a stock - get it and monitor if it is increasing/decreasing
-    let { sym, shares } = folio[0];
-    while (ns.stock.getPosition(sym)[0] > 0) {
-      let increaseChance = ns.stock.getForecast(sym);
-      if (increaseChance <= sellBellow) {
-        let total = ns.stock.sell(sym, shares);
-        ns.tail();
-        ns.print(
-          `Sold:
-        shares    : ${ns.nFormat(shares, "0.00a")} 
-        stock     : ${sym}
-        total     : ${ns.nFormat(total * shares, "$0.000a")} 
-        increase%   : ${increaseChance.toLocaleString(undefined, {
-          style: "percent",
-        })}
-          `
-        );
-      } else {
-        await ns.sleep(1);
+    for (const { sym, shares } of folio) {
+      if (ns.stock.getPosition(sym)[0] > 0) {
+        // we have stock in the long position
+        let increaseChance = ns.stock.getForecast(sym);
+        if (increaseChance <= sellBellow) {
+          let total = ns.stock.sell(sym, shares);
+          // ns.tail();
+          ns.print(
+            `Sold:
+          shares    : ${ns.nFormat(shares, "0.00a")} 
+          stock     : ${sym}
+          total     : ${ns.nFormat(total * shares, "$0.000a")} 
+          increase%   : ${increaseChance.toLocaleString(undefined, {
+            style: "percent",
+          })}
+            `
+          );
+        } else {
+          await ns.sleep(1);
+        }
       }
     }
-  } else {
-    // find a stock to get
-    const stock = getBestStock(ns);
-    let increaseChance = ns.stock.getForecast(stock);
-    let maxShares = getMaxShares(ns, stock);
+  }
+
+  // buy any stocks that are increasing that we can offord
+  for (const sym of ns.stock.getSymbols()) {
+    let increaseChance = ns.stock.getForecast(sym);
     if (increaseChance >= buyAt) {
-      let cost = ns.stock.buy(stock, maxShares);
-      if (cost === 0) {
-      }
-      ns.tail();
-      ns.print(
-        `Bought:
-        shares      : ${ns.nFormat(maxShares, "0.000a")}
-        stock       : ${stock} 
-        total       : ${ns.nFormat(cost * maxShares, "$0.000a")}
-        increase%   : ${increaseChance.toLocaleString(undefined, {
-          style: "percent",
-        })}
-        `
-      );
+      buyStock(ns, sym);
     }
   }
 }
 
-function getMaxShares(ns: NS, sym: string) {
+function buyStock(ns: NS, sym: string) {
   let cashAvailable = ns.getServerMoneyAvailable("home") * budget;
   let stockCost = ns.stock.getBidPrice(sym);
-  let maxPurchaseable = Math.min(
-    ns.stock.getMaxShares(sym),
-    cashAvailable / stockCost
-  );
-  return maxPurchaseable;
+  let maxShares = ns.stock.getMaxShares(sym);
+  if (cashAvailable >= maxShares * stockCost) {
+    ns.stock.buy(sym, maxShares);
+    let increaseChance = ns.stock.getForecast(sym);
+
+    ns.print(
+      `Bought:
+        shares      : ${ns.nFormat(maxShares, "0.000a")}
+        stock       : ${sym} 
+        total       : ${ns.nFormat(stockCost * maxShares, "$0.000a")}
+        increase%   : ${increaseChance.toLocaleString(undefined, {
+          style: "percent",
+        })}
+        `
+    );
+  }
 }
 
 export function getBestStock(ns: NS): string {
