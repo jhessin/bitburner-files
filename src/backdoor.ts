@@ -1,6 +1,6 @@
 import { NS, Server } from "Bitburner";
 import { nuke } from "utils/nuke";
-import { ServerNode, ServerTree } from "utils/ServerTree";
+import { ServerTree } from "utils/ServerTree";
 import { ProgramData } from "utils/ProgramData";
 import { bkdr } from "bkdr";
 
@@ -21,34 +21,52 @@ export async function main(ns: NS) {
   }
 
   const programs = new ProgramData(ns);
+  let tree = new ServerTree(ns);
+  let allServers = tree.home.filter(
+    (s) =>
+      s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
+  );
 
   while (true) {
     await ns.sleep(1);
-    let servers = new ServerNode(ns);
+    ns.clearLog();
+    allServers = new ServerTree(ns).home.filter(
+      (s) =>
+        s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
+    );
 
     // find nukable servers.
-    for (const server of servers
-      .list()
-      .filter(
-        (s) =>
-          !s.hasAdminRights && s.numOpenPortsRequired <= programs.hackablePorts
-      )) {
+    for (const server of allServers.filter(
+      (s) =>
+        !s.hasAdminRights && s.numOpenPortsRequired <= programs.hackablePorts
+    )) {
       // nuke them.
       ns.print(`nuking ${server.hostname}`);
       nuke(ns, server.hostname);
+      server.hasAdminRights = true;
     }
     // clear the log.
     ns.clearLog();
-    let backdoors = servers
-      .list()
-      .filter(
-        (s) =>
-          s.hasAdminRights &&
-          !s.backdoorInstalled &&
-          s.requiredHackingSkill < ns.getHackingLevel() &&
-          s.hostname !== "home" &&
-          !ns.getPurchasedServers().includes(s.hostname)
-      );
+    const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);
+    ns.print(`
+      ==========================================================
+      ${serversBackdoored.length} of ${allServers.length} servers
+      have been backdoored.
+      ==========================================================
+      `);
+    if (serversBackdoored.length === allServers.length) {
+      ns.clearLog();
+      ns.print(`
+        ALL SERVERS HAVE BEEN BACKDOORED
+        `);
+      return;
+    }
+    let backdoors = allServers.filter(
+      (s) =>
+        s.hasAdminRights &&
+        !s.backdoorInstalled &&
+        s.requiredHackingSkill < ns.getHackingLevel()
+    );
     // show the log if we have servers to backdoor
     if (backdoors.length === 0) {
       ns.print("No servers require a backdoor at this time.");

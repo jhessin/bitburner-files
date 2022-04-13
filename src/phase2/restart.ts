@@ -83,11 +83,13 @@ export async function main(ns: NS) {
       );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
-      if (Date.now() >= restartTime) ns.spawn("restart.js");
+      if (Date.now() >= restartTime) break;
       if (!hasFormulas && ns.fileExists("Formulas.exe")) {
         restartDuration = 30 * minutes;
         break;
       }
+      if (getMinRam(ns) >= ns.getPurchasedServerMaxRam())
+        ns.spawn("phase3/restart.js");
     }
   }
 }

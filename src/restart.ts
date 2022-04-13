@@ -31,18 +31,8 @@ export async function main(ns: NS) {
     Purchased Server MAX RAM: ${ns.nFormat(purchasedServerMaxRAM, "0.0b")}
     `);
 
-  // test for phase3
-  if (minRAM >= purchasedServerMaxRAM) {
-    ns.spawn("/phase3/restart.js");
-  }
-
-  // test for phase2
-  if (homeRAM >= 128 && totalRAM > 1e3) {
-    // phase2
-    ns.spawn("/phase2/restart.js");
-  }
-
-  // if all else fails run phase1
+  // just run phase1 and if you are ready for phase2/3 it should automatically
+  // elevate.
   ns.spawn("/phase1/restart.js");
 }
 

@@ -13,12 +13,11 @@ import { NS } from "Bitburner";
 /** @param {NS} ns **/
 export async function main(ns: NS) {
   let stocks: string[] = ns.stock.getSymbols();
-  for (let stock of stocks) {
-    let increaseChance = ns.stock.getForecast(stock) * 100;
-    ns.tprint(
-      `${stock} - ${increaseChance.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-      })}%`
-    );
+  for (let stock of stocks.sort(
+    (a, b) => ns.stock.getAskPrice(b) - ns.stock.getAskPrice(a)
+  )) {
+    // let increaseChance = ns.stock.getForecast(stock) * 100;
+    let askPrice = ns.stock.getAskPrice(stock);
+    ns.tprint(`${stock} - ${ns.nFormat(askPrice, "$0.0a")}`);
   }
 }

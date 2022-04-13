@@ -65,7 +65,6 @@ export async function main(ns: NS) {
       ns.getPlayer().bitNodeN === 4
     )
       for (const script of singularityScripts) {
-        ns.scriptKill(script, ns.getHostname());
         ns.run(script);
       }
 
@@ -84,8 +83,8 @@ export async function main(ns: NS) {
       );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
-      if (Date.now() >= restartTime) ns.spawn("restart.js");
-      if (getTotalRam(ns) > 1e6) ns.spawn("restart.js");
+      if (Date.now() >= restartTime) break;
+      if (getTotalRam(ns) > 1e6) ns.spawn("phase2/restart.js");
     }
   }
 }

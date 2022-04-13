@@ -30,6 +30,8 @@ export async function main(ns: NS) {
   }
   while (true) {
     await manageStock(ns);
+    if (getFolio(ns).length > 0) ns.tail();
+    showFolio(ns);
     await ns.sleep(1);
   }
 }
@@ -78,19 +80,41 @@ function buyStock(ns: NS, sym: string) {
   let cashAvailable = ns.getServerMoneyAvailable("home") * budget;
   let stockCost = ns.stock.getBidPrice(sym);
   let maxShares = ns.stock.getMaxShares(sym);
-  if (cashAvailable >= maxShares * stockCost) {
-    ns.stock.buy(sym, maxShares);
+  let [ownedShares] = ns.stock.getPosition(sym);
+  if (
+    cashAvailable >= maxShares * stockCost &&
+    ownedShares < ns.stock.getMaxShares(sym)
+  ) {
+    ns.stock.buy(sym, maxShares - ownedShares);
     let increaseChance = ns.stock.getForecast(sym);
 
     ns.print(
       `Bought:
-        shares      : ${ns.nFormat(maxShares, "0.000a")}
+        shares      : ${ns.nFormat(maxShares, "0.0a")}
         stock       : ${sym} 
-        total       : ${ns.nFormat(stockCost * maxShares, "$0.000a")}
-        increase%   : ${increaseChance.toLocaleString(undefined, {
-          style: "percent",
-        })}
+        total       : ${ns.nFormat(stockCost * maxShares, "$0.0a")}
+        increase%   : ${ns.nFormat(increaseChance, "0.0%")}
         `
+    );
+  }
+}
+
+function showFolio(ns: NS) {
+  ns.clearLog();
+  for (const { sym, shares } of getFolio(ns)) {
+    let [_, avgPrice] = ns.stock.getPosition(sym);
+    let invested = shares * avgPrice;
+    let currentWorth = ns.stock.getBidPrice(sym) * shares;
+    ns.print(
+      `${sym}:
+      shares          : ${ns.nFormat(shares, "0.0a")}
+      invested        : ${ns.nFormat(invested, "$0.0a")}
+      worth           : ${ns.nFormat(currentWorth, "$0.0a")}
+      profit          : ${ns.nFormat(
+        currentWorth - invested,
+        "$0.0a"
+      )}(${ns.nFormat((currentWorth - invested) / invested, "0.0%")})
+      `
     );
   }
 }

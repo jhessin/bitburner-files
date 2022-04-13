@@ -19,14 +19,12 @@ const scripts = [
   "/phase3/batchHack.js",
   "/contracts/start.js",
   "programs.js",
-  "purchase.js",
+  "/stocks/start.js",
   "shareAll.js",
 ];
 
 const restartScripts = [
   "/phase3/batchHack.js",
-  "/stocks/start.js",
-  "shareAll.js",
   //
 ];
 
