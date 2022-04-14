@@ -1,4 +1,3 @@
-im;
 import { NS, AutocompleteData } from "Bitburner";
 // import { copyCmd, ServerTree, ProgramData } from "utils/index";
 import { copyCmd } from "utils/terminal";
