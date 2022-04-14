@@ -1,27 +1,4 @@
-// import { NS } from "Bitburner";
-
-// export function main(ns: NS) {
-//   let data = 60;
-//   // data = ns.args[0] as number;
-//   ns.tprint(totalWaysToSum(data));
-//   ns.print(totalWaysToSum(data));
-// }
-
 // Total Ways to Sum
-// You are attempting to solve a Coding Contract. You have 10 tries remaining,
-// after which the contract will self-destruct.
-//
-// It is possible write four as a sum in exactly four different ways:
-
-//     3 + 1
-//     2 + 2
-//     2 + 1 + 1
-//     1 + 1 + 1 + 1
-//
-//  How many different ways can the given number be written as a sum of at least
-//  two positive integers?
-//
-//  60 => 966466
 export function totalWaysToSum(data: number) {
   let N = data;
   let K = data - 1;

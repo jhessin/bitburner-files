@@ -1,22 +1,3 @@
-// import { NS } from "Bitburner";
-
-// export function main(ns: NS) {
-//   let data = "((a(a)(()(((a)a)))((";
-//   // data = ns.args[0].toString();
-//   ns.tprint(sanitizeParentheses(data));
-//   ns.print(sanitizeParentheses(data));
-// }
-
-// Given a string:
-//
-// ie.: '((a(a)(()(((a)a)))((' => [a(a)(()(((a)a))),(aa)(()(((a)a))),(a(a)()(((a)a))),(a(a)(()((a)a))),((aa)()(((a)a))),((aa)(()((a)a))),((a(a))(((a)a))),((a(a)()((a)a))),((a(a)(()(a)a)))]
-//
-// remove the minimum number of invalid parentheses in order to validate the
-// string. If there are multiple ways to validate the string, provide all of the
-// possible results. The answer should be provided as an array of strings. If it
-// is impossible to validate the string the result should be an array with only
-// an empty string.
-
 export function sanitizeParentheses(data: string) {
   var solution = Sanitize(data);
   if (solution == null) {

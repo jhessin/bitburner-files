@@ -1,12 +1,13 @@
 import { NS, Server } from "Bitburner";
-import { ServerTree } from "utils/ServerTree";
+import { keys } from "consts";
 import * as solvers from "contracts/solvers/index.js";
 
 const minuteInterval = 2;
 
-function getAllServers(ns: NS): Server[] {
-  const tree = new ServerTree(ns);
-  return tree.home.list();
+function getAllServers(): Server[] {
+  let data = localStorage.getItem(keys.serverList);
+  if (!data) return [];
+  return JSON.parse(data);
 }
 
 export async function main(ns: NS) {
@@ -61,46 +62,40 @@ export async function main(ns: NS) {
   }
   while (true) {
     // await dfs(ns, null, "home", trySolveContracts, 0);
-    const contracts = getAllServers(ns).flatMap((server) => {
+    const contracts = getAllServers().flatMap((server) => {
       const onServer = ns.ls(server.hostname, ".cct").map((contract) => {
         const type = ns.codingcontract.getContractType(
           contract,
           server.hostname
         );
         const data = ns.codingcontract.getData(contract, server.hostname);
-        return {
-          type,
-          data,
-          server,
-          contract,
-        };
+        const reward = solve(type, data, server.hostname, contract, ns);
+        if (!reward) {
+          failedContracts.push({
+            server: server.hostname,
+            contract,
+            type,
+          });
+          refreshLog();
+        } else {
+          successfulContracts.push({
+            server: server.hostname,
+            contract,
+            type,
+            reward,
+          });
+          refreshLog();
+        }
+        return `${server} - ${contract} - ${type} - ${reward || "FAILED!"}`;
       });
       return onServer;
     });
-    for (const { type, data, server, contract } of contracts) {
-      const reward = await solve(type, data, server.hostname, contract, ns);
-      if (!reward) {
-        failedContracts.push({
-          server: server.hostname,
-          contract,
-          type,
-        });
-        refreshLog();
-      } else {
-        successfulContracts.push({
-          server: server.hostname,
-          contract,
-          type,
-          reward,
-        });
-        refreshLog();
-      }
-    }
+    if (contracts.length > 0) ns.print(`Found ${contracts.length} contracts`);
     await ns.sleep(minuteInterval * 60 * 1000);
   }
 }
 
-async function solve(
+function solve(
   type: string,
   data: any,
   server: string,
@@ -156,7 +151,7 @@ async function solve(
       solution = solvers.sanitizeParentheses(data);
       break;
     case "Find All Valid Math Expressions":
-      solution = await solvers.findMathExpression(ns, data);
+      solution = solvers.findMathExpression(data);
       break;
     default:
       ns.print(`Unknown contract type: ${type}`);
