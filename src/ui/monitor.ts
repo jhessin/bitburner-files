@@ -1,34 +1,26 @@
-import { NS } from "Bitburner";
+import { NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
-import { weakenAll } from "weakenAll";
-import { growAll } from "growAll";
-import { hackAll } from "hackAll";
+import { kill } from "utils/scriptKilling";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
 
   ns.tail();
 
+  let { hostname } = getTarget(ns);
+  ns.run("batching/batch.js", 1, hostname);
+
   while (true) {
     ns.tail();
+    ns.clearLog();
     monitor(ns);
-    const { hostname } = getTarget(ns);
-    if (
-      ns.getServerSecurityLevel(hostname) >
-      ns.getServerMinSecurityLevel(hostname)
-    ) {
-      ns.print("Weakening");
-      await weakenAll(ns);
-    } else if (
-      ns.getServerMoneyAvailable(hostname) < ns.getServerMaxMoney(hostname)
-    ) {
-      ns.print("Growing");
-      await growAll(ns);
-    } else {
-      ns.print("Hacking");
-      await hackAll(ns);
+    const newHost = getTarget(ns).hostname;
+    if (newHost !== hostname) {
+      kill(ns, (ps) => ps.args.includes(hostname));
+      hostname = newHost;
+      ns.run("batching/batchLite.js", 1, hostname);
     }
-    await ns.sleep(100000);
+    await ns.sleep(1);
   }
 }
 
@@ -36,12 +28,14 @@ function getTarget(ns: NS) {
   return getHackableServers(ns)[0];
 }
 
-export function monitor(ns: NS) {
-  ns.clearLog();
+export function monitor(ns: NS, target: Server | null = null) {
   ns.disableLog("ALL");
-  const { hostname } = getHackableServers(ns)[0];
+  const { hostname } = target || getTarget(ns);
   ns.print(`
-  TARGET : ${hostname}
+  ScriptXP    : ${ns.nFormat(ns.getScriptExpGain(), "0.0a")} / sec.
+  Cash/sec    : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
+  Total Cash  : ${ns.nFormat(ns.getScriptIncome()[1], "$0.0a")}
+  TARGET      : ${hostname}
     `);
   const moneyAvailable = ns.getServerMoneyAvailable(hostname);
   const maxMoney = ns.getServerMaxMoney(hostname);

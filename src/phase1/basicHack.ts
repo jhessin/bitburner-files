@@ -1,5 +1,16 @@
 import { NS, Server } from "Bitburner";
-import { getHackableServers } from "cnct";
+import { getHackableServers, getRunnableServers } from "cnct";
+import { prepareServer as prepBatch } from "batching/batchLite";
+
+// const hackScript = "hack.js";
+const weakenScript = "weaken.js";
+const growScript = "grow.js";
+
+enum Phase {
+  Grow = "Grow",
+  Weaken = "Weaken",
+  Hack = "Hack",
+}
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -25,14 +36,78 @@ export async function main(ns: NS) {
     return;
   }
 
-  // prepare the target server
-  if (!ns.isRunning("batching/prepBatch.js", "home", richest.hostname))
-    ns.run("batching/prepBatch.js", 1, richest.hostname);
-  while (ns.isRunning("batching/prepBatch.js", "home", richest.hostname)) {
+  let phase: Phase = Phase.Weaken;
+
+  async function runPhase(phase: Phase) {
+    ns.print(`Starting ${phase} phase`);
     serverStatus(ns, richest.hostname);
-    await ns.sleep(1);
+    for (const server of getRunnableServers(ns)) {
+      if (!server) continue;
+      if (server.hostname !== "home") ns.killall(server.hostname);
+      let currentScripts = [growScript, weakenScript];
+      switch (phase) {
+        case Phase.Grow:
+          await prepBatch(ns, richest.hostname);
+          break;
+        case Phase.Weaken:
+          currentScripts = [weakenScript];
+          await prepBatch(ns, richest.hostname);
+          break;
+        case Phase.Hack:
+          ns.spawn("batching/batchLite.js", 1, richest.hostname);
+      }
+      await ns.scp(currentScripts, server.hostname);
+
+      const currentScriptsRam = Sum(
+        currentScripts.map((script) => ns.getScriptRam(script))
+      );
+      // calculate the maximum number of threads.
+      let maxThreads = Math.floor(
+        server.hostname === "home"
+          ? server.maxRam -
+              server.ramUsed -
+              getReservedRam(ns) / currentScriptsRam
+          : server.maxRam / currentScriptsRam
+      );
+      // hack the richest server
+      if (maxThreads > 0)
+        for (const script of currentScripts) {
+          ns.exec(script, server.hostname, maxThreads, richest.hostname);
+        }
+    }
   }
-  ns.spawn("batching/batch.js", 1, richest.hostname);
+
+  while (phase !== Phase.Hack) {
+    // copy the hack script to all the servers we have admin priveledges to.
+    const oldPhase = phase;
+    await runPhase(phase);
+    while (phase === oldPhase) {
+      await ns.sleep(1);
+      ns.clearLog();
+      ns.tail();
+      ns.print(`Current phase: ${phase}`);
+      serverStatus(ns, richest.hostname);
+      // update the phase
+      if (
+        ns.getServerSecurityLevel(richest.hostname) >
+        ns.getServerMinSecurityLevel(richest.hostname)
+      )
+        phase = Phase.Weaken;
+      else if (
+        ns.getServerMoneyAvailable(richest.hostname) <
+        ns.getServerMaxMoney(richest.hostname)
+      )
+        phase = Phase.Grow;
+      else phase = Phase.Hack;
+    }
+  }
+
+  // Hack phase.
+  await runPhase(Phase.Hack);
+}
+
+function getReservedRam(ns: NS) {
+  return Math.max(ns.getScriptRam("cnct.js"), ns.getScriptRam("bkdr.js"));
 }
 
 function serverStatus(ns: NS, host: string) {
@@ -51,4 +126,12 @@ function serverStatus(ns: NS, host: string) {
     "0.0%"
   )})
   `);
+}
+
+function Sum(elements: number[]) {
+  let total = 0;
+  for (const e of elements) {
+    total += e;
+  }
+  return total;
 }

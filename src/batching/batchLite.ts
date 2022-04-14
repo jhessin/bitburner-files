@@ -1,13 +1,15 @@
 import { AutocompleteData, NS } from "Bitburner";
-import { getRunnableServers } from "cnct";
 import { kill } from "utils/scriptKilling";
-import { prepBatch } from "batching/prepBatch";
 import { runSpawner, spawnerName } from "batching/runSpawner";
 import { ps } from "ps";
+import { getRunnableServers } from "cnct";
 
-let bufferTime = 3000;
-const growMultiplier = 4;
-const hackPercent = 0.5;
+/**
+ *  This will batch attack a given target with as little threads as possible.
+ * Adjusting timing rather than threads when necessary.
+ */
+
+let bufferTime = 10;
 
 const analyzeScript = "/analyzeServer.js";
 
@@ -35,6 +37,20 @@ export async function main(ns: NS) {
     return;
   }
 
+  // DEBUG ONLY
+  // killBatches(ns);
+
+  const reserveRam = Math.max(
+    ...runningScripts.map((script) => ns.getScriptRam(script))
+  );
+
+  const scriptCount = Math.floor(totalRAM(ns) / reserveRam);
+
+  const { hackTime, growTime, weakenTime } = getTiming(ns, target);
+
+  const maxTime = Math.max(hackTime, growTime, weakenTime);
+
+  bufferTime = maxTime / scriptCount;
   // check if this server is already being batched.
   if (
     ps(ns).find(
@@ -51,8 +67,8 @@ export async function main(ns: NS) {
   ns.run(analyzeScript, 1, target, `Batch attack!`);
 
   // now find the required number of threads for each action.
-  const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
-  const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
+  const growThreads = 1;
+  const hackThreads = 1;
 
   const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
   const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
@@ -61,20 +77,6 @@ export async function main(ns: NS) {
   let targetDelta = Math.max(growSecurityDelta, hackSecurityDelta);
   // pin targetDelta to 100 to prevent infinity
   if (targetDelta > 100) targetDelta = 100;
-
-  const maxThreads = Math.max(hackThreads, weakenThreads, growThreads);
-  const reserveRam = Math.max(
-    ...runningScripts.map((script) => ns.getScriptRam(script) * maxThreads)
-  );
-
-  const scriptCount = Math.floor(totalRAM(ns) / reserveRam);
-
-  // calculate timing
-  const { hackTime, growTime, weakenTime } = getTiming(ns, target);
-
-  const maxTime = Math.max(hackTime, growTime, weakenTime);
-
-  bufferTime = maxTime / scriptCount;
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     await ns.sleep(1);
@@ -96,7 +98,7 @@ export async function main(ns: NS) {
   }
 
   // Prepare the server
-  await prepBatch(ns, target);
+  await prepareServer(ns, target);
 
   ns.print("Hacking...");
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 1);
@@ -130,8 +132,8 @@ function getTiming(ns: NS, target: any) {
 
 export async function prepareServer(ns: NS, target: any) {
   // now find the required number of threads for each action.
-  const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
-  const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
+  const growThreads = 1;
+  const hackThreads = 1;
 
   const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
   const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
@@ -157,8 +159,12 @@ export async function prepareServer(ns: NS, target: any) {
   // ns.print(`Preparing ${target} for hacking...`);
   // ns.print("Growing...");
   await killMsg(ns, "hack", target);
-  ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
-  ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 2);
+  while (
+    ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
+  )
+    await ns.sleep(bufferTime);
+  await runSpawner(ns, "grow", target, growThreads, bufferTime * 3);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     await ns.sleep(bufferTime);
   }
@@ -174,7 +180,7 @@ export async function prepareServer(ns: NS, target: any) {
   await killMsg(ns, "weaken", target);
 }
 
-async function killMsg(ns: NS, cmd: string, target: any) {
+async function killMsg(ns: NS, cmd: string, target: string) {
   kill(ns, (ps) => {
     if (
       ps.filename === spawnerName &&

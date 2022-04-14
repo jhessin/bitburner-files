@@ -35,7 +35,7 @@ export async function main(ns: NS) {
     return;
   }
 
-  let phase: Phase = Phase.Grow;
+  let phase: Phase = Phase.Weaken;
 
   async function runPhase(phase: Phase) {
     ns.print(`Starting ${phase} phase`);
@@ -86,17 +86,16 @@ export async function main(ns: NS) {
       serverStatus(ns, richest.hostname);
       // update the phase
       if (
-        ns.getServerMoneyAvailable(richest.hostname) ===
-        ns.getServerMaxMoney(richest.hostname)
+        ns.getServerSecurityLevel(richest.hostname) >
+        ns.getServerMinSecurityLevel(richest.hostname)
       )
         phase = Phase.Weaken;
-
-      if (
-        phase === Phase.Weaken &&
-        ns.getServerSecurityLevel(richest.hostname) ===
-          ns.getServerMinSecurityLevel(richest.hostname)
+      else if (
+        ns.getServerMoneyAvailable(richest.hostname) <
+        ns.getServerMaxMoney(richest.hostname)
       )
-        phase = Phase.Hack;
+        phase = Phase.Grow;
+      else phase = Phase.Hack;
     }
   }
 

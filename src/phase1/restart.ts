@@ -1,26 +1,29 @@
 import { NS } from "Bitburner";
+import { monitor } from "ui/monitor";
 
 // timing constants
-const seconds = 1000; //milliseconds
-const second = seconds;
-const minutes = 60 * seconds;
-const minute = minutes;
-const hours = 60 * minutes;
-const hour = hours;
-const days = 24 * hours;
-const day = days;
+const second = 1000; //milliseconds
+const seconds = second;
+const minute = 60 * seconds;
+const minutes = minute;
+const hour = 60 * minutes;
+const hours = hour;
+const day = 24 * hours;
+// const days = day;
+
+const phase2RAM = 1e6;
 
 let restartDuration = 1 * day;
 
 const scripts = [
-  "/backdoor.js",
-  "hacknet.js",
-  // "/contracts/list.js",
-  "/contracts/start.js",
-  "programs.js",
-  "purchase.js",
-  "/stocks/start.js",
+  "backdoor.js",
   "/phase1/basicHack.js",
+  // "/contracts/list.js",
+  // "/contracts/start.js",
+  // "programs.js",
+  // "purchase.js",
+  // "/stocks/start.js",
+  "hacknet.js",
 ];
 
 const restartScripts = ["/phase1/basicHack.js"];
@@ -72,6 +75,7 @@ export async function main(ns: NS) {
     while (true) {
       ns.clearLog();
       ns.tail();
+      monitor(ns);
       ns.print(
         `
       Hack Profit     : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
@@ -79,12 +83,13 @@ export async function main(ns: NS) {
       Home RAM        : ${ns.nFormat(ns.getServerMaxRam("home") * 1e9, "0.0b")}
       Servers Owned   : ${ns.getPurchasedServers().length}
       Total RAM       : ${ns.nFormat(getTotalRam(ns) * 1e9, "0.0b")}
+      Phase 2 RAM     : ${ns.nFormat(phase2RAM * 1e9, "0.0b")}
 `
       );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
       if (Date.now() >= restartTime) break;
-      if (getTotalRam(ns) > 1e6) ns.spawn("phase2/restart.js");
+      if (getTotalRam(ns) > phase2RAM) ns.spawn("phase2/restart.js");
     }
   }
 }
