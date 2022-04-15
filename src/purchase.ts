@@ -1,6 +1,6 @@
 import { NS } from "Bitburner";
 
-const budgetPercent = 1;
+const budgetPercent = 0.5;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -17,10 +17,11 @@ export async function main(ns: NS) {
   while (ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) {
     await ns.sleep(1000);
     ns.clearLog();
+    serverStats(ns);
     ns.tail();
     const ram = await calculateRam(ns);
     const price = ns.getPurchasedServerCost(ram);
-    const moneyAvailable = ns.getServerMoneyAvailable("home");
+    const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
     if (moneyAvailable > price) {
       const serverName = `pserver-${Date.now()}`;
       ns.print(
@@ -37,14 +38,16 @@ export async function main(ns: NS) {
     }
   }
   ns.clearLog();
+  serverStats(ns);
   ns.print("All servers have been purchased! Working on upgrades.");
   while (getMinRam(ns) < ns.getPurchasedServerMaxRam()) {
     await ns.sleep(1000);
     ns.clearLog();
+    serverStats(ns);
     ns.tail();
     const ram = await calculateRam(ns);
     const price = ns.getPurchasedServerCost(ram);
-    const moneyAvailable = ns.getServerMoneyAvailable("home");
+    const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
     const serverName = ns
       .getPurchasedServers()
       .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
@@ -61,9 +64,12 @@ export async function main(ns: NS) {
       );
       ns.enableLog("deleteServer");
       ns.enableLog("purchaseServer");
-      ns.killall(serverName);
-      ns.deleteServer(serverName);
-      ns.purchaseServer(serverName, ram);
+      if (ns.ps(serverName).length === 0) {
+        if (ns.deleteServer(serverName))
+          ns.purchaseServer(`pserver-${Date.now()}`, ram);
+      } else {
+        // TODO: find a way to migrate processes to another server.
+      }
     } else {
       ns.print(
         `You need ${ns.nFormat(
@@ -77,6 +83,7 @@ export async function main(ns: NS) {
     }
   }
   ns.clearLog();
+  serverStats(ns);
   ns.print("All servers have been Upgraded!");
 }
 
@@ -89,10 +96,20 @@ async function calculateRam(ns: NS) {
 }
 
 export function getMinRam(ns: NS) {
-  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
-    return ns.getServerMaxRam("home");
+  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) return 32;
   const serverName = ns
     .getPurchasedServers()
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
-  return ns.getServerMaxRam(serverName) || ns.getServerMaxRam("home");
+  return ns.getServerMaxRam(serverName) || 32;
+}
+
+function serverStats(ns: NS) {
+  ns.print(`Current Server Stats:`);
+  ns.print(`=====================`);
+  for (const host of ns
+    .getPurchasedServers()
+    .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))) {
+    ns.print(`${host}:
+      RAM     : ${ns.nFormat(ns.getServerMaxRam(host) * 1e9, "0.0b")}`);
+  }
 }

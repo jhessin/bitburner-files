@@ -1,4 +1,4 @@
-import { NS, AutocompleteData } from "Bitburner";
+import { NS, AutocompleteData, Server } from "Bitburner";
 // import { copyCmd, ServerTree, ProgramData } from "utils/index";
 import { copyCmd } from "utils/terminal";
 import { ServerNode, ServerTree } from "utils/ServerTree";
@@ -51,31 +51,9 @@ export function getHackableServers(ns: NS) {
         s.hostname !== "home" &&
         !ns.getPurchasedServers().includes(s.hostname) &&
         s.moneyMax > 0
-      // &&
-      //   s.moneyAvailable > 0 // Exclude dead servers.
     )
     .sort((a, b) => {
-      const formulas = ns.fileExists("Formulas.exe");
-      if (formulas) {
-        a.hackDifficulty = a.minDifficulty;
-        b.hackDifficulty = b.minDifficulty;
-        const player = ns.getPlayer();
-        const aValue =
-          (a.moneyMax * ns.formulas.hacking.hackChance(a, player)) /
-          ns.formulas.hacking.hackTime(a, player);
-        const bValue =
-          (b.moneyMax * ns.formulas.hacking.hackChance(b, player)) /
-          ns.formulas.hacking.hackTime(b, player);
-        return bValue - aValue;
-      } else {
-        const aValue =
-          (a.moneyMax * ns.hackAnalyzeChance(a.hostname)) /
-          ns.getHackTime(a.hostname);
-        const bValue =
-          (b.moneyMax * ns.hackAnalyzeChance(b.hostname)) /
-          ns.getHackTime(b.hostname);
-        return bValue - aValue;
-      }
+      return getServerHackValue(ns, b) - getServerHackValue(ns, a);
     });
 }
 
@@ -92,4 +70,18 @@ export function getRunnableServers(ns: NS) {
     .list()
     .filter((s) => s.hasAdminRights)
     .sort((a, b) => b.maxRam - b.ramUsed - (a.maxRam - a.ramUsed));
+}
+
+function getServerHackValue(ns: NS, server: Server) {
+  server.hackDifficulty = server.minDifficulty;
+  const player = ns.getPlayer();
+  return (
+    (server.moneyMax *
+      ns.formulas.hacking.hackChance(server, player) *
+      ns.formulas.hacking.hackPercent(server, player) *
+      ns.formulas.hacking.growPercent(server, 1, player)) /
+    ns.formulas.hacking.hackTime(server, player) /
+    ns.formulas.hacking.growTime(server, player) /
+    ns.formulas.hacking.weakenTime(server, player)
+  );
 }

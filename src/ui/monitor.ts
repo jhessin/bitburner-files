@@ -44,10 +44,13 @@ export function monitor(ns: NS, target: Server | null = null) {
   const hackChance = ns.hackAnalyzeChance(hostname);
 
   ns.print(`${hostname}:
-    Security      : ${security} / ${minSecurity}
+    Security      : ${minSecurity} / ${security} (${ns.nFormat(
+    minSecurity / security,
+    "0.00%"
+  )})
     Money         : ${ns.nFormat(moneyAvailable, "$0.0a")} / ${ns.nFormat(
     maxMoney,
     "$0.0a"
-  )}
+  )} (${ns.nFormat(moneyAvailable / maxMoney, "0.00%")})
     Hack Chance   : ${ns.nFormat(hackChance, "0.0%")}`);
 }

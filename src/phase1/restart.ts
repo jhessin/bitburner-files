@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { getRunnableServers } from "cnct";
 import { monitor } from "ui/monitor";
 
 // timing constants
@@ -11,7 +12,7 @@ const hours = hour;
 const day = 24 * hours;
 // const days = day;
 
-const phase2RAM = 1e6;
+const phase2RAM = 500;
 
 let restartDuration = 1 * day;
 
@@ -47,6 +48,7 @@ export async function main(ns: NS) {
     return;
   }
 
+  if (getTotalRam(ns) > phase2RAM) ns.spawn("phase2/restart.js");
   for (const script of scripts) {
     ns.run(script);
     // This delay is to keep the scripts from colliding.
@@ -94,10 +96,9 @@ export async function main(ns: NS) {
   }
 }
 function getTotalRam(ns: NS) {
-  let total = ns.getServerMaxRam("home");
-  if (ns.getPurchasedServers().length === 0) return total;
-  for (const host of ns.getPurchasedServers()) {
-    total += ns.getServerMaxRam(host);
+  let total = 0;
+  for (const { maxRam } of getRunnableServers(ns)) {
+    total += maxRam;
   }
   return total;
 }

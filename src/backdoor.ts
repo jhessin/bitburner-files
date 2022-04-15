@@ -1,7 +1,7 @@
 import { NS, Server } from "Bitburner";
 import { nuke } from "utils/nuke";
 import { ServerTree } from "utils/ServerTree";
-import { ProgramData } from "utils/ProgramData";
+import { getNukableServers } from "cnct";
 import { bkdr } from "bkdr";
 
 export async function main(ns: NS) {
@@ -20,31 +20,21 @@ export async function main(ns: NS) {
     return;
   }
 
-  const programs = new ProgramData(ns);
-  let tree = new ServerTree(ns);
-  let allServers = tree.home.filter(
-    (s) =>
-      s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
-  );
-
   while (true) {
     await ns.sleep(1);
     ns.clearLog();
-    allServers = new ServerTree(ns).home.filter(
-      (s) =>
-        s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
-    );
 
     // find nukable servers.
-    for (const server of allServers.filter(
-      (s) =>
-        !s.hasAdminRights && s.numOpenPortsRequired <= programs.hackablePorts
-    )) {
+    for (const server of getNukableServers(ns)) {
       // nuke them.
       ns.print(`nuking ${server.hostname}`);
       nuke(ns, server.hostname);
       server.hasAdminRights = true;
     }
+    const allServers = new ServerTree(ns).home.filter(
+      (s) =>
+        s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
+    );
     // clear the log.
     ns.clearLog();
     const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);

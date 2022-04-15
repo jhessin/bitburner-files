@@ -35,18 +35,6 @@ export async function main(ns: NS) {
     return;
   }
 
-  // check if this server is already being batched.
-  if (
-    ps(ns).find(
-      (ps) =>
-        ps.ps.args.includes(target) &&
-        ps.ps.filename === spawnerName &&
-        ps.ps.args.includes("hack")
-    )
-  )
-    // already hacking
-    return;
-
   // analyze the server
   ns.run(analyzeScript, 1, target, `Batch attack!`);
 
@@ -75,6 +63,22 @@ export async function main(ns: NS) {
   const maxTime = Math.max(hackTime, growTime, weakenTime);
 
   bufferTime = maxTime / scriptCount;
+
+  // check if this server is already being batched.
+  if (
+    ps(ns).find(
+      (ps) =>
+        ps.ps.args.includes(target) &&
+        ps.ps.filename === spawnerName &&
+        ps.ps.args.includes("hack") &&
+        ps.ps.args.includes((bufferTime * 3).toString())
+    )
+  )
+    // already hacking
+    return;
+
+  // otherwise kill any batching that is going on.
+  kill(ns, (ps) => ps.filename === spawnerName);
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     await ns.sleep(1);
@@ -195,7 +199,7 @@ function totalRAM(ns: NS) {
   let total = 0;
   for (const { hostname } of getRunnableServers(ns)) {
     const host = hostname;
-    total += ns.getServerMaxRam(host) - ns.getServerUsedRam(host);
+    total += ns.getServerMaxRam(host); // - ns.getServerUsedRam(host);
   }
   return total;
 }
