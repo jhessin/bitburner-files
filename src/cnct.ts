@@ -3,6 +3,15 @@ import { NS, AutocompleteData, Server } from "Bitburner";
 import { copyCmd } from "utils/terminal";
 import { ServerNode, ServerTree } from "utils/ServerTree";
 import { ProgramData } from "utils/ProgramData";
+const growMultiplier = 4;
+const hackPercent = 0.5;
+
+const runningScripts = [
+  "/batching/hack.js",
+  "/batching/grow.js",
+  "/batching/weaken.js",
+  "/batching/spawner.js",
+];
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -74,14 +83,31 @@ export function getRunnableServers(ns: NS) {
 
 function getServerHackValue(ns: NS, server: Server) {
   server.hackDifficulty = server.minDifficulty;
+  // now find the required number of threads for each action.
+  const growThreads = Math.ceil(
+    ns.growthAnalyze(server.hostname, growMultiplier)
+  );
+  const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(server.hostname));
+
+  const growSecurityDelta = ns.growthAnalyzeSecurity(growThreads);
+  const hackSecurityDelta = ns.hackAnalyzeSecurity(hackThreads);
+
+  let weakenThreads = 0;
+  let targetDelta = Math.max(growSecurityDelta, hackSecurityDelta);
+  // pin targetDelta to 100 to prevent infinity
+  if (targetDelta > 100) targetDelta = 100;
+
+  const maxThreads = Math.max(hackThreads, weakenThreads, growThreads);
+  const reserveRam = Math.max(
+    ...runningScripts.map((script) => ns.getScriptRam(script) * maxThreads)
+  );
+
   const player = ns.getPlayer();
   return (
     (server.moneyMax *
       ns.formulas.hacking.hackChance(server, player) *
       ns.formulas.hacking.hackPercent(server, player) *
       ns.formulas.hacking.growPercent(server, 1, player)) /
-    ns.formulas.hacking.hackTime(server, player) /
-    ns.formulas.hacking.growTime(server, player) /
-    ns.formulas.hacking.weakenTime(server, player)
+    reserveRam
   );
 }

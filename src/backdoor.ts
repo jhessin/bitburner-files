@@ -1,7 +1,5 @@
 import { NS, Server } from "Bitburner";
-import { nuke } from "utils/nuke";
 import { ServerTree } from "utils/ServerTree";
-import { getNukableServers } from "cnct";
 import { bkdr } from "bkdr";
 
 export async function main(ns: NS) {
@@ -25,12 +23,7 @@ export async function main(ns: NS) {
     ns.clearLog();
 
     // find nukable servers.
-    for (const server of getNukableServers(ns)) {
-      // nuke them.
-      ns.print(`nuking ${server.hostname}`);
-      nuke(ns, server.hostname);
-      server.hasAdminRights = true;
-    }
+    if (!ns.scriptRunning("nuker.js", "home")) ns.run("nuker.js");
     const allServers = new ServerTree(ns).home.filter(
       (s) =>
         s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
@@ -39,10 +32,12 @@ export async function main(ns: NS) {
     ns.clearLog();
     const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);
     ns.print(`
-      ==========================================================
-      ${serversBackdoored.length} of ${allServers.length} servers
-      have been backdoored.
-      ==========================================================
+      ||=====================||
+      ||${serversBackdoored.length.toPrecision(
+        2
+      )} of ${allServers.length.toPrecision(2)} servers     ||
+      ||have been backdoored.||
+      ||=====================||
       `);
     if (serversBackdoored.length === allServers.length) {
       ns.clearLog();
@@ -93,12 +88,12 @@ async function bn4(ns: NS, backdoors: Server[]) {
     const path = tree.home.find(host.hostname);
     // go to the target
     for (const host of path) {
-      // ns.connect(host);
+      ns.connect(host);
     }
-    // await ns.installBackdoor();
+    await ns.installBackdoor();
     // return home
     for (const host of path.reverse()) {
-      // ns.connect(host);
+      ns.connect(host);
     }
   }
 }

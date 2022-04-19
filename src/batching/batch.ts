@@ -4,12 +4,16 @@ import { kill } from "utils/scriptKilling";
 import { prepBatch } from "batching/prepBatch";
 import { runSpawner, spawnerName } from "batching/runSpawner";
 import { ps } from "ps";
+import { expandServer } from "expandServer";
+import { commitCrime } from "actions/crime";
+import { purchaseServers, upgradeServers } from "purchase";
 
-let bufferTime = 3000;
+const minBufferTime = 60;
+let bufferTime = minBufferTime;
 const growMultiplier = 4;
 const hackPercent = 0.5;
 
-const analyzeScript = "/analyzeServer.js";
+const analyzeScript = "ui/monitor.js";
 
 const runningScripts = [
   "/batching/hack.js",
@@ -38,6 +42,12 @@ export async function main(ns: NS) {
   // analyze the server
   ns.run(analyzeScript, 1, target, `Batch attack!`);
 
+  await prepBatch(ns, target);
+
+  await batch(ns, target);
+}
+
+export async function batch(ns: NS, target: string) {
   // now find the required number of threads for each action.
   const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
   const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
@@ -63,6 +73,7 @@ export async function main(ns: NS) {
   const maxTime = Math.max(hackTime, growTime, weakenTime);
 
   bufferTime = maxTime / scriptCount;
+  if (bufferTime < minBufferTime) bufferTime = minBufferTime;
 
   // check if this server is already being batched.
   if (
@@ -71,7 +82,7 @@ export async function main(ns: NS) {
         ps.ps.args.includes(target) &&
         ps.ps.filename === spawnerName &&
         ps.ps.args.includes("hack") &&
-        ps.ps.args.includes((bufferTime * 3).toString())
+        ps.ps.args.includes(bufferTime.toString())
     )
   )
     // already hacking
@@ -99,17 +110,14 @@ export async function main(ns: NS) {
     return;
   }
 
-  // Prepare the server
-  await prepBatch(ns, target);
-
   ns.print("Hacking...");
-  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 1);
-  await ns.sleep(weakenTime - bufferTime * 2);
-  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime * 3, 2);
-  await ns.sleep(weakenTime - growTime - bufferTime);
-  await runSpawner(ns, "grow", target, growThreads, bufferTime * 3);
-  await ns.sleep(growTime - hackTime - bufferTime * 2);
-  await runSpawner(ns, "hack", target, hackThreads, bufferTime * 3);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 1);
+  await ns.sleep(weakenTime - (bufferTime * 2) / 3);
+  await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 2);
+  await ns.sleep(weakenTime - growTime - bufferTime / 3);
+  await runSpawner(ns, "grow", target, growThreads, bufferTime);
+  await ns.sleep(growTime - hackTime - (bufferTime * 2) / 3);
+  await runSpawner(ns, "hack", target, hackThreads, bufferTime);
 }
 
 function getTiming(ns: NS, target: any) {
@@ -164,7 +172,11 @@ export async function prepareServer(ns: NS, target: any) {
   ns.run(spawnerName, 1, "grow", target, growThreads, bufferTime);
   ns.run(spawnerName, 1, "weaken", target, weakenThreads, bufferTime);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
-    await ns.sleep(bufferTime);
+    expandServer(ns);
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+    await commitCrime(ns);
   }
   // ns.kill(growPid);
   await killMsg(ns, "grow", target);
@@ -172,7 +184,11 @@ export async function prepareServer(ns: NS, target: any) {
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
-    await ns.sleep(bufferTime);
+    expandServer(ns);
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+    await commitCrime(ns);
   }
   // ns.kill(weakenPid);
   await killMsg(ns, "weaken", target);
@@ -199,7 +215,7 @@ function totalRAM(ns: NS) {
   let total = 0;
   for (const { hostname } of getRunnableServers(ns)) {
     const host = hostname;
-    total += ns.getServerMaxRam(host); // - ns.getServerUsedRam(host);
+    total += ns.getServerMaxRam(host);
   }
-  return total;
+  return total - ns.getServerUsedRam("home");
 }

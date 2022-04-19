@@ -1,6 +1,10 @@
 import { AutocompleteData, NS } from "Bitburner";
 import { kill } from "utils/scriptKilling";
 import { runSpawner, spawnerName } from "batching/runSpawner";
+import { monitor } from "ui/monitor";
+import { commitCrime } from "actions/crime";
+import { factionWatch } from "factionWatch";
+import { purchaseServers, upgradeServers } from "purchase";
 
 const bufferTime = 3000;
 const growMultiplier = 4;
@@ -42,7 +46,14 @@ export async function prepBatch(ns: NS, target: string) {
   if (targetDelta > 100) targetDelta = 100;
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
-    await ns.sleep(1);
+    ns.clearLog();
+    ns.tail();
+    monitor(ns, ns.getServer(target));
+    factionWatch(ns);
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+    await commitCrime(ns);
     weakenThreads += 1;
     ns.clearLog();
     ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
@@ -67,11 +78,27 @@ export async function prepBatch(ns: NS, target: string) {
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime);
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
-  )
-    await ns.sleep(bufferTime);
+  ) {
+    ns.clearLog();
+    ns.tail();
+    monitor(ns, ns.getServer(target));
+    factionWatch(ns);
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+    await commitCrime(ns);
+  }
   await runSpawner(ns, "grow", target, growThreads, bufferTime);
-  while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target))
-    await ns.sleep(bufferTime);
+  while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
+    ns.clearLog();
+    ns.tail();
+    monitor(ns, ns.getServer(target));
+    factionWatch(ns);
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+    await commitCrime(ns);
+  }
   kill(
     ns,
     (ps) =>

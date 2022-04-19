@@ -19,18 +19,14 @@ const scripts = [
   "hacknet.js",
   "/contracts/start.js",
   "programs.js",
+  "expandServer.js",
+  "factionWatch.js",
   "purchase.js",
   "/stocks/start.js",
-  // "shareAll.js",
 ];
 
 const restartScripts = [
   "/phase2/batchHack.js",
-  //
-];
-
-const singularityScripts = [
-  "/expandServer.js",
   //
 ];
 
@@ -63,14 +59,6 @@ export async function main(ns: NS) {
     if (hasFormulas) {
       restartDuration = 30 * minutes;
     }
-
-    if (
-      ns.getOwnedSourceFiles().filter((sf) => sf.n === 4).length > 0 ||
-      ns.getPlayer().bitNodeN === 4
-    )
-      for (const script of singularityScripts) {
-        ns.run(script);
-      }
 
     const restartTime = Date.now() + restartDuration;
     while (true) {

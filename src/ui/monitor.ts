@@ -1,4 +1,4 @@
-import { NS, Server } from "Bitburner";
+import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
 import { kill } from "utils/scriptKilling";
 
@@ -7,19 +7,12 @@ export async function main(ns: NS) {
 
   ns.tail();
 
-  let { hostname } = getTarget(ns);
-  ns.run("batching/batch.js", 1, hostname);
-
   while (true) {
     ns.tail();
     ns.clearLog();
-    monitor(ns);
-    const newHost = getTarget(ns).hostname;
-    if (newHost !== hostname) {
-      kill(ns, (ps) => ps.args.includes(hostname));
-      hostname = newHost;
-      ns.run("batching/batchLite.js", 1, hostname);
-    }
+    let host = ns.args[0] as string;
+    if (host && ns.serverExists(host)) monitor(ns, ns.getServer(host));
+    else monitor(ns);
     await ns.sleep(1);
   }
 }
@@ -42,15 +35,32 @@ export function monitor(ns: NS, target: Server | null = null) {
   const security = ns.getServerSecurityLevel(hostname);
   const minSecurity = ns.getServerMinSecurityLevel(hostname);
   const hackChance = ns.hackAnalyzeChance(hostname);
+  const server = target || getTarget(ns);
+  // always show the smallest time.
+  server.hackDifficulty = server.minDifficulty;
+  const player = ns.getPlayer();
 
   ns.print(`${hostname}:
-    Security      : ${minSecurity} / ${security} (${ns.nFormat(
-    minSecurity / security,
-    "0.00%"
-  )})
-    Money         : ${ns.nFormat(moneyAvailable, "$0.0a")} / ${ns.nFormat(
+    Security      : (${ns.nFormat(
+      minSecurity / security,
+      "000.00%"
+    )}) +${ns.nFormat(security - minSecurity, "0.00a")}
+    Money         : (${ns.nFormat(
+      moneyAvailable / maxMoney,
+      "000.00%"
+    )}) ${ns.nFormat(moneyAvailable, "$0.0a")} / ${ns.nFormat(
     maxMoney,
     "$0.0a"
-  )} (${ns.nFormat(moneyAvailable / maxMoney, "0.00%")})
-    Hack Chance   : ${ns.nFormat(hackChance, "0.0%")}`);
+  )}
+    Hack Chance   : ${ns.nFormat(hackChance, "0.0%")}
+    Hack Time     : ${ns.tFormat(ns.formulas.hacking.hackTime(server, player))}
+    Grow Time     : ${ns.tFormat(ns.formulas.hacking.growTime(server, player))}
+    Waken Time    : ${ns.tFormat(
+      ns.formulas.hacking.weakenTime(server, player)
+    )}
+    `);
+}
+
+export function autocomplete(data: AutocompleteData) {
+  return data.servers;
 }

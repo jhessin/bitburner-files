@@ -152,6 +152,9 @@ async function solve(
     case "Total Ways to Sum":
       solution = solvers.totalWaysToSum(data);
       break;
+    // case "Total Ways to Sum II":
+    //   solution = solvers.totalWaysToSum2(data);
+    //   break;
     case "Sanitize Parentheses in Expression":
       solution = solvers.sanitizeParentheses(data);
       break;

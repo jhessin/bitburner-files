@@ -70,6 +70,7 @@ function spawnScript(
   target: string
 ) {
   for (const host of getRunnableServers(ns)) {
+    if (ns.getServerMaxRam("home") < 1e9 && host.hostname === "home") continue;
     // calculate available ram
     const ramAvailable =
       host.maxRam - host.ramUsed - reservedRam(ns, host.hostname);

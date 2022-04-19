@@ -1,5 +1,6 @@
 import { NS, Server } from "Bitburner";
 import { ServerTree } from "utils/ServerTree";
+import { displayContract } from "contracts/probe";
 
 const minuteInterval = 2;
 
@@ -22,28 +23,30 @@ export async function main(ns: NS) {
       `);
     return;
   }
-  let contracts: string[];
+  let contracts: [string, string][];
   function refreshLog() {
     ns.clearLog();
     ns.tail();
     ns.print("Contracts");
     ns.print("=========");
-    for (const c of contracts) ns.print(c);
+    for (const [c, s] of contracts) ns.print(displayContract(ns, c, s));
     ns.print("=========");
   }
   while (true) {
     // await dfs(ns, null, "home", trySolveContracts, 0);
+    let servers: string[] = [];
     contracts = getAllServers(ns).flatMap((server) => {
-      const onServer = ns.ls(server.hostname, ".cct").map((contract) => {
-        const type = ns.codingcontract.getContractType(
-          contract,
-          server.hostname
-        );
-        return `${server.hostname} - ${contract} - ${type}`;
-      });
+      const onServer: [string, string][] = ns
+        .ls(server.hostname, ".cct")
+        .map((cct) => [cct, server.hostname]);
+
       return onServer;
     });
+    for (const s of servers) {
+      await ns.scp("/contracts/probe.js", "home", s);
+    }
+    servers = [];
     if (contracts.length > 0) refreshLog();
-    await ns.sleep(minuteInterval * 60 * 1000);
+    await ns.sleep(1);
   }
 }

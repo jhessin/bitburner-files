@@ -1,4 +1,5 @@
 import { NS } from "Bitburner";
+import { monitor } from "ui/monitor";
 
 // timing constants
 const seconds = 1000; //milliseconds
@@ -19,17 +20,14 @@ const scripts = [
   "/phase3/batchHack.js",
   "/contracts/start.js",
   "programs.js",
+  "expandServer.js",
+  "factionWatch.js",
   "/stocks/start.js",
   "shareAll.js",
 ];
 
 const restartScripts = [
   "/phase3/batchHack.js",
-  //
-];
-
-const singularityScripts = [
-  "expandServer.js",
   //
 ];
 
@@ -63,25 +61,17 @@ export async function main(ns: NS) {
       restartDuration = 30 * minutes;
     }
 
-    if (
-      ns.getOwnedSourceFiles().filter((sf) => sf.n === 4).length > 0 ||
-      ns.getPlayer().bitNodeN === 4
-    )
-      for (const script of singularityScripts) {
-        ns.scriptKill(script, ns.getHostname());
-        ns.run(script);
-      }
-
     const restartTime = Date.now() + restartDuration;
     while (true) {
       ns.clearLog();
       ns.tail();
-      ns.print(
-        `
-      Hack Profit  : ${ns.nFormat(ns.getScriptIncome()[0], "$0.000a")} / sec.
-      Hack XP      : ${ns.nFormat(ns.getScriptExpGain(), "0.000a")} / sec.
-`
-      );
+      monitor(ns);
+      // ns.print(
+      //   `
+      // Hack Profit  : ${ns.nFormat(ns.getScriptIncome()[0], "$0.000a")} / sec.
+      // Hack XP      : ${ns.nFormat(ns.getScriptExpGain(), "0.000a")} / sec.
+      // `
+      // );
       ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
       await ns.sleep(second);
       if (Date.now() >= restartTime) break;

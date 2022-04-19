@@ -2,10 +2,12 @@ import { NS } from "Bitburner";
 import { getFolio } from "stocks/folio";
 
 // % of money to use in buying stocks
-const budget = 0.9;
+const budget = 0.5;
 // % at which to buy or sell stocks
 const buyAt = 0.6;
 const sellBellow = 0.5;
+// const shortAt = 0.4;
+// const sellShortAt = 0.5;
 
 // const stockToWatch = "MGCP"; // Megacorp
 

@@ -47,3 +47,36 @@ export function totalWaysToSum(data: number) {
   // Return the total number of ways
   return dp[N];
 }
+
+// Total Ways to Sum II
+// You are attempting to solve a Coding Contract. You have 10 tries remaining, after which the contract will self-destruct.
+//
+//
+// How many different distinct ways can the number 37 be written as a sum of integers contained in the set:
+//
+// [1,2,4,5,6,7,8,12,14,15]?
+//
+// You may use each integer in the set zero or more times.
+
+export function totalWaysToSum2(data: [number, number[]]) {
+  const target = data[0];
+  const input = data[1].sort();
+  // dp -> Data points that hold the total ways to sum for each of the inputs.
+  let dp = Array.from({ length: input.length }, () => 1);
+  let total = 0;
+
+  for (let i = 0; i < dp.length; i++) {
+    // iterate through each data point
+    // to see if any input[j] + input[k] === input[i]
+    // then dp[i]+= dp[j] + dp[k];
+    for (let j = 0; j < i; j++) {
+      for (let k = 0; k < i; k++) {
+        if (input[j] + input[k] === input[i]) dp[i] += dp[j] + dp[k];
+        if (input[j] + input[k] === target) total += dp[j] + dp[k];
+      }
+    }
+  }
+
+  // Return the total number of ways
+  return total;
+}

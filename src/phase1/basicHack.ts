@@ -1,6 +1,7 @@
 import { NS, Server } from "Bitburner";
 import { getHackableServers, getRunnableServers } from "cnct";
 import { prepareServer as prepBatch } from "batching/batchLite";
+import { nukeAll } from "nuker";
 
 // const hackScript = "hack.js";
 const weakenScript = "weaken.js";
@@ -27,6 +28,9 @@ export async function main(ns: NS) {
       `);
     return;
   }
+
+  // first nuke everything
+  await nukeAll(ns);
 
   // find the richest server.
   let richest: Server = getHackableServers(ns)[0];

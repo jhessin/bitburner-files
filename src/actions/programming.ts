@@ -21,6 +21,7 @@ export async function main(ns: NS) {
     ns.tail();
     ns.print(`Creating ${programName}`);
     if (hasSourceFile(ns, 4)) {
+      if (ns.purchaseTor() && ns.purchaseProgram(programName)) return;
       if (!ns.isBusy() || !ns.getPlayer().workType.includes("Program"))
         ns.createProgram(programName);
     } else if (!ns.getPlayer().workType.includes("Program")) {
