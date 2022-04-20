@@ -95,25 +95,51 @@ declare module "Bitburner" {
     factions: string[];
     tor: boolean;
     hasCorporation: boolean;
+    inBladeburner: boolean;
+    entropy: number;
   }
 
   /**
    * @public
    */
-  interface RunningScript {
+  export interface RunningScript {
+    /** Arguments the script was called with */
     args: string[];
+    /** Filename of the script */
     filename: string;
+    /**
+     * Script logs as an array. The newest log entries are at the bottom.
+     * Timestamps, if enabled, are placed inside `[brackets]` at the start of each line.
+     **/
     logs: string[];
+    /** Total amount of hacking experience earned from this script when offline */
     offlineExpGained: number;
+    /** Total amount of money made by this script when offline */
     offlineMoneyMade: number;
+    /** Number of seconds that the script has been running offline */
     offlineRunningTime: number;
+    /** Total amount of hacking experience earned from this script when online */
     onlineExpGained: number;
+    /** Total amount of money made by this script when online */
     onlineMoneyMade: number;
+    /** Number of seconds that this script has been running online */
     onlineRunningTime: number;
+    /** Process ID. Must be an integer */
     pid: number;
+    /** How much RAM this script uses for ONE thread */
     ramUsage: number;
+    /** Hostname of the server on which this script runs */
     server: string;
+    /** Number of threads that this script runs with */
     threads: number;
+  }
+
+  /**
+   * @public
+   */
+  export interface RecentScript extends RunningScript {
+    /** Timestamp of when the script was killed */
+    timeOfDeath: Date;
   }
 
   /**
@@ -534,6 +560,8 @@ declare module "Bitburner" {
     CompanyWorkExpGain: number;
     /** Influences how much money the player earns when completing working their job. */
     CompanyWorkMoney: number;
+    /** Influences the money gain from dividends of corporations created by the player. */
+    CorporationSoftCap: number;
     /** Influences the valuation of corporations created by the player. */
     CorporationValuation: number;
     /** Influences the base experience gained for each ability when the player commits a crime. */
@@ -579,7 +607,7 @@ declare module "Bitburner" {
     /** Influences the maximum allowed RAM for a purchased server */
     PurchasedServerMaxRam: number;
     /** Influences cost of any purchased server at or above 128GB */
-    PurchasedServerSoftCap: number;
+    PurchasedServerSoftcap: number;
     /** Influences the minimum favor the player must have with a faction before they can donate to gain rep. */
     RepToDonateToFaction: number;
     /** Influences how much the money on a server can be reduced when a script performs a hack against it. */
@@ -662,6 +690,10 @@ declare module "Bitburner" {
     agility: number;
     /** Agility exp */
     agilityExp: number;
+    /** Charisma stat */
+    charisma: number;
+    /** Charisma exp */
+    charismaExp: number;
     /** Company reputation */
     companyRep: number;
     /** Money earned from crimes */
@@ -702,10 +734,10 @@ declare module "Bitburner" {
     factions: string[];
     /** Current health points */
     hp: number;
-    /** Array of all companies at which you have jobs */
-    company: string[];
+    /** Array of all jobs */
+    jobs: string[];
     /** Array of job positions for all companies you are employed at. Same order as 'jobs' */
-    jobTitle: string[];
+    jobTitles: string[];
     /** Maximum health points */
     maxHp: number;
     /** Boolean indicating whether or not you have a tor router */
@@ -730,6 +762,18 @@ declare module "Bitburner" {
     workRepGain: number;
     /** Money earned so far from work, if applicable */
     workMoneyGain: number;
+    /** total hacking exp */
+    hackingExp: number;
+    /** total strength exp */
+    strengthExp: number;
+    /** total defense exp */
+    defenseExp: number;
+    /** total dexterity exp */
+    dexterityExp: number;
+    /** total agility exp */
+    agilityExp: number;
+    /** total charisma exp */
+    charismaExp: number;
   }
 
   /**
@@ -899,42 +943,75 @@ declare module "Bitburner" {
    * @public
    */
   export interface GangMemberInfo {
+    /** Name of the gang member */
     name: string;
+    /** Currently assigned task */
     task: string;
     earnedRespect: number;
+
+    /** Hack skill level */
     hack: number;
+    /** Strength skill level */
     str: number;
+    /** Defense skill level */
     def: number;
+    /** Dexterity skill level */
     dex: number;
+    /** Agility skill level */
     agi: number;
+    /** Charisma skill level */
     cha: number;
 
+    /** Current hack experience */
     hack_exp: number;
+    /** Current strength experience */
     str_exp: number;
+    /** Current defense experience */
     def_exp: number;
+    /** Current dexterity experience */
     dex_exp: number;
+    /** Current agility experience */
     agi_exp: number;
+    /** Current charisma experience */
     cha_exp: number;
 
+    /** Hack multiplier from equipment */
     hack_mult: number;
+    /** Strength multiplier from equipment */
     str_mult: number;
+    /** Defense multiplier from equipment */
     def_mult: number;
+    /** Dexterity multiplier from equipment */
     dex_mult: number;
+    /** Agility multiplier from equipment */
     agi_mult: number;
+    /** Charisma multiplier from equipment */
     cha_mult: number;
 
+    /** Hack multiplier from ascensions */
     hack_asc_mult: number;
+    /** Strength multiplier from ascensions */
     str_asc_mult: number;
+    /** Defense multiplier from ascensions */
     def_asc_mult: number;
+    /** Dexterity multiplier from ascensions */
     dex_asc_mult: number;
+    /** Agility multiplier from ascensions */
     agi_asc_mult: number;
+    /** Charisma multiplier from ascensions */
     cha_asc_mult: number;
 
+    /** Total earned hack experience */
     hack_asc_points: number;
+    /** Total earned strength experience */
     str_asc_points: number;
+    /** Total earned defense experience */
     def_asc_points: number;
+    /** Total earned dexterity experience */
     dex_asc_points: number;
+    /** Total earned agility experience */
     agi_asc_points: number;
+    /** Total earned charisma experience */
     cha_asc_points: number;
 
     upgrades: string[];
@@ -1481,6 +1558,20 @@ declare module "Bitburner" {
      * @returns True if you successfully purchased it or if you already have access, false otherwise.
      */
     purchase4SMarketDataTixApi(): boolean;
+
+    /**
+     * Purchase WSE Account.
+     * @remarks RAM cost: 2.5 GB
+     * @returns True if you successfully purchased it or if you already have access, false otherwise.
+     */
+    purchaseWseAccount(): boolean;
+
+    /**
+     * Purchase TIX API Access
+     * @remarks RAM cost: 2.5 GB
+     * @returns True if you successfully purchased it or if you already have access, false otherwise.
+     */
+    purchaseTixApi(): boolean;
   }
 
   /**
@@ -1562,7 +1653,7 @@ declare module "Bitburner" {
      * purchasing a TOR router using this function is the same as if you were to
      * manually purchase one.
      *
-     * @returns True if actions is successful, false otherwise.
+     * @returns True if actions is successful or you already own TOR router, false otherwise.
      */
     purchaseTor(): boolean;
 
@@ -1618,9 +1709,10 @@ declare module "Bitburner" {
      * The actions that can be stopped with this function are:
      *
      * * Studying at a university
+     * * Working out at a gym
      * * Working for a company/faction
      * * Creating a program
-     * * Committing a Crime
+     * * Committing a crime
      *
      * This function will return true if the player’s action was ended.
      * It will return false if the player was not performing an action when this function was called.
@@ -2162,11 +2254,8 @@ declare module "Bitburner" {
      * Hospitalize the player.
      * @remarks
      * RAM cost: 0.25 GB * 16/4/1
-     *
-     *
-     * @returns The cost of the hospitalization.
      */
-    hospitalize(): number;
+    hospitalize(): void;
 
     /**
      * Soft reset the game.
@@ -2253,6 +2342,91 @@ declare module "Bitburner" {
      * @returns True if the focus was changed.
      */
     setFocus(focus: boolean): boolean;
+
+    /**
+     * Get a list of programs offered on the dark web.
+     * @remarks
+     * RAM cost: 1 GB * 16/4/1
+     *
+     *
+     * This function allows the player to get a list of programs available for purchase
+     * on the dark web. Players MUST have purchased Tor to get the list of programs
+     * available. If Tor has not been purchased yet, this function will return an
+     * empty list.
+     *
+     * @example
+     * ```ts
+     * // NS1
+     * getDarkwebProgramsAvailable();
+     * // returns ['BruteSSH.exe', 'FTPCrack.exe'...etc]
+     * ```
+     * @example
+     * ```ts
+     * // NS2
+     * ns.getDarkwebProgramsAvailable();
+     * // returns ['BruteSSH.exe', 'FTPCrack.exe'...etc]
+     * ```
+     * @returns - a list of programs available for purchase on the dark web, or [] if Tor has not
+     * been purchased
+     */
+    getDarkwebPrograms(): string[];
+
+    /**
+     * Check the price of an exploit on the dark web
+     * @remarks
+     * RAM cost: 0.5 GB * 16/4/1
+     *
+     *
+     * This function allows you to check the price of a darkweb exploit/program.
+     * You MUST have a TOR router in order to use this function. The price returned
+     * by this function is the same price you would see with buy -l from the terminal.
+     * Returns the cost of the program if it has not been purchased yet, 0 if it
+     * has already been purchased, or -1 if Tor has not been purchased (and thus
+     * the program/exploit is not available for purchase).
+     *
+     * If the program does not exist, an error is thrown.
+     *
+     *
+     * @example
+     * ```ts
+     * // NS1
+     * getDarkwebProgramCost("brutessh.exe");
+     * ```
+     * @example
+     * ```ts
+     * // NS2
+     * ns.getDarkwebProgramCost("brutessh.exe");
+     * ```
+     * @param programName - Name of program to check the price of
+     * @returns Price of the specified darkweb program
+     * (if not yet purchased), 0 if it has already been purchased, or -1 if Tor has not been
+     * purchased. Throws an error if the specified program/exploit does not exist
+     */
+    getDarkwebProgramCost(programName: string): number;
+
+    /**
+     * b1t_flum3 into a different BN.
+     * @remarks
+     * RAM cost: 16 GB * 16/4/1
+     *
+     * @param nextBN - BN number to jump to
+     * @param callbackScript - Name of the script to launch in the next BN.
+     */
+    b1tflum3(nextBN: number, callbackScript?: string): void;
+
+    /**
+     * Destroy the w0r1d_d43m0n and move on to the next BN.
+     * @remarks
+     * RAM cost: 32 GB * 16/4/1
+     *
+     * You must have the special augment installed and the required hacking level
+     *   OR
+     * Completed the final black op.
+     *
+     * @param nextBN - BN number to jump to
+     * @param callbackScript - Name of the script to launch in the next BN.
+     */
+    destroyW0r1dD43m0n(nextBN: number, callbackScript?: string): void;
   }
 
   /**
@@ -2507,7 +2681,7 @@ declare module "Bitburner" {
      * // NS1:
      * var upgradeName = "Sell for Corporation Funds";
      * if (hacknet.numHashes() > hacknet.hashCost(upgradeName)) {
-     *    hacknet.spendHashes(upgName);
+     *    hacknet.spendHashes(upgradeName);
      * }
      * ```
      * @example
@@ -2515,7 +2689,7 @@ declare module "Bitburner" {
      * // NS2:
      * const upgradeName = "Sell for Corporation Funds";
      * if (ns.hacknet.numHashes() > ns.hacknet.hashCost(upgradeName)) {
-     *    ns.hacknet.spendHashes(upgName);
+     *    ns.hacknet.spendHashes(upgradeName);
      * }
      * ```
      * @param upgName - Name of the upgrade of Hacknet Node.
@@ -2766,7 +2940,7 @@ declare module "Bitburner" {
      *
      * Note that this is meant to be used for Contracts and Operations.
      * This function will return ‘Infinity’ for actions such as Training and Field Analysis.
-     * This function will return 1 for BlackOps not yet completed regardless of wether
+     * This function will return 1 for BlackOps not yet completed regardless of whether
      * the player has the required rank to attempt the mission or not.
      *
      * @param type - Type of action.
@@ -2806,7 +2980,7 @@ declare module "Bitburner" {
     getActionCurrentLevel(type: string, name: string): number;
 
     /**
-     * Get wether an action is set to autolevel.
+     * Get whether an action is set to autolevel.
      * @remarks
      * RAM cost: 4 GB
      *
@@ -3104,7 +3278,7 @@ declare module "Bitburner" {
      * Attempts to solve the Coding Contract with the provided solution.
      *
      * @param answer - Solution for the contract.
-     * @param fn - Filename of the contract.
+     * @param filename - Filename of the contract.
      * @param host - Host of the server containing the contract. Optional. Defaults to current server if not provided.
      * @param opts - Optional parameters for configuring function behavior.
      * @returns True if the solution was correct, false otherwise. If the returnReward option is configured, then the function will instead return a string. If the contract is successfully solved, the string will contain a description of the contract’s reward. Otherwise, it will be an empty string.
@@ -3124,7 +3298,7 @@ declare module "Bitburner" {
      * Returns a name describing the type of problem posed by the Coding Contract.
      * (e.g. Find Largest Prime Factor, Total Ways to Sum, etc.)
      *
-     * @param fn - Filename of the contract.
+     * @param filename - Filename of the contract.
      * @param host - Host of the server containing the contract. Optional. Defaults to current server if not provided.
      * @returns Name describing the type of problem posed by the Coding Contract.
      */
@@ -3137,7 +3311,7 @@ declare module "Bitburner" {
      *
      * Get the full text description for the problem posed by the Coding Contract.
      *
-     * @param fn - Filename of the contract.
+     * @param filename - Filename of the contract.
      * @param host - Host of the server containing the contract. Optional. Defaults to current server if not provided.
      * @returns Contract’s text description.
      */
@@ -3165,7 +3339,7 @@ declare module "Bitburner" {
      *
      * Get the number of tries remaining on the contract before it self-destructs.
      *
-     * @param fn - Filename of the contract.
+     * @param filename - Filename of the contract.
      * @param host - Host of the server containing the contract. Optional. Defaults to current server if not provided.
      * @returns How many attempts are remaining for the contract;
      */
@@ -3534,13 +3708,13 @@ declare module "Bitburner" {
      * @param sleeveNumber - Index of the sleeve to work for the faction.
      * @param factionName - Name of the faction to work for.
      * @param factionWorkType - Name of the action to perform for this faction.
-     * @returns True if the sleeve started working on this faction, false otherwise.
+     * @returns True if the sleeve started working on this faction, false otherwise, can also throw on errors
      */
     setToFactionWork(
       sleeveNumber: number,
       factionName: string,
       factionWorkType: string
-    ): boolean;
+    ): boolean | undefined;
 
     /**
      * Set a sleeve to work for a company.
@@ -3643,6 +3817,61 @@ declare module "Bitburner" {
   }
 
   /**
+   * Grafting API
+   * @remarks
+   * This API requires Source-File 10 to use.
+   * @public
+   */
+  export interface Grafting {
+    /**
+     * Retrieve the grafting cost of an aug.
+     * @remarks
+     * RAM cost: 3.75 GB
+     *
+     * @param augName - Name of the aug to check the price of. Must be an exact match.
+     * @returns The cost required to graft the named augmentation.
+     * @throws Will error if an invalid Augmentation name is provided.
+     */
+    getAugmentationGraftPrice(augName: string): number;
+
+    /**
+     * Retrieves the time required to graft an aug.
+     * @remarks
+     * RAM cost: 3.75 GB
+     *
+     * @param augName - Name of the aug to check the grafting time of. Must be an exact match.
+     * @returns The time required, in millis, to graft the named augmentation.
+     * @throws Will error if an invalid Augmentation name is provided.
+     */
+    getAugmentationGraftTime(augName: string): number;
+
+    /**
+     * Retrieves a list of Augmentations that can be grafted.
+     * @remarks
+     * RAM cost: 5 GB
+     *
+     * Note that this function returns a list of currently graftable Augmentations,
+     * based off of the Augmentations that you already own.
+     *
+     * @returns An array of graftable Augmentations.
+     */
+    getGraftableAugmentations(): string[];
+
+    /**
+     * Begins grafting the named aug. You must be in New Tokyo to use this.
+     * @remarks
+     * RAM cost: 7.5 GB
+     *
+     * @param augName - The name of the aug to begin grafting. Must be an exact match.
+     * @param focus - Acquire player focus on this Augmentation grafting. Optional. Defaults to true.
+     * @returns True if the aug successfully began grafting, false otherwise (e.g. not enough money, or
+     * invalid Augmentation name provided).
+     * @throws Will error if called while you are not in New Tokyo.
+     */
+    graftAugmentation(augName: string, focus?: boolean): boolean;
+  }
+
+  /**
    * Skills formulas
    * @public
    */
@@ -3661,6 +3890,33 @@ declare module "Bitburner" {
      * @returns The calculated exp required.
      */
     calculateExp(skill: number, skillMult?: number): number;
+  }
+
+  /**
+   * Reputation formulas
+   * @public
+   */
+  interface ReputationFormulas {
+    /**
+     * Calculate the total required amount of faction reputation to reach a target favor.
+     * @param favor - target faction favor.
+     * @returns The calculated faction reputation required.
+     */
+    calculateFavorToRep(favor: number): number;
+    /**
+     * Calculate the resulting faction favor of a total amount of reputation.
+     * (Faction favor is gained whenever you install an Augmentation.)
+     * @param rep - amount of reputation.
+     * @returns The calculated faction favor.
+     */
+    calculateRepToFavor(rep: number): number;
+
+    /**
+     * Calculate how much rep would be gained.
+     * @param amount - Amount of money donated
+     * @param player - Player info from {@link NS.getPlayer | getPlayer}
+     */
+    repFromDonation(amount: number, player: Player): number;
   }
 
   /**
@@ -3957,6 +4213,8 @@ declare module "Bitburner" {
    * @public
    */
   export interface Formulas {
+    /** Reputation formulas */
+    reputation: ReputationFormulas;
     /** Skills formulas */
     skills: SkillsFormulas;
     /** Hacking formulas */
@@ -3985,7 +4243,7 @@ declare module "Bitburner" {
    */
   export interface ActiveFragment {
     id: number;
-    avgCharge: number;
+    highestCharge: number;
     numCharge: number;
     rotation: number;
     x: number;
@@ -4003,14 +4261,14 @@ declare module "Bitburner" {
      * RAM cost: 0.4 GB
      * @returns The width of the gift.
      */
-    width(): number;
+    giftWidth(): number;
     /**
      * Stanek's Gift height.
      * @remarks
      * RAM cost: 0.4 GB
      * @returns The height of the gift.
      */
-    height(): number;
+    giftHeight(): number;
 
     /**
      * Charge a fragment, increasing its power.
@@ -4020,7 +4278,7 @@ declare module "Bitburner" {
      * @param rootY - rootY Root Y against which to align the top left of the fragment.
      * @returns Promise that lasts until the charge action is over.
      */
-    charge(rootX: number, rootY: number): Promise<void>;
+    chargeFragment(rootX: number, rootY: number): Promise<void>;
 
     /**
      * List possible fragments.
@@ -4045,7 +4303,7 @@ declare module "Bitburner" {
      * @remarks
      * RAM cost: 0 GB
      */
-    clear(): void;
+    clearGift(): void;
 
     /**
      * Check if fragment can be placed at specified location.
@@ -4058,7 +4316,7 @@ declare module "Bitburner" {
      * @param fragmentId - fragmentId ID of the fragment to place.
      * @returns true if the fragment can be placed at that position. false otherwise.
      */
-    canPlace(
+    canPlaceFragment(
       rootX: number,
       rootY: number,
       rotation: number,
@@ -4075,7 +4333,7 @@ declare module "Bitburner" {
      * @param fragmentId - ID of the fragment to place.
      * @returns true if the fragment can be placed at that position. false otherwise.
      */
-    place(
+    placeFragment(
       rootX: number,
       rootY: number,
       rotation: number,
@@ -4090,7 +4348,7 @@ declare module "Bitburner" {
      * @param rootY - Y against which to align the top left of the fragment.
      * @returns The fragment at [rootX, rootY], if any.
      */
-    get(rootX: number, rootY: number): ActiveFragment | undefined;
+    getFragment(rootX: number, rootY: number): ActiveFragment | undefined;
 
     /**
      * Remove fragment at location.
@@ -4101,7 +4359,17 @@ declare module "Bitburner" {
      * @param rootY - Y against which to align the top left of the fragment.
      * @returns The fragment at [rootX, rootY], if any.
      */
-    remove(rootX: number, rootY: number): boolean;
+    removeFragment(rootX: number, rootY: number): boolean;
+
+    /**
+     * Accept Stanek's Gift by joining the Church of the Machine God
+     * @remarks
+     * RAM cost: 2 GB
+     *
+     * @returns true if the player is a member of the church and has the gift installed,
+     * false otherwise.
+     */
+    acceptGift(): boolean;
   }
 
   /**
@@ -4197,14 +4465,14 @@ declare module "Bitburner" {
    *  ns.getHostname();
    *  // Some related functions are gathered under a sub-property of the ns object
    *  ns.stock.getPrice();
-   *  // Some functions need to be await ed
+   *  // Some functions need to be awaited
    *  await ns.hack('n00dles');
    * }
    * ```
    * {@link https://bitburner.readthedocs.io/en/latest/netscript/netscriptjs.html| ns2 in-game docs}
    * <hr>
    */
-  export interface NS extends Singularity {
+  export interface NS {
     /**
      * Namespace for hacknet functions.
      * @remarks RAM cost: 4 GB
@@ -4264,6 +4532,19 @@ declare module "Bitburner" {
      * RAM cost: 0 GB
      */
     readonly ui: UserInterface;
+
+    /**
+     * Namespace for singularity functions.
+     * RAM cost: 0 GB
+     */
+    readonly singularity: Singularity;
+
+    /**
+     * Namespace for grafting functions.
+     * @remarks
+     * RAM cost: 0 GB
+     */
+    readonly grafting: Grafting;
 
     /**
      * Arguments passed into the script.
@@ -4448,9 +4729,10 @@ declare module "Bitburner" {
      * Returns the security increase that would occur if a hack with this many threads happened.
      *
      * @param threads - Amount of threads that will be used.
+     * @param hostname - Hostname of the target server. The number of threads is limited to the number needed to hack the servers maximum amount of money.
      * @returns The security increase.
      */
-    hackAnalyzeSecurity(threads: number): number;
+    hackAnalyzeSecurity(threads: number, hostname?: string): number;
 
     /**
      * Get the chance of successfully hacking a server.
@@ -4505,9 +4787,15 @@ declare module "Bitburner" {
      * Returns the security increase that would occur if a grow with this many threads happened.
      *
      * @param threads - Amount of threads that will be used.
+     * @param hostname - Optional. Hostname of the target server. The number of threads is limited to the number needed to hack the servers maximum amount of money.
+     * @param cores - Optional. The number of cores of the server that would run grow.
      * @returns The security increase.
      */
-    growthAnalyzeSecurity(threads: number): number;
+    growthAnalyzeSecurity(
+      threads: number,
+      hostname?: string,
+      cores?: number
+    ): number;
 
     /**
      * Suspends the script for n milliseconds.
@@ -4535,7 +4823,7 @@ declare module "Bitburner" {
      * ```
      * @returns
      */
-    sleep(millis: number): Promise<void>;
+    sleep(millis: number): Promise<true>;
 
     /**
      * Suspends the script for n milliseconds. Doesn't block with concurrent calls.
@@ -4545,7 +4833,7 @@ declare module "Bitburner" {
      * @param millis - Number of milliseconds to sleep.
      * @returns
      */
-    asleep(millis: number): Promise<void>;
+    asleep(millis: number): Promise<true>;
 
     /**
      * Prints one or move values or variables to the script’s logs.
@@ -4673,6 +4961,27 @@ declare module "Bitburner" {
      * @returns Returns an string array, where each line is an element in the array. The most recently logged line is at the end of the array.
      */
     getScriptLogs(fn?: string, host?: string, ...args: any[]): string[];
+
+    /**
+     * Get an array of recently killed scripts across all servers.
+     * @remarks
+     * RAM cost: 0.2 GB
+     *
+     * The most recently killed script is the first element in the array.
+     * Note that there is a maximum number of recently killed scripts which are tracked.
+     * This is configurable in the game's options as `Recently killed scripts size`.
+     *
+     * @example
+     * ```ts
+     * let recentScripts = ns.getRecentScripts();
+     * let mostRecent = recentScripts.shift()
+     * if (mostRecent)
+     *   ns.tprint(mostRecent.logs.join('\n'))
+     * ```
+     *
+     * @returns Array with information about previously killed scripts.
+     */
+    getRecentScripts(): RecentScript[];
 
     /**
      * Open the tail window of a script.
@@ -4924,8 +5233,7 @@ declare module "Bitburner" {
      * PID stands for Process ID. The PID is a unique identifier for each script.
      * The PID will always be a positive integer.
      *
-     * Running this function with a numThreads argument of 0 will return 0 without running the script.
-     * However, running this function with a negative numThreads argument will cause a runtime error.
+     * Running this function with 0 or a negative numThreads argument will cause a runtime error.
      *
      * @example
      * ```ts
@@ -5034,6 +5342,34 @@ declare module "Bitburner" {
      * @returns True if the script is successfully killed, and false otherwise.
      */
     kill(script: number): boolean;
+
+    /**
+     * {@inheritDoc NS.(kill:1)}
+     * @example
+     * ```ts
+     * // NS1:
+     * //The following example will try to kill a script named foo.script on the foodnstuff server that was ran with no arguments:
+     * kill("foo.script", "foodnstuff");
+     *
+     * //The following will try to kill a script named foo.script on the current server that was ran with no arguments:
+     * kill("foo.script", getHostname());
+     *
+     * //The following will try to kill a script named foo.script on the current server that was ran with the arguments 1 and “foodnstuff”:
+     * kill("foo.script", getHostname(), 1, "foodnstuff");
+     * ```
+     * @example
+     * ```ts
+     * // NS2:
+     * //The following example will try to kill a script named foo.script on the foodnstuff server that was ran with no arguments:
+     * ns.kill("foo.script", "foodnstuff");
+     *
+     * //The following will try to kill a script named foo.script on the current server that was ran with no arguments:
+     * ns.kill("foo.script", getHostname());
+     *
+     * //The following will try to kill a script named foo.script on the current server that was ran with the arguments 1 and “foodnstuff”:
+     * ns.kill("foo.script", getHostname(), 1, "foodnstuff");
+     * ```
+     */
     kill(script: string, host: string, ...args: string[]): boolean;
 
     /**
@@ -5099,6 +5435,37 @@ declare module "Bitburner" {
      * @returns True if the script/literature file is successfully copied over and false otherwise. If the files argument is an array then this function will return true if at least one of the files in the array is successfully copied.
      */
     scp(files: string | string[], destination: string): Promise<boolean>;
+
+    /**
+     * {@inheritDoc NS.(scp:1)}
+     * @example
+     * ```ts
+     * // NS1:
+     * //Copies foo.lit from the helios server to the home computer:
+     * scp("foo.lit", "helios", "home");
+     *
+     * //Tries to copy three files from rothman-uni to home computer:
+     * files = ["foo1.lit", "foo2.script", "foo3.script"];
+     * scp(files, "rothman-uni", "home");
+     * ```
+     * @example
+     * ```ts
+     * // NS2:
+     * //Copies foo.lit from the helios server to the home computer:
+     * await ns.scp("foo.lit", "helios", "home");
+     *
+     * //Tries to copy three files from rothman-uni to home computer:
+     * files = ["foo1.lit", "foo2.script", "foo3.script"];
+     * await ns.scp(files, "rothman-uni", "home");
+     * ```
+     * @example
+     * ```ts
+     * //ns2, copies files from home to a target server
+     * const server = ns.args[0];
+     * const files = ["hack.js","weaken.js","grow.js"];
+     * await ns.scp(files, "home", server);
+     * ```
+     */
     scp(
       files: string | string[],
       source: string,
@@ -5129,8 +5496,8 @@ declare module "Bitburner" {
      * @example
      * ```ts
      * // NS1:
-     * const scripts = ps("home");
-     * for (let i = 0; i < scripts.length; ++i) {
+     * var scripts = ps("home");
+     * for (var i = 0; i < scripts.length; ++i) {
      *     tprint(scripts[i].filename + ' ' + scripts[i].threads);
      *     tprint(scripts[i].args);
      * }
@@ -5139,8 +5506,8 @@ declare module "Bitburner" {
      * ```ts
      * // NS2:
      * const ps = ns.ps("home");
-     * for (script of ps) {
-     *     ns.tprint(`${script.filename} ${ps[i].threads}`);
+     * for (let script of ps) {
+     *     ns.tprint(`${script.filename} ${script.threads}`);
      *     ns.tprint(script.args);
      * }
      * ```
@@ -5522,7 +5889,7 @@ declare module "Bitburner" {
       filename?: FilenameOrPID,
       hostname?: string,
       ...args: (string | number)[]
-    ): RunningScript;
+    ): RunningScript | null;
 
     /**
      * Get cost of purchasing a server.
@@ -5675,7 +6042,7 @@ declare module "Bitburner" {
      * @param data - Data to write.
      * @returns True if the data is successfully written to the port, and false otherwise.
      */
-    tryWritePort(port: number, data: string[] | number): Promise<boolean>;
+    tryWritePort(port: number, data: string | number): Promise<boolean>;
 
     /**
      * Read content of a file.
@@ -5915,6 +6282,10 @@ declare module "Bitburner" {
      * @returns Amount of income the specified script generates while online.
      */
     getScriptIncome(): [number, number];
+
+    /**
+     * {@inheritDoc NS.(getScriptIncome:1)}
+     */
     getScriptIncome(script: string, host: string, ...args: string[]): number;
 
     /**
@@ -5935,6 +6306,10 @@ declare module "Bitburner" {
      * @returns Amount of hacking experience the specified script generates while online.
      */
     getScriptExpGain(): number;
+
+    /**
+     * {@inheritDoc NS.(getScriptExpGain:1)}
+     */
     getScriptExpGain(script: string, host: string, ...args: string[]): number;
 
     /**
@@ -5998,19 +6373,28 @@ declare module "Bitburner" {
     tFormat(milliseconds: number, milliPrecision?: boolean): string;
 
     /**
-     * Prompt the player with a Yes/No modal.
+     * Prompt the player with an input modal.
      * @remarks
      * RAM cost: 0 GB
      *
-     * Prompts the player with a dialog box with two options: “Yes” and “No”.
-     * This function will return true if the player click “Yes” and false if
-     * the player clicks “No”. The script’s execution is halted until the player
-     * selects one of the options.
+     * Prompts the player with a dialog box. If `options.type` is undefined or "boolean",
+     * the player is shown "Yes" and "No" prompts, which return true and false respectively.
+     * Passing a type of "text" will give the player a text field and a value of "select"
+     * will show a drop-down field. Choosing type "select" will require an array or object
+     * to be passed via the `options.choices` property.
+     * The script’s execution is halted until the player selects one of the options.
      *
      * @param txt - Text to appear in the prompt dialog box.
-     * @returns True if the player click “Yes” and false if the player clicks “No”.
+     * @param options - Options to modify the prompt the player is shown.
+     * @returns True if the player click “Yes”; false if the player clicks “No”; or the value entered by the player.
      */
-    prompt(txt: string): Promise<boolean>;
+    prompt(
+      txt: string,
+      options?: {
+        type?: "boolean" | "text" | "select" | undefined;
+        choices?: string[];
+      }
+    ): Promise<boolean | string>;
 
     /**
      * Open up a message box.
@@ -6024,7 +6408,11 @@ declare module "Bitburner" {
      * @param variant - Type of toast, must be one of success, info, warning, error. Defaults to success.
      * @param duration - Duration of toast in ms. Can also be `null` to create a persistent toast. Defaults to 2000
      */
-    toast(msg: any, variant?: string, duration?: number | null): void;
+    toast(
+      msg: any,
+      variant?: ToastVariantValues,
+      duration?: number | null
+    ): void;
 
     /**
      * Download a file from the internet.
@@ -6219,6 +6607,24 @@ declare module "Bitburner" {
      * RAM cost: 0.2 GB
      */
     getSharePower(): number;
+
+    enums: NSEnums;
+  }
+
+  /** @public */
+  export enum ToastVariant {
+    SUCCESS = "success",
+    WARNING = "warning",
+    ERROR = "error",
+    INFO = "info",
+  }
+
+  /** @public */
+  export type ToastVariantValues = `${ToastVariant}`;
+
+  /** @public */
+  export interface NSEnums {
+    toast: typeof ToastVariant;
   }
 
   /**
@@ -6446,6 +6852,19 @@ declare module "Bitburner" {
       amt: number
     ): void;
     /**
+     * Set material to bulk buy
+     * @param divisionName - Name of the division
+     * @param cityName - Name of the city
+     * @param materialName - Name of the material
+     * @param amt - Amount of material to buy
+     */
+    bulkPurchase(
+      divisionName: string,
+      cityName: string,
+      materialName: string,
+      amt: number
+    ): void;
+    /**
      * Get warehouse data
      * @param divisionName - Name of the division
      * @param cityName - Name of the city
@@ -6562,8 +6981,13 @@ declare module "Bitburner" {
      * Upgrade warehouse
      * @param divisionName - Name of the division
      * @param cityName - Name of the city
+     * @param amt - amount of upgrades defaults to 1
      */
-    upgradeWarehouse(divisionName: string, cityName: string): void;
+    upgradeWarehouse(
+      divisionName: string,
+      cityName: string,
+      amt?: number
+    ): void;
     /**
      * Create a new product
      * @param divisionName - Name of the division
@@ -6580,15 +7004,48 @@ declare module "Bitburner" {
       marketingInvest: number
     ): void;
     /**
+     * Limit Material Production.
+     * @param divisionName - Name of the division
+     * @param cityName - Name of the city
+     * @param materialName - Name of the material
+     * @param qty - Amount to limit to
+     */
+    limitMaterialProduction(
+      divisionName: string,
+      cityName: string,
+      materialName: string,
+      qty: number
+    ): void;
+    /**
+     * Limit Product Production.
+     * @param divisionName - Name of the division
+     * @param cityName - Name of the city
+     * @param productName - Name of the product
+     * @param qty - Amount to limit to
+     */
+    limitProductProduction(
+      divisionName: string,
+      cityName: string,
+      productName: string,
+      qty: number
+    ): void;
+    /**
      * Gets the cost to purchase a warehouse
      * @returns cost
      */
     getPurchaseWarehouseCost(): number;
     /**
      * Gets the cost to upgrade a warehouse to the next level
+     * @param divisionName - Name of the division
+     * @param cityName - Name of the city
+     * @param amt - amount of upgrades defaults to 1
      * @returns cost to upgrade
      */
-    getUpgradeWarehouseCost(adivisionName: any, acityName: any): number;
+    getUpgradeWarehouseCost(
+      adivisionName: any,
+      acityName: any,
+      amt?: number
+    ): number;
     /**
      * Check if you have a warehouse in city
      * @returns true if warehouse is present, false if not
@@ -6711,6 +7168,28 @@ declare module "Bitburner" {
      * @param percent - Percent of profit to issue as dividends.
      */
     issueDividends(percent: number): void;
+    /**
+     * Buyback Shares
+     * @param amount - Amount of shares to buy back.
+     *
+     */
+    buyBackShares(amount: number): void;
+    /**
+     * Sell Shares
+     * @param amount -  Amount of shares to sell.
+     *
+     */
+    sellShares(amount: number): void;
+    /**
+     * Get bonus time.
+     *
+     * “Bonus time” is accumulated when the game is offline or if the game is inactive in the browser.
+     *
+     * “Bonus time” makes the game progress faster.
+     *
+     * @returns Bonus time for the Corporation mechanic in milliseconds.
+     */
+    getBonusTime(): number;
   }
 
   /**
@@ -6777,10 +7256,14 @@ declare module "Bitburner" {
   interface Product {
     /** Name of the product */
     name: string;
-    /** Demand for the product */
-    dmd: number;
-    /** Competition for the product */
-    cmp: number;
+    /** Demand for the product, only present if "Market Research - Demand" unlocked */
+    dmd: number | undefined;
+    /** Competition for the product, only present if "Market Research - Competition" unlocked */
+    cmp: number | undefined;
+    /** Product Rating */
+    rat: number;
+    /** Product Properties. The data is \{qlt, per, dur, rel, aes, fea\} */
+    properties: { [key: string]: number };
     /** Production cost */
     pCost: number;
     /** Sell cost, can be "MP+5" */
@@ -6804,10 +7287,16 @@ declare module "Bitburner" {
     qty: number;
     /** Quality of the material */
     qlt: number;
+    /** Demand for the material, only present if "Market Research - Demand" unlocked */
+    dmd: number | undefined;
+    /** Competition for the material, only present if "Market Research - Competition" unlocked */
+    cmp: number | undefined;
     /** Amount of material produced  */
     prod: number;
-    /** Amount of material sold  */
+    /** Amount of material sold */
     sell: number;
+    /** cost to buy material */
+    cost: number;
   }
 
   /**
@@ -6848,8 +7337,10 @@ declare module "Bitburner" {
     maxMor: number;
     /** Name of all the employees */
     employees: string[];
-    /** Positions of the employees */
+    /** Production of the employees */
     employeeProd: EmployeeJobs;
+    /** Positions of the employees */
+    employeeJobs: EmployeeJobs;
   }
 
   /**
@@ -6973,13 +7464,13 @@ declare module "Bitburner" {
   }
 
   /**
-   * Data passed to the autocomplete function.
+   * Used for autocompletion
    * @public
    */
   interface AutocompleteData {
     servers: string[];
-    txts: string[];
     scripts: string[];
-    flags: any;
+    txts: string[];
+    flags(schema: [string, string | number | boolean | string[]][]): any;
   }
 }
