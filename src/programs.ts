@@ -1,5 +1,6 @@
 import { NS } from "Bitburner";
 import { ProgramData } from "utils/ProgramData";
+import { createProgram } from "actions/programming";
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -18,25 +19,35 @@ export async function main(ns: NS) {
 
   const data = new ProgramData(ns);
 
-  while (true) {
-    await ns.sleep(30 * 1000);
+  while (data.programs.filter((p) => !p.exists).length > 0) {
     ns.clearLog();
-    let neededPrograms: string[] = [];
-    for (const program of data.programs) {
-      if (!program.exists) neededPrograms.push(program.filename);
-      else continue;
+    await createPrograms(ns);
+    await ns.sleep(1);
+  }
+}
 
-      if (program.hackingLevel <= ns.getHackingLevel()) {
-        // this program needs created.
-        if (!ns.scriptRunning("/actions/programming.js", ns.getHostname()))
-          ns.run("/actions/programming.js", 1, program.filename);
+export async function createPrograms(ns: NS) {
+  const data = new ProgramData(ns);
+
+  let neededPrograms: string[] = [];
+  for (const program of data.programs) {
+    if (!program.exists) neededPrograms.push(program.filename);
+    else continue;
+
+    if (program.hackingLevel <= ns.getHackingLevel()) {
+      // this program needs created.
+      while (!program.exists) {
+        await createProgram(ns, program.filename);
+        await ns.sleep(1);
       }
     }
+  }
 
-    if (neededPrograms.length === 0) return;
-    else {
-      ns.print(`Need these programs:
-        ${neededPrograms.join("\n")}`);
+  if (neededPrograms.length === 0) return;
+
+  if (ns.singularity.purchaseTor()) {
+    for (const programName of neededPrograms) {
+      ns.singularity.purchaseProgram(programName);
     }
   }
 }

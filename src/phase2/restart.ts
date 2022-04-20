@@ -1,34 +1,35 @@
 import { NS } from "Bitburner";
 import { getMinRam } from "purchase";
+import { getHackableServers } from "cnct";
 import { monitor } from "ui/monitor";
+import { nukeAll } from "nuker";
+import { installBackdoors } from "backdoor";
+import { createPrograms } from "programs";
+import { expandServer } from "expandServer";
+import { factionWatch } from "factionWatch";
+import { purchaseServers, upgradeServers } from "purchase";
+import { expandHacknet } from "hacknet";
+import { prepBatch } from "batching/prepBatch";
+import { batch } from "batching/batch";
+import { purchasePricey } from "actions/augmentations";
+import { commitCrime } from "actions/crime";
+import { manageStock } from "stocks/start";
 
 // timing constants
-const seconds = 1000; //milliseconds
-const second = seconds;
-const minutes = 60 * seconds;
-const minute = minutes;
-const hours = 60 * minutes;
-const hour = hours;
-const days = 24 * hours;
-const day = days;
-
-let restartDuration = 1 * day;
+// const second = 1000; //milliseconds
+// const seconds = second;
+// const minute = 60 * seconds;
+// const minutes = minute;
+// const hours = 60 * minutes;
+// const hour = hours;
+// const days = 24 * hours;
+// const day = days;
 
 const scripts = [
-  "backdoor.js",
-  "hacknet.js",
   "/contracts/start.js",
-  "programs.js",
-  "expandServer.js",
-  "factionWatch.js",
-  "purchase.js",
-  "/stocks/start.js",
-];
-
-const restartScripts = [
-  "/phase2/batchHack.js",
   //
 ];
+const updateDuration = 30 * 60 * 1000;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -48,38 +49,67 @@ export async function main(ns: NS) {
     // This delay is to keep the scripts from colliding.
     await ns.sleep(5000);
   }
-  while (true) {
-    for (const script of restartScripts) {
-      ns.run(script);
-      // This delay is to keep the scripts from colliding.
-      await ns.sleep(5000);
-    }
+  let target = getHackableServers(ns)[0].hostname;
+  let startTime = Date.now();
 
-    let hasFormulas = ns.fileExists("Formulas.exe");
-    if (hasFormulas) {
-      restartDuration = 30 * minutes;
-    }
-
-    const restartTime = Date.now() + restartDuration;
-    while (true) {
-      ns.clearLog();
-      ns.tail();
-      monitor(ns);
-      // ns.print(
-      //   `
-      // Hack Profit  : ${ns.nFormat(ns.getScriptIncome()[0], "$0.000a")} / sec.
-      // Hack XP      : ${ns.nFormat(ns.getScriptExpGain(), "0.000a")} / sec.
-      // `
-      // );
-      ns.print(`Restart in ${ns.tFormat(restartTime - Date.now())}`);
-      await ns.sleep(second);
-      if (Date.now() >= restartTime) break;
-      if (!hasFormulas && ns.fileExists("Formulas.exe")) {
-        restartDuration = 30 * minutes;
-        break;
-      }
-      if (getMinRam(ns) >= ns.getPurchasedServerMaxRam())
-        ns.spawn("phase3/restart.js");
-    }
+  async function updateHack() {
+    target = getHackableServers(ns)[0].hostname;
+    await prepBatch(ns, target);
+    await batch(ns, target);
+    startTime = Date.now();
   }
+  await spendMoney(ns);
+  await nukeAll(ns);
+  await updateHack();
+
+  while (true) {
+    ns.clearLog();
+    ns.tail();
+    // Keep nuking servers
+    await nukeAll(ns);
+    // update hack target if necessary
+    if (
+      getHackableServers(ns)[0].hostname !== target &&
+      Date.now() > startTime + updateDuration
+    )
+      await updateHack();
+    // install backdoors and join any factions.
+    await installBackdoors(ns);
+    factionWatch(ns);
+    await spendMoney(ns);
+    monitor(ns);
+    ns.print(
+      `Possible update in ${ns.tFormat(
+        startTime + updateDuration - Date.now()
+      )}`
+    );
+    // If I'm not to busy commit a crime.
+    await commitCrime(ns);
+    const owned = ns.singularity.getOwnedAugmentations(true);
+    let shouldInstall =
+      ns.singularity.getOwnedAugmentations(false).length < owned.length;
+    for (const faction of ns.getPlayer().factions) {
+      for (const aug of ns.singularity
+        .getAugmentationsFromFaction(faction)
+        .filter((a) => !a.startsWith("NeuroFlux"))) {
+        // if we don't have all augs don't install.
+        if (!owned.includes(aug)) shouldInstall = false;
+      }
+    }
+    if (shouldInstall) ns.singularity.installAugmentations("restart.js");
+  }
+}
+
+async function spendMoney(ns: NS) {
+  await purchasePricey(ns);
+  // Buy or create any programs you may need.
+  await createPrograms(ns);
+  expandServer(ns);
+  if (getMinRam(ns) < ns.getPurchasedServerMaxRam()) {
+    if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+      await purchaseServers(ns);
+    else await upgradeServers(ns);
+  }
+  expandHacknet(ns);
+  await manageStock(ns);
 }

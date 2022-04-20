@@ -16,22 +16,7 @@ const sellBellow = 0.5;
 export async function main(ns: NS) {
   ns.disableLog("ALL");
   ns.clearLog();
-  try {
-    if (
-      !ns.stock.purchase4SMarketData() ||
-      !ns.stock.purchase4SMarketDataTixApi()
-    ) {
-      ns.tprint(
-        "You need 4S Maket Data Api access to effectively trade stocks!"
-      );
-      return;
-    }
-  } catch (error) {
-    ns.tprint("You need 4S Maket Data Api access to effectively trade stocks!");
-    return;
-  }
-  while (true) {
-    await manageStock(ns);
+  while (await manageStock(ns)) {
     if (getFolio(ns).length > 0) ns.tail();
     showFolio(ns);
     await ns.sleep(1);
@@ -39,7 +24,19 @@ export async function main(ns: NS) {
 }
 
 /** @param {NS} ns **/
-async function manageStock(ns: NS) {
+export async function manageStock(ns: NS): Promise<boolean> {
+  try {
+    if (
+      !ns.stock.purchaseWseAccount() ||
+      !ns.stock.purchaseTixApi() ||
+      !ns.stock.purchase4SMarketData() ||
+      !ns.stock.purchase4SMarketDataTixApi()
+    ) {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
   // let stock = stockToWatch;
   let folio = getFolio(ns);
 
@@ -76,6 +73,7 @@ async function manageStock(ns: NS) {
       buyStock(ns, sym);
     }
   }
+  return true;
 }
 
 function buyStock(ns: NS, sym: string) {

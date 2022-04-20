@@ -16,7 +16,7 @@ export async function main(ns: NS) {
   }
 
   while (true) {
-    if (!ns.isBusy()) {
+    if (!ns.singularity.isBusy()) {
       work(ns);
     }
 
@@ -26,22 +26,19 @@ export async function main(ns: NS) {
 }
 
 export function expandServer(ns: NS) {
-  const ramUpgradeCost = ns.getUpgradeHomeRamCost();
-  const coreUpgradeCost = ns.getUpgradeHomeCoresCost();
-
-  ns.print(`Ram Cost      : ${ns.nFormat(ramUpgradeCost, "$0.0a")}`);
-  ns.print(`Core Cost     : ${ns.nFormat(coreUpgradeCost, "$0.0a")}`);
+  const ramUpgradeCost = ns.singularity.getUpgradeHomeRamCost();
+  const coreUpgradeCost = ns.singularity.getUpgradeHomeCoresCost();
 
   if (ns.getServerMoneyAvailable("home") >= ramUpgradeCost) {
-    ns.upgradeHomeRam();
+    ns.singularity.upgradeHomeRam();
   }
 
   if (ns.getServerMoneyAvailable("home") >= coreUpgradeCost) {
-    ns.upgradeHomeCores();
+    ns.singularity.upgradeHomeCores();
   }
 }
 
 function work(ns: NS) {
-  ns.applyToCompany(`Joe's Guns`, "part-time employee");
-  ns.workForCompany(`Joe's Guns`);
+  ns.singularity.applyToCompany(`Joe's Guns`, "part-time employee");
+  ns.singularity.workForCompany(`Joe's Guns`);
 }

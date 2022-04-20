@@ -1,6 +1,6 @@
 import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
-import { kill } from "utils/scriptKilling";
+import { calculateRam } from "purchase";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -59,6 +59,32 @@ export function monitor(ns: NS, target: Server | null = null) {
       ns.formulas.hacking.weakenTime(server, player)
     )}
     `);
+  ns.print(`home:
+    RAM           : ${ns.nFormat(ns.getServerMaxRam("home") * 1e9, "0.0b")}
+    RAM Upgrade @ : ${ns.nFormat(
+      ns.singularity.getUpgradeHomeRamCost(),
+      "$0.0a"
+    )}
+    Cores         : ${ns.getServer("home").cpuCores}
+    Core Upgrade @: ${ns.nFormat(
+      ns.singularity.getUpgradeHomeCoresCost(),
+      "$0.0a"
+    )}`);
+  let ram = 0;
+  for (const host of ns.getPurchasedServers()) {
+    ram += ns.getServerMaxRam(host);
+  }
+  const maxRam = ns.getPurchasedServerLimit() * ns.getPurchasedServerMaxRam();
+  const sorted = ns
+    .getPurchasedServers()
+    .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b));
+  const smallest = sorted[0];
+  const largest = sorted[sorted.length - 1];
+  ns.print(`Purchased Servers:
+    Smallest      : ${ns.nFormat(ns.getServerMaxRam(smallest) * 1e9, "0.0b")}
+    Largest       : ${ns.nFormat(ns.getServerMaxRam(largest) * 1e9, "0.0b")}
+    Current RAM   : ${ns.nFormat(ram * 1e9, "0.0b")}
+    Max RAM       : ${ns.nFormat(maxRam * 1e9, "0.0b")}`);
 }
 
 export function autocomplete(data: AutocompleteData) {

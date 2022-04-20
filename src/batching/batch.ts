@@ -7,13 +7,12 @@ import { ps } from "ps";
 import { expandServer } from "expandServer";
 import { commitCrime } from "actions/crime";
 import { purchaseServers, upgradeServers } from "purchase";
+import { monitor } from "ui/monitor";
 
 const minBufferTime = 60;
 let bufferTime = minBufferTime;
 const growMultiplier = 4;
 const hackPercent = 0.5;
-
-const analyzeScript = "ui/monitor.js";
 
 const runningScripts = [
   "/batching/hack.js",
@@ -38,9 +37,6 @@ export async function main(ns: NS) {
       `);
     return;
   }
-
-  // analyze the server
-  ns.run(analyzeScript, 1, target, `Batch attack!`);
 
   await prepBatch(ns, target);
 
@@ -103,6 +99,7 @@ export async function batch(ns: NS, target: string) {
     );
     ns.print(`Target security is ${targetDelta}`);
   }
+  ns.clearLog();
 
   // sanity check
   if (hackTime > growTime || hackTime > weakenTime || growTime > weakenTime) {
@@ -110,7 +107,9 @@ export async function batch(ns: NS, target: string) {
     return;
   }
 
+  ns.clearLog();
   ns.print("Hacking...");
+  monitor(ns, ns.getServer(target));
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 1);
   await ns.sleep(weakenTime - (bufferTime * 2) / 3);
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 2);

@@ -72,12 +72,12 @@ export async function main(ns: NS) {
 }
 
 export function factionWatch(ns: NS) {
-  const ownedAugs = ns.getOwnedAugmentations(true);
-  for (const invitation of ns.checkFactionInvitations()) {
+  const ownedAugs = ns.singularity.getOwnedAugmentations(true);
+  for (const invitation of ns.singularity.checkFactionInvitations()) {
     // check if I need any of this factions augmentations.
-    for (const aug of ns.getAugmentationsFromFaction(invitation)) {
+    for (const aug of ns.singularity.getAugmentationsFromFaction(invitation)) {
       if (!ownedAugs.includes(aug)) {
-        ns.joinFaction(invitation);
+        ns.singularity.joinFaction(invitation);
         break;
       }
     }
@@ -86,11 +86,177 @@ export function factionWatch(ns: NS) {
   const { factions } = ns.getPlayer();
   // now check for the first invitation;
   if (factions.length === 0) {
-    for (const invitation of ns.checkFactionInvitations()) {
+    for (const invitation of ns.singularity.checkFactionInvitations()) {
       // skip restricted factions here.
       if (restrictedFactions.includes(invitation)) continue;
-      ns.joinFaction(invitation);
+      ns.singularity.joinFaction(invitation);
       break;
     }
   }
+
+  travel(ns);
+}
+
+export function travel(ns: NS) {
+  // travel if necessary
+  function findTargetCity() {
+    for (const city of restrictedFactions) {
+      if (
+        !factionIsCleared(ns, city) &&
+        !ns.getPlayer().factions.includes(city)
+      ) {
+        return city;
+      }
+    }
+  }
+
+  switch (ns.getPlayer().city) {
+    case "Sector-12":
+      if (
+        (ns.getPlayer().factions.includes("Sector-12") ||
+          factionIsCleared(ns, "Sector-12")) &&
+        !ns.getPlayer().factions.includes("Aevum") &&
+        !factionIsCleared(ns, "Aevum")
+      )
+        ns.singularity.travelToCity("Aevum");
+      if (factionIsCleared(ns, "Sector-12") && factionIsCleared(ns, "Aevum")) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) ns.singularity.travelToCity(city);
+      }
+      break;
+    case "Aevum":
+      if (
+        (ns.getPlayer().factions.includes("Aevum") ||
+          factionIsCleared(ns, "Aevum")) &&
+        !ns.getPlayer().factions.includes("Sector-12") &&
+        !factionIsCleared(ns, "Sector-12")
+      )
+        ns.singularity.travelToCity("Sector-12");
+      if (factionIsCleared(ns, "Sector-12") && factionIsCleared(ns, "Aevum")) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) ns.singularity.travelToCity(city);
+      }
+      break;
+    case "Chongqing":
+      if (
+        ns.getPlayer().factions.includes("Chongqing") ||
+        factionIsCleared(ns, "Chongqing")
+      ) {
+        if (
+          !ns.getPlayer().factions.includes("New Tokyo") &&
+          !factionIsCleared(ns, "New Tokyo")
+        ) {
+          ns.singularity.travelToCity("New Tokyo");
+          break;
+        }
+        if (
+          !ns.getPlayer().factions.includes("Ishima") &&
+          !factionIsCleared(ns, "Ishima")
+        ) {
+          ns.singularity.travelToCity("Ishima");
+          break;
+        }
+      }
+
+      if (
+        factionIsCleared(ns, "Chongqing") &&
+        factionIsCleared(ns, "New Tokyo") &&
+        factionIsCleared(ns, "Ishima")
+      ) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) {
+          ns.singularity.travelToCity(city);
+          break;
+        }
+      }
+    case "New Tokyo":
+      if (
+        ns.getPlayer().factions.includes("New Tokyo") ||
+        factionIsCleared(ns, "New Tokyo")
+      ) {
+        if (
+          !ns.getPlayer().factions.includes("Chongqing") &&
+          !factionIsCleared(ns, "Chongqing")
+        ) {
+          ns.singularity.travelToCity("Chongqing");
+          break;
+        }
+        if (
+          !ns.getPlayer().factions.includes("Ishima") &&
+          !factionIsCleared(ns, "Ishima")
+        ) {
+          ns.singularity.travelToCity("Ishima");
+          break;
+        }
+      }
+
+      if (
+        factionIsCleared(ns, "Chongqing") &&
+        factionIsCleared(ns, "New Tokyo") &&
+        factionIsCleared(ns, "Ishima")
+      ) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) {
+          ns.singularity.travelToCity(city);
+          break;
+        }
+      }
+    case "Ishima":
+      if (
+        ns.getPlayer().factions.includes("Ishima") ||
+        factionIsCleared(ns, "Ishima")
+      ) {
+        if (
+          !ns.getPlayer().factions.includes("New Tokyo") &&
+          !factionIsCleared(ns, "New Tokyo")
+        ) {
+          ns.singularity.travelToCity("New Tokyo");
+          break;
+        }
+        if (
+          !ns.getPlayer().factions.includes("Chongqing") &&
+          !factionIsCleared(ns, "Chongqing")
+        ) {
+          ns.singularity.travelToCity("Chongqing");
+          break;
+        }
+      }
+
+      if (
+        factionIsCleared(ns, "Chongqing") &&
+        factionIsCleared(ns, "New Tokyo") &&
+        factionIsCleared(ns, "Ishima")
+      ) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) {
+          ns.singularity.travelToCity(city);
+          break;
+        }
+      }
+    case "Volhaven":
+      if (factionIsCleared(ns, "Volhaven")) {
+        // check other cities
+        const city = findTargetCity();
+        if (city) {
+          ns.singularity.travelToCity(city);
+          break;
+        }
+      }
+  }
+}
+
+export function factionIsCleared(ns: NS, faction: string) {
+  const owned = ns.singularity.getOwnedAugmentations(true);
+  if (
+    ns.singularity
+      .getAugmentationsFromFaction(faction)
+      .filter((aug) => !owned.includes(aug)).length === 0
+  )
+    return true;
+  return false;
 }

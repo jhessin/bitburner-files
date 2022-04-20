@@ -1,5 +1,4 @@
 import { NS } from "Bitburner";
-import { hasSourceFile } from "actions/test";
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -18,15 +17,18 @@ export async function main(ns: NS) {
   ns.disableLog("ALL");
   while (!ns.fileExists(programName)) {
     ns.clearLog();
-    ns.tail();
-    ns.print(`Creating ${programName}`);
-    if (hasSourceFile(ns, 4)) {
-      if (ns.purchaseTor() && ns.purchaseProgram(programName)) return;
-      if (!ns.isBusy() || !ns.getPlayer().workType.includes("Program"))
-        ns.createProgram(programName);
-    } else if (!ns.getPlayer().workType.includes("Program")) {
-      ns.toast(`please create or purchase ${programName}`);
-    }
-    await ns.sleep(1000);
+    await createProgram(ns, programName);
+    await ns.sleep(1);
   }
+}
+
+export async function createProgram(ns: NS, programName: string) {
+  ns.tail();
+  if (
+    ns.singularity.purchaseTor() &&
+    ns.singularity.purchaseProgram(programName)
+  )
+    return;
+  if (!ns.singularity.isBusy() || !ns.getPlayer().workType.includes("Program"))
+    ns.singularity.createProgram(programName);
 }

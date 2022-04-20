@@ -18,8 +18,12 @@ export async function main(ns: NS) {
   let augs: { aug: string; faction: string; price: number }[] = [];
 
   for (const faction of factions) {
-    for (const aug of ns.getAugmentationsFromFaction(faction)) {
-      augs.push({ aug, faction, price: ns.getAugmentationPrice(aug) });
+    for (const aug of ns.singularity.getAugmentationsFromFaction(faction)) {
+      augs.push({
+        aug,
+        faction,
+        price: ns.singularity.getAugmentationPrice(aug),
+      });
     }
   }
 

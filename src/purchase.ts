@@ -21,20 +21,17 @@ export async function main(ns: NS) {
     ns.tail();
     await purchaseServers(ns);
   }
-  ns.print("All servers have been purchased! Working on upgrades.");
   while (getMinRam(ns) < ns.getPurchasedServerMaxRam()) {
     ns.clearLog();
     ns.tail();
     await upgradeServers(ns);
   }
   ns.clearLog();
-  serverStats(ns);
-  ns.print("All servers have been Upgraded!");
+  // serverStats(ns);
 }
 
 export async function upgradeServers(ns: NS) {
-  await ns.sleep(1);
-  serverStats(ns);
+  // serverStats(ns);
   const ram = await calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
   const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
@@ -43,15 +40,6 @@ export async function upgradeServers(ns: NS) {
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
   if (moneyAvailable > price) {
     // find the server with the least amount of ram.
-    ns.print(
-      `Upgrading server ${serverName} from ${ns.nFormat(
-        ns.getServerMaxRam(serverName) * 1e9,
-        "0.000b"
-      )} to ${ns.nFormat(ram * 1e9, "0.000b")} of RAM for ${ns.nFormat(
-        price,
-        "$0.000a"
-      )}`
-    );
     ns.enableLog("deleteServer");
     ns.enableLog("purchaseServer");
     if (ns.ps(serverName).length === 0) {
@@ -60,40 +48,22 @@ export async function upgradeServers(ns: NS) {
     } else {
       // TODO: find a way to migrate processes to another server.
     }
-  } else {
-    ns.print(
-      `You need ${ns.nFormat(
-        price,
-        "$0.000a"
-      )} to upgrade ${serverName} from ${ns.nFormat(
-        ns.getServerMaxRam(serverName) * 1e9,
-        "0.000b"
-      )} to ${ns.nFormat(ram * 1e9, "0.000b")} of RAM`
-    );
   }
 }
 
 export async function purchaseServers(ns: NS) {
   await ns.sleep(1);
-  serverStats(ns);
+  // serverStats(ns);
   const ram = await calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
   const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
   if (moneyAvailable > price) {
     const serverName = `pserver-${Date.now()}`;
-    ns.print(`Buying server ${serverName} for ${ns.nFormat(price, "$0.000a")}`);
-    ns.purchaseServer(`pserver-${Date.now()}`, ram);
-  } else {
-    ns.print(
-      `You need ${ns.nFormat(
-        price,
-        "$0.000a"
-      )} to purchase a server with ${ns.nFormat(ram * 1e9, "0.000b")} of RAM`
-    );
+    ns.purchaseServer(serverName, ram);
   }
 }
 
-async function calculateRam(ns: NS) {
+export async function calculateRam(ns: NS) {
   // get budget
   // return ns.getPurchasedServerMaxRam();
   const budget = ns.getServerMoneyAvailable("home") * budgetPercent;

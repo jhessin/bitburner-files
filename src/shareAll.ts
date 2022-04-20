@@ -17,6 +17,10 @@ export async function main(ns: NS) {
     return;
   }
 
+  await shareAll(ns);
+}
+
+export async function shareAll(ns: NS) {
   // copy the share script to all the servers we have admin priveledges to.
   for (const server of getRunnableServers(ns)) {
     // if (!server || server.hostname === "home") continue;
@@ -32,6 +36,7 @@ export async function main(ns: NS) {
       ),
       1
     );
+    if (maxThreads < 1) maxThreads = 1;
     // run the share script if possible.
     ns.exec(shareScript, server.hostname, maxThreads);
   }

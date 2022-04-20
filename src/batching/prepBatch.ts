@@ -45,8 +45,8 @@ export async function prepBatch(ns: NS, target: string) {
   // pin targetDelta to 100 to prevent infinity
   if (targetDelta > 100) targetDelta = 100;
 
+  ns.clearLog();
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
-    ns.clearLog();
     ns.tail();
     monitor(ns, ns.getServer(target));
     factionWatch(ns);
@@ -55,7 +55,6 @@ export async function prepBatch(ns: NS, target: string) {
     else await upgradeServers(ns);
     await commitCrime(ns);
     weakenThreads += 1;
-    ns.clearLog();
     ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
     ns.print(
       `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
@@ -64,6 +63,7 @@ export async function prepBatch(ns: NS, target: string) {
     );
     ns.print(`Target security is ${targetDelta}`);
   }
+  ns.clearLog();
 
   // calculate timing
   const { hackTime, growTime, weakenTime } = getTiming(ns, target);
@@ -76,10 +76,10 @@ export async function prepBatch(ns: NS, target: string) {
 
   ns.print("Preparing...");
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime);
+  ns.clearLog();
   while (
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
-    ns.clearLog();
     ns.tail();
     monitor(ns, ns.getServer(target));
     factionWatch(ns);
@@ -88,9 +88,10 @@ export async function prepBatch(ns: NS, target: string) {
     else await upgradeServers(ns);
     await commitCrime(ns);
   }
+  ns.clearLog();
   await runSpawner(ns, "grow", target, growThreads, bufferTime);
+  ns.clearLog();
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
-    ns.clearLog();
     ns.tail();
     monitor(ns, ns.getServer(target));
     factionWatch(ns);
@@ -99,6 +100,7 @@ export async function prepBatch(ns: NS, target: string) {
     else await upgradeServers(ns);
     await commitCrime(ns);
   }
+  ns.clearLog();
   kill(
     ns,
     (ps) =>

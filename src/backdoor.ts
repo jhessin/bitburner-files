@@ -24,49 +24,51 @@ export async function main(ns: NS) {
 
     // find nukable servers.
     if (!ns.scriptRunning("nuker.js", "home")) ns.run("nuker.js");
-    const allServers = new ServerTree(ns).home.filter(
-      (s) =>
-        s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
-    );
-    // clear the log.
-    ns.clearLog();
-    const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);
+    await installBackdoors(ns);
+  }
+}
+
+export async function installBackdoors(ns: NS) {
+  const allServers = new ServerTree(ns).home.filter(
+    (s) =>
+      s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
+  );
+  const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);
+  if (serversBackdoored.length === allServers.length) {
     ns.print(`
-      ||=====================||
-      ||${serversBackdoored.length.toPrecision(
-        2
-      )} of ${allServers.length.toPrecision(2)} servers     ||
-      ||have been backdoored.||
-      ||=====================||
-      `);
-    if (serversBackdoored.length === allServers.length) {
-      ns.clearLog();
-      ns.print(`
         ALL SERVERS HAVE BEEN BACKDOORED
         `);
-      return;
-    }
-    let backdoors = allServers.filter(
-      (s) =>
-        s.hasAdminRights &&
-        !s.backdoorInstalled &&
-        s.requiredHackingSkill < ns.getHackingLevel()
-    );
-    // show the log if we have servers to backdoor
-    if (backdoors.length === 0) {
-      ns.print("No servers require a backdoor at this time.");
-      continue;
-    }
-    if (
-      ns
-        .getOwnedSourceFiles()
-        .map((sf) => sf.n)
-        .includes(4) ||
-      ns.getPlayer().bitNodeN === 4
-    ) {
-      await bn4(ns, backdoors);
-    } else await noBn4(ns, backdoors);
+    return;
   }
+  let backdoors = allServers.filter(
+    (s) =>
+      s.hasAdminRights &&
+      !s.backdoorInstalled &&
+      s.requiredHackingSkill < ns.getHackingLevel()
+  );
+  ns.print(`
+      ||=====================||
+      ||${serversBackdoored.length} of ${allServers.length.toPrecision(
+    2
+  )} servers     ||
+      ||have been backdoored.||
+      ||${backdoors.length} servers     ||
+      ||are being backdoored.||
+      ||=====================||
+      `);
+  // show the log if we have servers to backdoor
+  if (backdoors.length === 0) {
+    return;
+  }
+  if (
+    ns
+      .getOwnedSourceFiles()
+      .map((sf) => sf.n)
+      .includes(4) ||
+    ns.getPlayer().bitNodeN === 4
+  ) {
+    await bn4(ns, backdoors);
+  } else await noBn4(ns, backdoors);
 }
 
 async function noBn4(ns: NS, backdoors: Server[]) {
@@ -82,18 +84,18 @@ async function noBn4(ns: NS, backdoors: Server[]) {
   ns.print(`===============================`);
 }
 
-async function bn4(ns: NS, backdoors: Server[]) {
+export async function bn4(ns: NS, backdoors: Server[]) {
   const tree = new ServerTree(ns);
   for (const host of backdoors) {
     const path = tree.home.find(host.hostname);
     // go to the target
     for (const host of path) {
-      ns.connect(host);
+      ns.singularity.connect(host);
     }
-    await ns.installBackdoor();
+    await ns.singularity.installBackdoor();
     // return home
     for (const host of path.reverse()) {
-      ns.connect(host);
+      ns.singularity.connect(host);
     }
   }
 }

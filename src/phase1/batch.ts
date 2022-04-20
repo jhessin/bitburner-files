@@ -7,6 +7,8 @@ import { batch } from "batching/batch";
 import { commitCrime } from "actions/crime";
 import { purchaseServers, upgradeServers } from "purchase";
 import { monitor } from "ui/monitor";
+import { installBackdoors } from "backdoor";
+import { createPrograms } from "programs";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -16,12 +18,14 @@ export async function main(ns: NS) {
   while (getHackableServers(ns)[0].hostname === bestServer) {
     ns.clearLog();
     await nukeAll(ns);
+    await installBackdoors(ns);
     expandServer(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
     factionWatch(ns);
     monitor(ns, ns.getServer(bestServer));
+    await createPrograms(ns);
     await commitCrime(ns);
   }
   ns.spawn("phase1/restart.js");

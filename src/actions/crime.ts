@@ -30,13 +30,17 @@ export async function commitCrime(
   goal: number = 0
 ) {
   if (!crime) crime = getBestCrime(ns);
-  const time = ns.getCrimeStats(crime).time;
+  const time = ns.singularity.getCrimeStats(crime).time;
   while (true) {
     ns.disableLog("ALL");
     ns.enableLog("commitCrime");
     ns.tail();
-    if (!ns.isBusy()) ns.commitCrime(crime);
-    await ns.sleep(time);
+    if (!ns.singularity.isBusy()) {
+      ns.singularity.commitCrime(crime);
+      await ns.sleep(time);
+    } else {
+      await ns.sleep(1);
+    }
     if (ns.getServerMoneyAvailable("home") >= goal) return;
   }
 }
@@ -50,8 +54,9 @@ function getBestCrime(ns: NS): string {
 // This gives the cash value of a crime taking in to account the chance of
 // success as well as the time taken.
 function crimeCashValue(ns: NS, crime: string) {
-  const chance = ns.getCrimeChance(crime);
-  const stats = ns.getCrimeStats(crime);
+  const chance = ns.singularity.getCrimeChance(crime);
+  const stats = ns.singularity.getCrimeStats(crime);
+  const cash = ns.getBitNodeMultipliers().CrimeMoney * stats.money;
 
-  return (stats.money * chance) / stats.time;
+  return (cash * chance) / stats.time + 1 / stats.time;
 }
