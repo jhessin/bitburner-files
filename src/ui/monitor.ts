@@ -1,6 +1,5 @@
 import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
-import { calculateRam } from "purchase";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
@@ -81,6 +80,9 @@ export function monitor(ns: NS, target: Server | null = null) {
   const smallest = sorted[0];
   const largest = sorted[sorted.length - 1];
   ns.print(`Purchased Servers:
+    Count         : ${
+      ns.getPurchasedServers().length
+    } / ${ns.getPurchasedServerLimit()}
     Smallest      : ${ns.nFormat(ns.getServerMaxRam(smallest) * 1e9, "0.0b")}
     Largest       : ${ns.nFormat(ns.getServerMaxRam(largest) * 1e9, "0.0b")}
     Current RAM   : ${ns.nFormat(ram * 1e9, "0.0b")}

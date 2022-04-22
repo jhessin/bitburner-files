@@ -9,11 +9,10 @@ import { expandServer } from "expandServer";
 import { factionWatch } from "factionWatch";
 import { purchaseServers, upgradeServers } from "purchase";
 import { expandHacknet } from "hacknet";
-import { prepBatch } from "batching/prepBatch";
 import { batch } from "batching/batch";
 import { purchasePricey } from "actions/augmentations";
-import { commitCrime } from "actions/crime";
 import { manageStock } from "stocks/start";
+import { companyWork } from "actions/companyWork";
 
 // timing constants
 // const second = 1000; //milliseconds
@@ -46,16 +45,18 @@ export async function main(ns: NS) {
   }
   for (const script of scripts) {
     ns.run(script);
-    // This delay is to keep the scripts from colliding.
-    await ns.sleep(5000);
   }
+  await nukeAll(ns);
   let target = getHackableServers(ns)[0].hostname;
   let startTime = Date.now();
 
   async function updateHack() {
     target = getHackableServers(ns)[0].hostname;
-    await prepBatch(ns, target);
-    await batch(ns, target);
+    if (
+      !ns.scriptRunning("/batching/batch.js", "home") &&
+      !ns.run("/batching/batch.js", 1, target)
+    )
+      await batch(ns, target);
     startTime = Date.now();
   }
   await spendMoney(ns);
@@ -74,8 +75,11 @@ export async function main(ns: NS) {
     )
       await updateHack();
     // install backdoors and join any factions.
-    await installBackdoors(ns);
-    factionWatch(ns);
+    if (!ns.scriptRunning("backdoor.js", "home")) {
+      if (!ns.run("backdoor.js")) await installBackdoors(ns);
+    }
+    if (!ns.scriptRunning("factionWatch.js", "home"))
+      if (!ns.run("factionWatch.js")) factionWatch(ns);
     await spendMoney(ns);
     monitor(ns);
     ns.print(
@@ -83,9 +87,16 @@ export async function main(ns: NS) {
         startTime + updateDuration - Date.now()
       )}`
     );
-    // If I'm not to busy commit a crime.
-    await commitCrime(ns);
+    await ns.sleep(1);
+    // If I'm not to busy work for a company.
+    if (!ns.singularity.isBusy() || ns.getPlayer().workType.includes("company"))
+      await companyWork(ns);
     const owned = ns.singularity.getOwnedAugmentations(true);
+    if (
+      !(await purchasePricey(ns)) &&
+      owned.length > ns.singularity.getOwnedAugmentations(false).length
+    )
+      ns.singularity.installAugmentations("restart.js");
     let shouldInstall =
       ns.singularity.getOwnedAugmentations(false).length < owned.length;
     for (const faction of ns.getPlayer().factions) {
@@ -96,7 +107,8 @@ export async function main(ns: NS) {
         if (!owned.includes(aug)) shouldInstall = false;
       }
     }
-    if (shouldInstall) ns.singularity.installAugmentations("restart.js");
+    if (shouldInstall || !(await purchasePricey(ns)))
+      ns.singularity.installAugmentations("restart.js");
   }
 }
 

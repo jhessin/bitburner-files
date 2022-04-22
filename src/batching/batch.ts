@@ -5,9 +5,9 @@ import { prepBatch } from "batching/prepBatch";
 import { runSpawner, spawnerName } from "batching/runSpawner";
 import { ps } from "ps";
 import { expandServer } from "expandServer";
-import { commitCrime } from "actions/crime";
 import { purchaseServers, upgradeServers } from "purchase";
 import { monitor } from "ui/monitor";
+import { companyWork } from "actions/companyWork";
 
 const minBufferTime = 60;
 let bufferTime = minBufferTime;
@@ -38,12 +38,13 @@ export async function main(ns: NS) {
     return;
   }
 
-  await prepBatch(ns, target);
-
   await batch(ns, target);
 }
 
 export async function batch(ns: NS, target: string) {
+  // first prep the server
+  await prepBatch(ns, target);
+
   // now find the required number of threads for each action.
   const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
   const hackThreads = Math.ceil(hackPercent / ns.hackAnalyze(target));
@@ -75,10 +76,11 @@ export async function batch(ns: NS, target: string) {
   if (
     ps(ns).find(
       (ps) =>
-        ps.ps.args.includes(target) &&
         ps.ps.filename === spawnerName &&
         ps.ps.args.includes("hack") &&
-        ps.ps.args.includes(bufferTime.toString())
+        ps.ps.args.includes(target)
+      // &&
+      //   ps.ps.args.includes(bufferTime)
     )
   )
     // already hacking
@@ -111,12 +113,16 @@ export async function batch(ns: NS, target: string) {
   ns.print("Hacking...");
   monitor(ns, ns.getServer(target));
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 1);
+  ns.print("Weaken 1...");
   await ns.sleep(weakenTime - (bufferTime * 2) / 3);
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 2);
+  ns.print("Weaken 2...");
   await ns.sleep(weakenTime - growTime - bufferTime / 3);
   await runSpawner(ns, "grow", target, growThreads, bufferTime);
+  ns.print("Grow ...");
   await ns.sleep(growTime - hackTime - (bufferTime * 2) / 3);
   await runSpawner(ns, "hack", target, hackThreads, bufferTime);
+  ns.print("HACK!");
 }
 
 function getTiming(ns: NS, target: any) {
@@ -175,7 +181,8 @@ export async function prepareServer(ns: NS, target: any) {
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    await commitCrime(ns);
+    if (!ns.singularity.isBusy()) await companyWork(ns);
+    await ns.sleep(1);
   }
   // ns.kill(growPid);
   await killMsg(ns, "grow", target);
@@ -187,7 +194,8 @@ export async function prepareServer(ns: NS, target: any) {
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    await commitCrime(ns);
+    if (!ns.singularity.isBusy()) await companyWork(ns);
+    await ns.sleep(1);
   }
   // ns.kill(weakenPid);
   await killMsg(ns, "weaken", target);
@@ -213,8 +221,7 @@ export function autocomplete(data: AutocompleteData) {
 function totalRAM(ns: NS) {
   let total = 0;
   for (const { hostname } of getRunnableServers(ns)) {
-    const host = hostname;
-    total += ns.getServerMaxRam(host);
+    total += ns.getServerMaxRam(hostname);
   }
   return total - ns.getServerUsedRam("home");
 }

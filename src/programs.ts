@@ -38,7 +38,6 @@ export async function createPrograms(ns: NS) {
       // this program needs created.
       while (!program.exists) {
         await createProgram(ns, program.filename);
-        await ns.sleep(1);
       }
     }
   }

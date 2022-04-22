@@ -15,6 +15,7 @@ export async function workForFaction(ns: NS, faction: string) {
     ns.getPlayer().workType.toLowerCase().includes("faction") &&
     ns.getPlayer().currentWorkFactionName === faction
   ) {
+    ns.print(`Max Rep : ${ns.nFormat(goal, "0.000a")}`);
     if (
       ns.singularity.getFactionRep(faction) + ns.getPlayer().workRepGained >=
       goal

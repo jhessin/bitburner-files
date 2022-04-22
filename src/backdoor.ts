@@ -47,14 +47,10 @@ export async function installBackdoors(ns: NS) {
       s.requiredHackingSkill < ns.getHackingLevel()
   );
   ns.print(`
-      ||=====================||
-      ||${serversBackdoored.length} of ${allServers.length.toPrecision(
-    2
-  )} servers     ||
-      ||have been backdoored.||
-      ||${backdoors.length} servers     ||
-      ||are being backdoored.||
-      ||=====================||
+      ${serversBackdoored.length} of ${allServers.length.toPrecision(2)} servers
+      have been backdoored.
+      ${backdoors.length} servers
+      are being backdoored.
       `);
   // show the log if we have servers to backdoor
   if (backdoors.length === 0) {
@@ -92,6 +88,8 @@ export async function bn4(ns: NS, backdoors: Server[]) {
     for (const host of path) {
       ns.singularity.connect(host);
     }
+    ns.enableLog("installBackdoor");
+    ns.print(ns.tFormat(Date.now()));
     await ns.singularity.installBackdoor();
     // return home
     for (const host of path.reverse()) {

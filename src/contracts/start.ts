@@ -96,7 +96,7 @@ export async function main(ns: NS) {
         refreshLog();
       }
     }
-    await ns.sleep(minuteInterval * 60 * 1000);
+    await ns.sleep(1);
   }
 }
 

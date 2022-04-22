@@ -17,7 +17,10 @@ export async function main(ns: NS) {
   }
 }
 
-export function priciestAug(ns: NS): string {
+export function priciestAug(
+  ns: NS,
+  cap: number = getMaxPrice(ns)
+): string | undefined {
   const owned = ns.singularity.getOwnedAugmentations(true);
   let allAugs: string[] = [];
   for (const faction of ns.getPlayer().factions) {
@@ -28,6 +31,7 @@ export function priciestAug(ns: NS): string {
         for (const prereq of ns.singularity.getAugmentationPrereq(a)) {
           if (!owned.includes(prereq)) return false;
         }
+        if (ns.singularity.getAugmentationPrice(a) > cap) return false;
         return true;
       })) {
       allAugs.push(aug);
@@ -43,6 +47,7 @@ export function priciestAug(ns: NS): string {
 export async function farmRep(ns: NS) {
   for (const faction of ns.getPlayer().factions) {
     if (
+      !ns.singularity.isBusy() &&
       ns.singularity.getFactionRep(faction) < getFactionRepGoal(ns, faction)
     ) {
       await workForFaction(ns, faction);
@@ -50,9 +55,16 @@ export async function farmRep(ns: NS) {
   }
 }
 
-export async function purchasePricey(ns: NS) {
+export async function purchasePricey(ns: NS): Promise<boolean> {
   const targetAug = priciestAug(ns);
+  if (!targetAug) return false;
   ns.print(`target aug : ${targetAug}`);
+  ns.print(
+    `rep needed : ${ns.nFormat(
+      ns.singularity.getAugmentationRepReq(targetAug),
+      "0.000a"
+    )}`
+  );
   for (const faction of ns
     .getPlayer()
     .factions.sort(
@@ -67,7 +79,20 @@ export async function purchasePricey(ns: NS) {
         ns.singularity.getFactionRep(faction)
       ) {
         ns.print(`Need rep with ${faction}.`);
-        await workForFaction(ns, faction);
+        if (
+          ns.singularity.isBusy() &&
+          ns.getPlayer().workType.includes("Faction") &&
+          ns.getPlayer().currentWorkFactionName === faction
+        ) {
+          const totalRep =
+            ns.singularity.getFactionRep(faction) +
+            ns.getPlayer().workRepGained;
+          const goal = ns.singularity.getAugmentationRepReq(targetAug);
+          const ETA =
+            ((goal - totalRep) / ns.getPlayer().workRepGainRate) * 200;
+          ns.print(`ETA   : ${ns.tFormat(ETA)}`);
+          if (totalRep >= goal) ns.singularity.stopAction();
+        } else await workForFaction(ns, faction);
       } else if (
         ns.getServerMoneyAvailable("home") >=
         ns.singularity.getAugmentationPrice(targetAug)
@@ -75,10 +100,26 @@ export async function purchasePricey(ns: NS) {
         ns.print(`Purchasing ${targetAug} from ${faction}`);
         ns.singularity.purchaseAugmentation(faction, targetAug);
       } else {
-        ns.print(`Commiting crime to afford ${targetAug} from ${faction}`);
+        const price = ns.singularity.getAugmentationPrice(targetAug);
+        // ns.print(`Commiting crime to afford ${targetAug} from ${faction}`);
+        ns.print(`Need ${ns.nFormat(price, "$0.0a")} to purchase ${targetAug}`);
         await commitCrime(ns);
       }
       break;
     }
   }
+  return true;
+}
+
+function getMaxPrice(ns: NS) {
+  // this is the minimum max price. If we have more in our bank we will use that
+  // instead.
+  let min = 10_000_000_000;
+  if (
+    ns.singularity.getOwnedAugmentations(true).length -
+      ns.singularity.getOwnedAugmentations(false).length ===
+    0
+  )
+    min = Infinity;
+  return Math.max(ns.getServerMoneyAvailable("home"), min);
 }

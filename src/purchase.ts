@@ -45,14 +45,18 @@ export async function upgradeServers(ns: NS) {
     if (ns.ps(serverName).length === 0) {
       if (ns.deleteServer(serverName))
         ns.purchaseServer(`pserver-${Date.now()}`, ram);
-    } else {
-      // TODO: find a way to migrate processes to another server.
     }
+  } else {
+    ns.print(
+      `${ns.nFormat(price, "$0.0a")} needed to add ${ns.nFormat(
+        (ram - getMinRam(ns)) * 1e9,
+        "0.0b"
+      )} RAM to servers.`
+    );
   }
 }
 
 export async function purchaseServers(ns: NS) {
-  await ns.sleep(1);
   // serverStats(ns);
   const ram = await calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
@@ -64,8 +68,8 @@ export async function purchaseServers(ns: NS) {
 }
 
 export async function calculateRam(ns: NS) {
-  // get budget
   // return ns.getPurchasedServerMaxRam();
+  // get budget
   const budget = ns.getServerMoneyAvailable("home") * budgetPercent;
   for (const ram of ramStopPoints.reverse())
     if (ns.getPurchasedServerCost(ram) <= budget && ram > getMinRam(ns))
@@ -75,11 +79,12 @@ export async function calculateRam(ns: NS) {
 }
 
 export function getMinRam(ns: NS) {
-  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) return 32;
+  if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
+    return ramStopPoints[0];
   const serverName = ns
     .getPurchasedServers()
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
-  return ns.getServerMaxRam(serverName) || 32;
+  return serverName ? ns.getServerMaxRam(serverName) : ramStopPoints[0];
 }
 
 function serverStats(ns: NS) {

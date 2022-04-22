@@ -3,6 +3,8 @@ import { NS, Server } from "Bitburner";
 const cnctScript = "cnct.js";
 const bkdrScript = "bkdr.js";
 
+const reserveScripts = [cnctScript, bkdrScript, "/phase2/restart.js"];
+
 // time constants
 // const second = 1000;
 // const seconds = second;
@@ -93,7 +95,7 @@ function spawnScript(
 
 function reservedRam(ns: NS, host: string) {
   return host === "home"
-    ? Math.max(ns.getScriptRam(cnctScript), ns.getScriptRam(bkdrScript))
+    ? Math.max(...reserveScripts.map((script) => ns.getScriptRam(script)))
     : 0;
 }
 

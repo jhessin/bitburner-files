@@ -59,8 +59,6 @@ export async function manageStock(ns: NS): Promise<boolean> {
           })}
             `
           );
-        } else {
-          await ns.sleep(1);
         }
       }
     }

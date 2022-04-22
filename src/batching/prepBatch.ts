@@ -2,9 +2,10 @@ import { AutocompleteData, NS } from "Bitburner";
 import { kill } from "utils/scriptKilling";
 import { runSpawner, spawnerName } from "batching/runSpawner";
 import { monitor } from "ui/monitor";
-import { commitCrime } from "actions/crime";
 import { factionWatch } from "factionWatch";
 import { purchaseServers, upgradeServers } from "purchase";
+import { companyWork } from "actions/companyWork";
+import { ps } from "ps";
 
 const bufferTime = 3000;
 const growMultiplier = 4;
@@ -35,6 +36,17 @@ export async function main(ns: NS) {
 }
 
 export async function prepBatch(ns: NS, target: string) {
+  if (
+    ps(ns).find(
+      (proc) =>
+        proc.ps.filename === spawnerName &&
+        proc.ps.args.includes("hack") &&
+        proc.ps.args.includes(target)
+    )
+  )
+    return;
+
+  kill(ns, (proc) => proc.filename === spawnerName);
   // now find the required number of threads for each action.
   const growThreads = Math.ceil(ns.growthAnalyze(target, growMultiplier));
 
@@ -45,16 +57,16 @@ export async function prepBatch(ns: NS, target: string) {
   // pin targetDelta to 100 to prevent infinity
   if (targetDelta > 100) targetDelta = 100;
 
-  ns.clearLog();
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     ns.tail();
-    monitor(ns, ns.getServer(target));
     factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    await commitCrime(ns);
+    if (!ns.singularity.isBusy()) await companyWork(ns);
+    await ns.sleep(1);
     weakenThreads += 1;
+    ns.clearLog();
     ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
     ns.print(
       `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
@@ -81,24 +93,30 @@ export async function prepBatch(ns: NS, target: string) {
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
     ns.tail();
+    ns.clearLog();
+    ns.print("Weakening...");
     monitor(ns, ns.getServer(target));
     factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    await commitCrime(ns);
+    if (!ns.singularity.isBusy()) await companyWork(ns);
+    await ns.sleep(1);
   }
   ns.clearLog();
   await runSpawner(ns, "grow", target, growThreads, bufferTime);
   ns.clearLog();
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     ns.tail();
+    ns.clearLog();
+    ns.print("Growing...");
     monitor(ns, ns.getServer(target));
     factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    await commitCrime(ns);
+    if (!ns.singularity.isBusy()) await companyWork(ns);
+    await ns.sleep(1);
   }
   ns.clearLog();
   kill(

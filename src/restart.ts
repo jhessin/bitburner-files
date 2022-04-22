@@ -24,7 +24,7 @@ export async function main(ns: NS) {
   const totalRAM = getTotalRam(ns) * 1e9;
   const purchasedServerMaxRAM = ns.getPurchasedServerMaxRam() * 1e9;
 
-  ns.tprint(`
+  ns.print(`
     Home RAM: ${ns.nFormat(homeRAM, "0.0b")}
     Min RAM: ${ns.nFormat(minRAM, "0.0b")}
     Total RAM: ${ns.nFormat(totalRAM, "0.0b")}

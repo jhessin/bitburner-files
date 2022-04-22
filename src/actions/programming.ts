@@ -29,6 +29,11 @@ export async function createProgram(ns: NS, programName: string) {
     ns.singularity.purchaseProgram(programName)
   )
     return;
-  if (!ns.singularity.isBusy() || !ns.getPlayer().workType.includes("Program"))
+  if (
+    !ns.singularity.isBusy() ||
+    !ns.getPlayer().workType.includes("Program")
+  ) {
     ns.singularity.createProgram(programName);
+    await ns.sleep(1);
+  }
 }
