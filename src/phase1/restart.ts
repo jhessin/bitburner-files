@@ -52,7 +52,7 @@ export async function main(ns: NS) {
 function getTotalRam(ns: NS) {
   let total = ns.getServerMaxRam("home");
   for (const host of ns.getPurchasedServers()) {
-    total += ns.getServerMaxRam(host);
+    total += host ? ns.getServerMaxRam(host) : 0;
   }
   return total;
 }

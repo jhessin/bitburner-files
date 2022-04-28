@@ -6,7 +6,6 @@ import { runSpawner, spawnerName } from "batching/runSpawner";
 import { ps } from "ps";
 import { expandServer } from "expandServer";
 import { purchaseServers, upgradeServers } from "purchase";
-import { monitor } from "ui/monitor";
 import { companyWork } from "actions/companyWork";
 
 const minBufferTime = 60;
@@ -87,7 +86,12 @@ export async function batch(ns: NS, target: string) {
     return;
 
   // otherwise kill any batching that is going on.
-  kill(ns, (ps) => ps.filename === spawnerName);
+  kill(
+    ns,
+    (ps) =>
+      ps.filename === spawnerName ||
+      (ps.filename.includes("batch.js") && !ps.args.includes(target))
+  );
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     await ns.sleep(1);
@@ -101,7 +105,6 @@ export async function batch(ns: NS, target: string) {
     );
     ns.print(`Target security is ${targetDelta}`);
   }
-  ns.clearLog();
 
   // sanity check
   if (hackTime > growTime || hackTime > weakenTime || growTime > weakenTime) {
@@ -109,20 +112,18 @@ export async function batch(ns: NS, target: string) {
     return;
   }
 
-  ns.clearLog();
-  ns.print("Hacking...");
-  monitor(ns, ns.getServer(target));
+  ns.toast(`Hacking ${target}`);
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 1);
-  ns.print("Weaken 1...");
+  ns.toast(`Weaken 1 on ${target}`);
   await ns.sleep(weakenTime - (bufferTime * 2) / 3);
   await runSpawner(ns, "weaken", target, weakenThreads, bufferTime, 2);
-  ns.print("Weaken 2...");
+  ns.toast(`Weaken 2 on ${target}..`);
   await ns.sleep(weakenTime - growTime - bufferTime / 3);
   await runSpawner(ns, "grow", target, growThreads, bufferTime);
-  ns.print("Grow ...");
+  ns.toast(`Grow on ${target}..`);
   await ns.sleep(growTime - hackTime - (bufferTime * 2) / 3);
   await runSpawner(ns, "hack", target, hackThreads, bufferTime);
-  ns.print("HACK!");
+  ns.toast(`HACKING ${target}!`);
 }
 
 function getTiming(ns: NS, target: any) {
@@ -221,7 +222,7 @@ export function autocomplete(data: AutocompleteData) {
 function totalRAM(ns: NS) {
   let total = 0;
   for (const { hostname } of getRunnableServers(ns)) {
-    total += ns.getServerMaxRam(hostname);
+    total += hostname ? ns.getServerMaxRam(hostname) : 0;
   }
   return total - ns.getServerUsedRam("home");
 }

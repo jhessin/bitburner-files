@@ -1,10 +1,12 @@
 import { NS } from "Bitburner";
 import { shareAll } from "shareAll";
 
+const workTypes = ["Hacking Contracts", "Field Work", "Security Work"];
+
 export async function main(ns: NS) {
   // Work for the given faction using the most expedient method (usually hacking)
   const faction = ns.args[0] as string;
-  await workForFaction(ns, faction);
+  if (!ns.singularity.isBusy()) await workForFaction(ns, faction);
 }
 
 export async function workForFaction(ns: NS, faction: string) {
@@ -25,10 +27,11 @@ export async function workForFaction(ns: NS, faction: string) {
     return;
   }
 
-  if (ns.singularity.workForFaction(faction, "Hacking Contracts")) return;
-  else if (ns.singularity.workForFaction(faction, "Field Work")) return;
-  else if (ns.singularity.workForFaction(faction, "Security Work")) return;
-  else ns.tprint(`ERROR! ${faction} does not offer any work!`);
+  for (const workType of workTypes) {
+    if (ns.singularity.workForFaction(faction, workType)) return;
+  }
+
+  ns.toast(`ERROR! ${faction} does not offer any work!`);
 }
 
 export function getFactionRepGoal(ns: NS, faction: string): number {

@@ -29,6 +29,12 @@ export async function main(ns: NS) {
 export async function createPrograms(ns: NS) {
   const data = new ProgramData(ns);
 
+  if (ns.singularity.purchaseTor()) {
+    for (const program of data.programs.filter((p) => !p.exists)) {
+      ns.singularity.purchaseProgram(program.filename);
+    }
+  }
+
   let neededPrograms: string[] = [];
   for (const program of data.programs) {
     if (!program.exists) neededPrograms.push(program.filename);
@@ -36,17 +42,11 @@ export async function createPrograms(ns: NS) {
 
     if (program.hackingLevel <= ns.getHackingLevel()) {
       // this program needs created.
-      while (!program.exists) {
+      if (!program.exists) {
         await createProgram(ns, program.filename);
       }
     }
   }
 
   if (neededPrograms.length === 0) return;
-
-  if (ns.singularity.purchaseTor()) {
-    for (const programName of neededPrograms) {
-      ns.singularity.purchaseProgram(programName);
-    }
-  }
 }

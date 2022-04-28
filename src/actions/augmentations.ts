@@ -1,6 +1,7 @@
 import { NS } from "Bitburner";
 import { commitCrime } from "actions/crime";
 import { getFactionRepGoal, workForFaction } from "actions/factionWork";
+import { etaCalculator } from "utils/etaCalculator";
 
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
@@ -91,8 +92,14 @@ export async function purchasePricey(ns: NS): Promise<boolean> {
           const ETA =
             ((goal - totalRep) / ns.getPlayer().workRepGainRate) * 200;
           ns.print(`ETA   : ${ns.tFormat(ETA)}`);
+          ns.print(`ETA   : ${etaCalculator(ns, ETA)}`);
           if (totalRep >= goal) ns.singularity.stopAction();
-        } else await workForFaction(ns, faction);
+        } else if (
+          !ns.singularity.isBusy() ||
+          // If we are working for a company stop for this.
+          ns.getPlayer().workType.toLowerCase().includes("company")
+        )
+          await workForFaction(ns, faction);
       } else if (
         ns.getServerMoneyAvailable("home") >=
         ns.singularity.getAugmentationPrice(targetAug)

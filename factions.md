@@ -63,6 +63,24 @@ Has field work that increases all stats while increasing reputation.
 
 Cleaned out!
 
+## Aevum
+
+### Joining
+
+Be in Aevum
+Have $40m
+
+### Augmentations
+
+Cleaned Out!
+
+### Locks Out
+
+Chongqing
+New Tokyo
+Ishima
+Volhaven
+
 ## Chongqing
 
 ### Joining
@@ -112,24 +130,6 @@ TODO
 
 Sector-12
 Aevum
-Volhaven
-
-## Aevum
-
-### Joining
-
-Be in Aevum
-Have $40m
-
-### Augmentations
-
-Cleaned Out!
-
-### Locks Out
-
-Chongqing
-New Tokyo
-Ishima
 Volhaven
 
 ## Volhaven
@@ -292,6 +292,14 @@ Not working for CIA or NSA
 
 # Endgame Factions
 
+## Daedalus
+
+### Joining
+
+30 Augmentations
+$100b
+Hacking: 2500 OR Combat: 1500
+
 ## The Covenant
 
 ### Joining
@@ -300,14 +308,6 @@ Not working for CIA or NSA
 $75b
 Hacking: 850
 Combat: 850
-
-## Daedalus
-
-### Joining
-
-30 Augmentations
-$100b
-Hacking: 2500 OR Combat: 1500
 
 ## Illuminati
 

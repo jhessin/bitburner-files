@@ -87,21 +87,21 @@ export function expandHacknet(ns: NS) {
       topgain === gain[0] &&
       ns.hacknet.getLevelUpgradeCost(i, 1) < currentCash
     ) {
-      ns.print(`Upgrading Level on Node ${i}`);
+      ns.toast(`Upgrading Level on Node ${i}`);
       ns.hacknet.upgradeLevel(i, 1);
     }
     if (
       topgain === gain[1] &&
       ns.hacknet.getRamUpgradeCost(i, 1) < currentCash
     ) {
-      ns.print(`Upgrading Ram on Node ${i}`);
+      ns.toast(`Upgrading Ram on Node ${i}`);
       ns.hacknet.upgradeRam(i, 1);
     }
     if (
       topgain === gain[2] &&
       ns.hacknet.getCoreUpgradeCost(i, 1) < currentCash
     ) {
-      ns.print(`Upgrading Cores on Node ${i}`);
+      ns.toast(`Upgrading Cores on Node ${i}`);
       ns.hacknet.upgradeCore(i, 1);
     } else {
       // ns.print(

@@ -30,7 +30,7 @@ export async function nukeAll(ns: NS) {
   // find nukable servers.
   for (const server of getNukableServers(ns)) {
     // nuke them.
-    ns.print(`nuking ${server.hostname}`);
+    ns.toast(`nuking ${server.hostname}`);
     nuke(ns, server.hostname);
     server.hasAdminRights = true;
   }

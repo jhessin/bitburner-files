@@ -38,7 +38,7 @@ export async function commitCrime(
       ns.singularity.commitCrime(crime);
     }
     if (ns.getServerMoneyAvailable("home") >= goal) return;
-    else await ns.sleep(1);
+    await ns.sleep(1);
   }
 }
 

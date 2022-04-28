@@ -1,6 +1,8 @@
 import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
 
+const Daemon = "w0r1d_d43m0n";
+
 export async function main(ns: NS) {
   ns.disableLog("ALL");
 
@@ -24,10 +26,10 @@ export function monitor(ns: NS, target: Server | null = null) {
   ns.disableLog("ALL");
   const { hostname } = target || getTarget(ns);
   ns.print(`
-  ScriptXP    : ${ns.nFormat(ns.getScriptExpGain(), "0.0a")} / sec.
-  Cash/sec    : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
-  Total Cash  : ${ns.nFormat(ns.getScriptIncome()[1], "$0.0a")}
-  TARGET      : ${hostname}
+  ScriptXP            : ${ns.nFormat(ns.getScriptExpGain(), "0.0a")} / sec.
+  Cash/sec            : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
+  Cash/sec since Aug  : ${ns.nFormat(ns.getScriptIncome()[1], "$0.0a")} / sec.
+  TARGET              : ${hostname}
     `);
   const moneyAvailable = ns.getServerMoneyAvailable(hostname);
   const maxMoney = ns.getServerMaxMoney(hostname);
@@ -79,14 +81,34 @@ export function monitor(ns: NS, target: Server | null = null) {
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b));
   const smallest = sorted[0];
   const largest = sorted[sorted.length - 1];
-  ns.print(`Purchased Servers:
+  if (
+    smallest &&
+    ns.getServerMaxRam(smallest) < ns.getPurchasedServerMaxRam()
+  ) {
+    ns.print(`Purchased Servers:
     Count         : ${
       ns.getPurchasedServers().length
     } / ${ns.getPurchasedServerLimit()}
-    Smallest      : ${ns.nFormat(ns.getServerMaxRam(smallest) * 1e9, "0.0b")}
-    Largest       : ${ns.nFormat(ns.getServerMaxRam(largest) * 1e9, "0.0b")}
+      Smallest      : ${ns.nFormat(
+        smallest ? ns.getServerMaxRam(smallest) * 1e9 : 0,
+        "0.0b"
+      )}
+      Largest       : ${ns.nFormat(
+        largest ? ns.getServerMaxRam(largest) * 1e9 : 0,
+        "0.0b"
+      )}
     Current RAM   : ${ns.nFormat(ram * 1e9, "0.0b")}
     Max RAM       : ${ns.nFormat(maxRam * 1e9, "0.0b")}`);
+  } else if (!smallest) {
+    ns.print("Purchased Servers: NONE");
+  } else ns.print("Purchased Servers: MAX");
+  if (ns.serverExists(Daemon))
+    ns.print(
+      `Hacking Level to crash the bitnode: ${ns.getServerRequiredHackingLevel(
+        Daemon
+      )}`
+    );
+  else ns.print("You don't have the red pill yet!");
 }
 
 export function autocomplete(data: AutocompleteData) {

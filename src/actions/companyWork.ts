@@ -3,15 +3,15 @@ import { commitCrime } from "actions/crime";
 
 // TODO: Sort and prioritize these.
 const companyPositions = [
+  "agent",
+  "security engineer",
+  "security",
   "business",
   "business consultant",
   "software",
   "software consultant",
   "it",
-  "security engineer",
   "network engineer",
-  "security",
-  "agent",
   "employee",
   "part-time employee",
   "waiter",
@@ -86,7 +86,8 @@ const factionCompanies: iCompany[] = [
 // any other action.
 export async function workForCompany(
   ns: NS,
-  company: string
+  company: string,
+  preferedPosition: string | undefined = undefined
 ): Promise<boolean> {
   // first check if we are already working for that company.
   if (
@@ -97,9 +98,12 @@ export async function workForCompany(
     return true;
 
   // apply to the company
-  for (const position of companyPositions) {
-    if (ns.singularity.applyToCompany(company, position)) break;
-  }
+  if (preferedPosition) {
+    ns.singularity.applyToCompany(company, preferedPosition);
+  } else
+    for (const position of companyPositions) {
+      if (ns.singularity.applyToCompany(company, position)) break;
+    }
 
   return ns.singularity.workForCompany(company);
 }

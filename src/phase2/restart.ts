@@ -13,6 +13,7 @@ import { batch } from "batching/batch";
 import { purchasePricey } from "actions/augmentations";
 import { manageStock } from "stocks/start";
 import { companyWork } from "actions/companyWork";
+import { getNeededFactions } from "actions/factionHunt";
 
 // timing constants
 // const second = 1000; //milliseconds
@@ -89,8 +90,9 @@ export async function main(ns: NS) {
     );
     await ns.sleep(1);
     // If I'm not to busy work for a company.
+    const neededFactions = getNeededFactions(ns);
     if (!ns.singularity.isBusy() || ns.getPlayer().workType.includes("company"))
-      await companyWork(ns);
+      await neededFactions[0].workToJoin();
     const owned = ns.singularity.getOwnedAugmentations(true);
     if (
       !(await purchasePricey(ns)) &&

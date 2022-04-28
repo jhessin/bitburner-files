@@ -31,15 +31,16 @@ export async function main(ns: NS) {
 }
 
 export async function upgradeServers(ns: NS) {
+  if (ns.getPurchasedServers().length === 0) return;
   // serverStats(ns);
   const ram = await calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
   const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
+  // find the server with the least amount of ram.
   const serverName = ns
     .getPurchasedServers()
     .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
   if (moneyAvailable > price) {
-    // find the server with the least amount of ram.
     ns.enableLog("deleteServer");
     ns.enableLog("purchaseServer");
     if (ns.ps(serverName).length === 0) {
@@ -81,28 +82,7 @@ export async function calculateRam(ns: NS) {
 export function getMinRam(ns: NS) {
   if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
     return ramStopPoints[0];
-  const serverName = ns
-    .getPurchasedServers()
-    .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))[0];
-  return serverName ? ns.getServerMaxRam(serverName) : ramStopPoints[0];
-}
-
-function serverStats(ns: NS) {
-  ns.print(`Current Server Stats:`);
-  ns.print(`=====================`);
-  for (const host of ns
-    .getPurchasedServers()
-    .sort((a, b) => ns.getServerMaxRam(a) - ns.getServerMaxRam(b))) {
-    ns.print(`${host}:
-      RAM     : ${ns.nFormat(ns.getServerMaxRam(host) * 1e9, "0.0b")}`);
-  }
-  ns.print(
-    `Max RAM: ${ns.nFormat(ns.getPurchasedServerMaxRam() * 1e9, "0.0b")}`
+  return Math.min(
+    ...ns.getPurchasedServers().map((s) => ns.getServerMaxRam(s))
   );
-  ns.print(
-    `${
-      ns.getPurchasedServers().length
-    } of ${ns.getPurchasedServerLimit()} servers purchased.`
-  );
-  ns.print(`=====================`);
 }
