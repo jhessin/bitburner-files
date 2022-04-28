@@ -1,7 +1,7 @@
 import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
 
-const Daemon = "w0r1d_d43m0n";
+export const Daemon = "w0r1d_d43m0n";
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");

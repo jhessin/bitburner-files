@@ -4,7 +4,7 @@ import { NS } from "Bitburner";
 // import { expandServer } from "expandServer";
 // import { expandHacknet } from "hacknet";
 // import { factionWatch } from "factionWatch";
-// import { nukeAll } from "nuker";
+import { nukeAll } from "nuker";
 
 // timing constants
 // const second = 1000; //milliseconds
@@ -23,7 +23,9 @@ export async function main(ns: NS) {
 
   if (getTotalRam(ns) > phase2RAM) ns.spawn("phase2/restart.js");
 
-  ns.spawn("/phase1/prepare.js");
+  // await nukeAll(ns);
+
+  ns.spawn("/phase1/nuke.js");
 
   // THIS IS GUARANTEED TO WORK ON A FRESH BITNODE
   // while (true) {
@@ -56,13 +58,3 @@ function getTotalRam(ns: NS) {
   }
   return total;
 }
-
-// async function cheapHack(ns: NS) {
-//   nukeAll(ns);
-//   const target = getHackableServers(ns)[0];
-//   if (target.hackDifficulty > target.minDifficulty)
-//     await ns.weaken(target.hostname);
-//   else if (target.moneyAvailable < target.moneyMax)
-//     await ns.grow(target.hostname);
-//   else await ns.hack(target.hostname);
-// }

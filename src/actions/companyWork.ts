@@ -3,14 +3,14 @@ import { commitCrime } from "actions/crime";
 
 // TODO: Sort and prioritize these.
 const companyPositions = [
-  "agent",
-  "security engineer",
-  "security",
   "business",
   "business consultant",
   "software",
   "software consultant",
   "it",
+  "agent",
+  "security engineer",
+  "security",
   "network engineer",
   "employee",
   "part-time employee",

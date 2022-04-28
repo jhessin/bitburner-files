@@ -1,9 +1,7 @@
 import { AutocompleteData, NS } from "Bitburner";
 import { kill } from "utils/scriptKilling";
 import { runSpawner, spawnerName } from "batching/runSpawner";
-import { factionWatch } from "factionWatch";
 import { purchaseServers, upgradeServers } from "purchase";
-import { companyWork } from "actions/companyWork";
 import { ps } from "ps";
 
 const bufferTime = 3000;
@@ -57,11 +55,9 @@ export async function prepBatch(ns: NS, target: string) {
   if (targetDelta > 100) targetDelta = 100;
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
-    factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    if (!ns.singularity.isBusy()) await companyWork(ns);
     await ns.sleep(1);
     weakenThreads += 1;
     ns.clearLog();
@@ -92,11 +88,9 @@ export async function prepBatch(ns: NS, target: string) {
     ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)
   ) {
     ns.clearLog();
-    factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    if (!ns.singularity.isBusy()) await companyWork(ns);
     await ns.sleep(1);
   }
   ns.clearLog();
@@ -105,11 +99,9 @@ export async function prepBatch(ns: NS, target: string) {
   ns.toast(`Growing ${target}`);
   while (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
     ns.clearLog();
-    factionWatch(ns);
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    if (!ns.singularity.isBusy()) await companyWork(ns);
     await ns.sleep(1);
   }
   ns.clearLog();

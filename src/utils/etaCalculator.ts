@@ -14,7 +14,7 @@ export function etaCalculator(ns: NS, milliseconds: number) {
   return `${
     dateCompleted.getMonth() + 1
   }-${dateCompleted.getDate()} ${ns.nFormat(
-    dateCompleted.getHours() % 12,
+    dateCompleted.getHours() % 13,
     "00"
   )}:${ns.nFormat(dateCompleted.getMinutes(), "00")}:${ns.nFormat(
     dateCompleted.getSeconds(),

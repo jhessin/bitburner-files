@@ -1,7 +1,7 @@
 import { NS } from "Bitburner";
 import { getMinRam } from "purchase";
 import { getHackableServers } from "cnct";
-import { monitor } from "ui/monitor";
+import { monitor, Daemon } from "ui/monitor";
 import { nukeAll } from "nuker";
 import { installBackdoors } from "backdoor";
 import { createPrograms } from "programs";
@@ -12,8 +12,9 @@ import { expandHacknet } from "hacknet";
 import { batch } from "batching/batch";
 import { purchasePricey } from "actions/augmentations";
 import { manageStock } from "stocks/start";
-import { companyWork } from "actions/companyWork";
 import { getNeededFactions } from "actions/factionHunt";
+import { workForFaction } from "actions/factionWork";
+import { commitCrime } from "actions/crime";
 
 // timing constants
 // const second = 1000; //milliseconds
@@ -49,7 +50,6 @@ export async function main(ns: NS) {
   }
   await nukeAll(ns);
   let target = getHackableServers(ns)[0].hostname;
-  let startTime = Date.now();
 
   async function updateHack() {
     target = getHackableServers(ns)[0].hostname;
@@ -58,7 +58,6 @@ export async function main(ns: NS) {
       !ns.run("/batching/batch.js", 1, target)
     )
       await batch(ns, target);
-    startTime = Date.now();
   }
   await spendMoney(ns);
   await nukeAll(ns);
@@ -70,11 +69,7 @@ export async function main(ns: NS) {
     // Keep nuking servers
     await nukeAll(ns);
     // update hack target if necessary
-    if (
-      getHackableServers(ns)[0].hostname !== target &&
-      Date.now() > startTime + updateDuration
-    )
-      await updateHack();
+    if (getHackableServers(ns)[0].hostname !== target) await updateHack();
     // install backdoors and join any factions.
     if (!ns.scriptRunning("backdoor.js", "home")) {
       if (!ns.run("backdoor.js")) await installBackdoors(ns);
@@ -83,34 +78,13 @@ export async function main(ns: NS) {
       if (!ns.run("factionWatch.js")) factionWatch(ns);
     await spendMoney(ns);
     monitor(ns);
-    ns.print(
-      `Possible update in ${ns.tFormat(
-        startTime + updateDuration - Date.now()
-      )}`
-    );
     await ns.sleep(1);
     // If I'm not to busy work for a company.
     const neededFactions = getNeededFactions(ns);
-    if (!ns.singularity.isBusy() || ns.getPlayer().workType.includes("company"))
+    if (!ns.singularity.isBusy() || ns.getPlayer().workType.includes("Company"))
       await neededFactions[0].workToJoin();
-    const owned = ns.singularity.getOwnedAugmentations(true);
-    if (
-      !(await purchasePricey(ns)) &&
-      owned.length > ns.singularity.getOwnedAugmentations(false).length
-    )
-      ns.singularity.installAugmentations("restart.js");
-    let shouldInstall =
-      ns.singularity.getOwnedAugmentations(false).length < owned.length;
-    for (const faction of ns.getPlayer().factions) {
-      for (const aug of ns.singularity
-        .getAugmentationsFromFaction(faction)
-        .filter((a) => !a.startsWith("NeuroFlux"))) {
-        // if we don't have all augs don't install.
-        if (!owned.includes(aug)) shouldInstall = false;
-      }
-    }
-    if (shouldInstall || !(await purchasePricey(ns)))
-      ns.singularity.installAugmentations("restart.js");
+    if (!(await purchasePricey(ns)) && hasAugsToInstall(ns))
+      await finishOut(ns);
   }
 }
 
@@ -126,4 +100,58 @@ async function spendMoney(ns: NS) {
   }
   expandHacknet(ns);
   await manageStock(ns);
+}
+
+async function finishOut(ns: NS) {
+  // check if we are at the end of the Bitnode
+  if (
+    ns.serverExists(Daemon) &&
+    ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(Daemon)
+  ) {
+    ns.clearLog();
+    ns.tail();
+    ns.print(`You can now Backdoor ${Daemon}`);
+    ns.exit();
+  }
+
+  // first find the faction I have the most rep with.
+  const targetFaction = ns
+    .getPlayer()
+    .factions.sort(
+      (a, b) =>
+        ns.singularity.getFactionRep(b) - ns.singularity.getFactionRep(a)
+    )[0];
+  if (!targetFaction) return;
+
+  while (true) {
+    ns.clearLog();
+    const neuroflux = ns.singularity
+      .getAugmentationsFromFaction(targetFaction)
+      .find((aug) => aug.startsWith("NeuroFlux"));
+    if (!neuroflux) throw new Error("NeuroFlux Governor not found!");
+
+    if (
+      ns.singularity.getAugmentationRepReq(neuroflux) >
+      ns.singularity.getFactionRep(targetFaction)
+    ) {
+      if (hasAugsToInstall(ns))
+        ns.singularity.installAugmentations("restart.js");
+      else await workForFaction(ns, targetFaction);
+    } else if (
+      ns.singularity.getAugmentationPrice(neuroflux) <
+      ns.getServerMoneyAvailable("home")
+    )
+      ns.singularity.purchaseAugmentation(targetFaction, neuroflux);
+    else await commitCrime(ns);
+
+    ns.print(`Finishing out by buying ${neuroflux} from ${targetFaction}`);
+    await ns.sleep(1);
+  }
+}
+
+function hasAugsToInstall(ns: NS) {
+  return (
+    ns.singularity.getOwnedAugmentations(true).length >
+    ns.singularity.getOwnedAugmentations(false).length
+  );
 }

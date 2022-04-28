@@ -6,7 +6,6 @@ import { runSpawner, spawnerName } from "batching/runSpawner";
 import { ps } from "ps";
 import { expandServer } from "expandServer";
 import { purchaseServers, upgradeServers } from "purchase";
-import { companyWork } from "actions/companyWork";
 
 const minBufferTime = 60;
 let bufferTime = minBufferTime;
@@ -182,7 +181,6 @@ export async function prepareServer(ns: NS, target: any) {
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    if (!ns.singularity.isBusy()) await companyWork(ns);
     await ns.sleep(1);
   }
   // ns.kill(growPid);
@@ -195,7 +193,6 @@ export async function prepareServer(ns: NS, target: any) {
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
       await purchaseServers(ns);
     else await upgradeServers(ns);
-    if (!ns.singularity.isBusy()) await companyWork(ns);
     await ns.sleep(1);
   }
   // ns.kill(weakenPid);

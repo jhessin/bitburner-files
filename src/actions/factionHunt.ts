@@ -54,6 +54,16 @@ export class FactionData {
     return true;
   }
 
+  get augs(): string[] {
+    return this.ns.singularity.getAugmentationsFromFaction(this.name);
+  }
+
+  get neededAugs(): string[] {
+    return this.augs.filter(
+      (aug) => !this.ns.singularity.getOwnedAugmentations(true).includes(aug)
+    );
+  }
+
   get canJoin(): boolean {
     const ns = this.ns;
     const req = this.requirements;
@@ -85,7 +95,7 @@ export class FactionData {
       let levels = 0;
       let ram = 0;
       let cores = 0;
-      for (let i = 0; i <= ns.hacknet.numNodes(); i++) {
+      for (let i = 0; i < ns.hacknet.numNodes(); i++) {
         const node = ns.hacknet.getNodeStats(i);
         levels += node.level;
         ram += node.ram;
@@ -169,9 +179,18 @@ export class FactionData {
       req.companyName &&
       req.companyRep &&
       req.companyRep > this.ns.singularity.getCompanyRep(req.companyName)
-    )
-      await workForCompany(this.ns, req.companyName);
-    else if (req.peopleKilled && req.peopleKilled > player.numPeopleKilled)
+    ) {
+      if (
+        this.ns.singularity.isBusy() &&
+        player.workType.includes("Company") &&
+        player.companyName === req.companyName &&
+        req.companyRep <=
+          this.ns.singularity.getCompanyRep(req.companyName) +
+            player.workRepGained / 2
+      )
+        this.ns.singularity.stopAction();
+      else await workForCompany(this.ns, req.companyName);
+    } else if (req.peopleKilled && req.peopleKilled > player.numPeopleKilled)
       await commitCrime(this.ns, "homicide");
     else if (
       req.cashReq &&
@@ -204,7 +223,7 @@ function university(ns: NS, stat: "hacking" | "charisma") {
   );
 }
 
-export function getAllFactions(ns: NS): FactionData[] {
+function getAllFactions(ns: NS): FactionData[] {
   return [
     // Early Game
     new FactionData(ns, "CyberSec", {
@@ -430,4 +449,15 @@ export function getAllFactions(ns: NS): FactionData[] {
 
 export function getNeededFactions(ns: NS): FactionData[] {
   return getAllFactions(ns).filter((faction) => faction.needed);
+}
+
+function getAllAugs(ns: NS): string[] {
+  const allAugs = getAllFactions(ns).flatMap((f) => f.augs);
+  return Array.from(new Set(allAugs));
+}
+
+export function getUninstalledAugs(ns: NS): string[] {
+  return getAllAugs(ns).filter(
+    (aug) => !ns.singularity.getOwnedAugmentations(false).includes(aug)
+  );
 }
