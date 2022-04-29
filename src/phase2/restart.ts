@@ -17,15 +17,7 @@ import { workForFaction } from "actions/factionWork";
 import { commitCrime } from "actions/crime";
 import { kill } from "utils/scriptKilling";
 
-// timing constants
-// const second = 1000; //milliseconds
-// const seconds = second;
-// const minute = 60 * seconds;
-// const minutes = minute;
-// const hours = 60 * minutes;
-// const hour = hours;
-// const days = 24 * hours;
-// const day = days;
+const nextBitnode = 4;
 
 const scripts = [
   "/contracts/start.js",
@@ -100,10 +92,7 @@ async function finishOut(ns: NS) {
     ns.serverExists(Daemon) &&
     ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(Daemon)
   ) {
-    ns.clearLog();
-    ns.tail();
-    ns.print(`You can now Backdoor ${Daemon}`);
-    ns.exit();
+    ns.singularity.destroyW0r1dD43m0n(nextBitnode, "restart.js");
   }
 
   // first find the faction I have the most rep with.
