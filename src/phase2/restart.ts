@@ -15,6 +15,7 @@ import { manageStock } from "stocks/start";
 import { getNeededFactions } from "actions/factionHunt";
 import { workForFaction } from "actions/factionWork";
 import { commitCrime } from "actions/crime";
+import { kill } from "utils/scriptKilling";
 
 // timing constants
 // const second = 1000; //milliseconds
@@ -30,21 +31,12 @@ const scripts = [
   "/contracts/start.js",
   //
 ];
-const updateDuration = 30 * 60 * 1000;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
-  const args = ns.flags([["help", false]]);
-  const ram = ns.getScriptRam(ns.getScriptName()) * 1e9;
-  if (args.help) {
-    ns.tprint(`
-      This is a simple script that restarts the automated scripts periodically.
+  // phase 1 cleanup
+  kill(ns, (proc) => proc.filename === "hack.js");
 
-      This script uses ${ns.nFormat(ram, "0.000b")} of RAM.
-      USAGE: run ${ns.getScriptName()} ARGS_HERE
-      `);
-    return;
-  }
   for (const script of scripts) {
     ns.run(script);
   }

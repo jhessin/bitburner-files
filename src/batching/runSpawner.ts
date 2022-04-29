@@ -3,6 +3,12 @@ import { getRunnableServers } from "cnct";
 
 export const spawnerName = "/batching/spawner.js";
 
+const killScripts = [
+  "/batching/weaken.js",
+  "/batching/grow.js",
+  "/batching/hack.js",
+];
+
 export async function runSpawner(
   ns: NS,
   cmd: string,
@@ -14,6 +20,9 @@ export async function runSpawner(
   let host = getRunnableServers(ns)[0];
 
   await ns.scp(spawnerName, "home", host.hostname);
+  for (const script of killScripts) {
+    ns.scriptKill(script, host.hostname);
+  }
 
   if (
     !ns.exec(
@@ -27,5 +36,5 @@ export async function runSpawner(
       index
     )
   )
-    ns.tprint(`ERROR! unable to run spawner on host: ${host.hostname}`);
+    await runSpawner(ns, cmd, target, threads, bufferTime);
 }

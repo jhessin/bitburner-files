@@ -36,9 +36,10 @@ export async function prepBatch(ns: NS, target: string) {
   if (
     ps(ns).find(
       (proc) =>
-        proc.ps.filename === spawnerName &&
-        proc.ps.args.includes("hack") &&
-        proc.ps.args.includes(target)
+        (proc.ps.filename === spawnerName &&
+          proc.ps.args.includes("hack") &&
+          proc.ps.args.includes(target)) ||
+        (proc.ps.filename === "hack.js" && proc.ps.args.includes(target))
     )
   )
     return;
