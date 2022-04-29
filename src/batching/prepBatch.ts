@@ -105,13 +105,7 @@ export async function prepBatch(ns: NS, target: string) {
     await ns.sleep(1);
   }
   ns.clearLog();
-  kill(
-    ns,
-    (ps) =>
-      (ps.filename === spawnerName && ps.args.includes(target)) ||
-      (ps.filename.includes("grow") && ps.args.includes(target)) ||
-      (ps.filename.includes("weaken") && ps.args.includes(target))
-  );
+  kill(ns, (ps) => ps.filename === spawnerName);
 }
 
 function getTiming(ns: NS, target: any) {

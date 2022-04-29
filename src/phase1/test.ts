@@ -9,10 +9,13 @@ const scripts = [
   //
 ];
 
-const maxRam = 32;
+const commonScript = "/phase1/monitor.js";
+
+let maxRam = 32;
 
 export async function main(ns: NS) {
   ns.disableLog("ALL");
+  maxRam -= ns.getScriptRam(commonScript);
   while (true) {
     ns.clearLog();
     ns.tail();
