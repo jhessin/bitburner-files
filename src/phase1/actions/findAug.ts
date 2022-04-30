@@ -2,7 +2,9 @@ import { NS } from "Bitburner";
 
 export async function main(ns: NS) {
   const aug = priciestAug(ns);
-  if (!aug) ns.spawn("phase1/actions/factionHunt.js");
+  if (!aug)
+    if (hasAugsToInstall(ns)) ns.spawn("/phase1/finishOut.js");
+    else ns.spawn("/phase1/actions/factionHunt.js");
   else ns.spawn("/phase1/actions/purchaseAug.js", 1, aug);
 }
 
@@ -44,4 +46,11 @@ function getMaxPrice(ns: NS) {
   )
     min = Infinity;
   return Math.max(ns.getServerMoneyAvailable("home"), min);
+}
+
+function hasAugsToInstall(ns: NS) {
+  return (
+    ns.singularity.getOwnedAugmentations(true).length >
+    ns.singularity.getOwnedAugmentations(false).length
+  );
 }

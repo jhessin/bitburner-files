@@ -35,6 +35,8 @@ export async function runSpawner(
       bufferTime,
       index
     )
-  )
+  ) {
+    await ns.sleep(1);
     await runSpawner(ns, cmd, target, threads, bufferTime);
+  }
 }

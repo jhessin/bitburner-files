@@ -1,5 +1,6 @@
 import { AutocompleteData, NS, Server } from "Bitburner";
 import { getHackableServers } from "cnct";
+import { ps } from "ps";
 
 export const Daemon = "w0r1d_d43m0n";
 
@@ -25,11 +26,20 @@ function getTarget(ns: NS) {
 export function monitor(ns: NS, target: Server | null = null) {
   ns.disableLog("ALL");
   const { hostname } = target || getTarget(ns);
+  const spawners = ps(ns).filter(
+    (p) => p.ps.filename === "/batching/spawner.js"
+  );
+  let phase = "";
+  if (spawners.find((p) => p.ps.args.includes("hack"))) phase = "Hacking...   ";
+  else if (spawners.find((p) => p.ps.args.includes("grow")))
+    phase = "Growing...   ";
+  else if (spawners.find((p) => p.ps.args.includes("weaken")))
+    phase = "Weakening... ";
   ns.print(`
   ScriptXP            : ${ns.nFormat(ns.getScriptExpGain(), "0.0a")} / sec.
   Cash/sec            : ${ns.nFormat(ns.getScriptIncome()[0], "$0.0a")} / sec.
   Cash/sec since Aug  : ${ns.nFormat(ns.getScriptIncome()[1], "$0.0a")} / sec.
-  TARGET              : ${hostname}
+  Target ${phase}: ${hostname}
     `);
   const moneyAvailable = ns.getServerMoneyAvailable(hostname);
   const maxMoney = ns.getServerMaxMoney(hostname);

@@ -11,13 +11,15 @@ export function etaCalculator(ns: NS, milliseconds: number) {
   // }:${dateCompleted.getMinutes()}:${dateCompleted.getSeconds()} ${
   //   dateCompleted.getHours() < 12 ? "AM" : "PM"
   // }`;
-  return `${
-    dateCompleted.getMonth() + 1
-  }-${dateCompleted.getDate()} ${ns.nFormat(
-    dateCompleted.getHours() % 13,
+  const month = dateCompleted.getMonth() + 1;
+  const date = dateCompleted.getDate();
+  const hours = dateCompleted.getHours() % 12 || 1;
+  const minutes = dateCompleted.getMinutes();
+  const seconds = dateCompleted.getSeconds();
+  return `${month}-${date} ${ns.nFormat(hours, "00")}:${ns.nFormat(
+    minutes,
     "00"
-  )}:${ns.nFormat(dateCompleted.getMinutes(), "00")}:${ns.nFormat(
-    dateCompleted.getSeconds(),
-    "00"
-  )} ${dateCompleted.getHours() < 12 ? "AM" : "PM"}`;
+  )}:${ns.nFormat(seconds, "00")} ${
+    dateCompleted.getHours() < 12 ? "AM" : "PM"
+  }`;
 }

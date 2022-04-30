@@ -97,7 +97,7 @@ export async function purchasePricey(ns: NS): Promise<boolean> {
         } else if (
           !ns.singularity.isBusy() ||
           // If we are working for a company stop for this.
-          ns.getPlayer().workType.toLowerCase().includes("company")
+          !ns.getPlayer().workType.toLowerCase().includes("Program")
         )
           await workForFaction(ns, faction);
       } else if (
@@ -110,7 +110,7 @@ export async function purchasePricey(ns: NS): Promise<boolean> {
         const price = ns.singularity.getAugmentationPrice(targetAug);
         // ns.print(`Commiting crime to afford ${targetAug} from ${faction}`);
         ns.print(`Need ${ns.nFormat(price, "$0.0a")} to purchase ${targetAug}`);
-        await commitCrime(ns);
+        await commitCrime(ns, undefined, price);
       }
       break;
     }
@@ -118,15 +118,18 @@ export async function purchasePricey(ns: NS): Promise<boolean> {
   return true;
 }
 
-function getMaxPrice(ns: NS) {
+export function getMaxPrice(ns: NS) {
   // this is the minimum max price. If we have more in our bank we will use that
   // instead.
-  let min = 10_000_000_000;
+  let min = 10_000_000;
   if (
     ns.singularity.getOwnedAugmentations(true).length -
       ns.singularity.getOwnedAugmentations(false).length ===
     0
   )
     min = Infinity;
-  return Math.max(ns.getServerMoneyAvailable("home"), min);
+  return Math.max(
+    ns.getServerMoneyAvailable("home") + ns.getScriptIncome()[0] * 60,
+    min
+  );
 }

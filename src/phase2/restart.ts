@@ -10,7 +10,7 @@ import { factionWatch } from "factionWatch";
 import { purchaseServers, upgradeServers } from "purchase";
 import { expandHacknet } from "hacknet";
 import { batch } from "batching/batch";
-import { purchasePricey } from "actions/augmentations";
+import { purchasePricey, getMaxPrice } from "actions/augmentations";
 import { manageStock } from "stocks/start";
 import { getNeededFactions } from "actions/factionHunt";
 import { workForFaction } from "actions/factionWork";
@@ -113,7 +113,8 @@ async function finishOut(ns: NS) {
 
     if (
       ns.singularity.getAugmentationRepReq(neuroflux) >
-      ns.singularity.getFactionRep(targetFaction)
+        ns.singularity.getFactionRep(targetFaction) ||
+      ns.singularity.getAugmentationPrice(neuroflux) > getMaxPrice(ns)
     ) {
       if (hasAugsToInstall(ns))
         ns.singularity.installAugmentations("restart.js");

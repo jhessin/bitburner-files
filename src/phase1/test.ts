@@ -6,6 +6,7 @@ const scripts = [
   "/phase1/work.js",
   "/phase1/prepare.js",
   "/phase1/cheapHack.js",
+  "/phase1/finishOut.js",
   "/phase1/actions/findAug.js",
   "/phase1/actions/purchaseAug.js",
   "/phase1/actions/backdoor.js",
