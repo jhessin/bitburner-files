@@ -83,17 +83,6 @@ export function factionWatch(ns: NS) {
     }
   }
 
-  const { factions } = ns.getPlayer();
-  // now check for the first invitation;
-  if (factions.length === 0) {
-    for (const invitation of ns.singularity.checkFactionInvitations()) {
-      // skip restricted factions here.
-      if (restrictedFactions.includes(invitation)) continue;
-      ns.singularity.joinFaction(invitation);
-      break;
-    }
-  }
-
   travel(ns);
 }
 

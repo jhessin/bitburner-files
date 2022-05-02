@@ -13,7 +13,7 @@ export function etaCalculator(ns: NS, milliseconds: number) {
   // }`;
   const month = dateCompleted.getMonth() + 1;
   const date = dateCompleted.getDate();
-  const hours = dateCompleted.getHours() % 12 || 1;
+  const hours = dateCompleted.getHours() % 12 || 12;
   const minutes = dateCompleted.getMinutes();
   const seconds = dateCompleted.getSeconds();
   return `${month}-${date} ${ns.nFormat(hours, "00")}:${ns.nFormat(

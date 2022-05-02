@@ -38,11 +38,24 @@ export function priciestAug(
       allAugs.push(aug);
     }
   }
-  return allAugs.sort(
-    (a, b) =>
-      ns.singularity.getAugmentationPrice(b) -
-      ns.singularity.getAugmentationPrice(a)
-  )[0];
+
+  function augValue(aug: string) {
+    const stats = ns.singularity.getAugmentationStats(aug);
+    let multiplier = 1;
+    if (stats.faction_rep_mult) multiplier += 1e9 * stats.faction_rep_mult;
+    // if (stats.hacking_money_mult) multiplier += 1e3 * stats.hacking_money_mult;
+    // if (stats.crime_money_mult) multiplier += 1e3 * stats.crime_money_mult;
+    // if (stats.hacking_mult) multiplier += 1e3 * stats.hacking_mult;
+    // if (stats.hacking_exp_mult) multiplier += 1e3 * stats.hacking_exp_mult;
+    // if (stats.company_rep_mult) multiplier += 1e2 * stats.company_rep_mult;
+    return (
+      (1 /
+        (ns.singularity.getAugmentationPrice(aug) *
+          ns.singularity.getAugmentationRepReq(aug)) || 1) * multiplier
+    );
+  }
+
+  return allAugs.sort((a, b) => augValue(b) - augValue(a))[0];
 }
 
 export async function farmRep(ns: NS) {

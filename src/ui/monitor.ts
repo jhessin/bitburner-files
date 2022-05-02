@@ -112,6 +112,11 @@ export function monitor(ns: NS, target: Server | null = null) {
   } else if (!smallest) {
     ns.print("Purchased Servers: NONE");
   } else ns.print("Purchased Servers: MAX");
+  if (needFocus(ns)) {
+    ns.print(`Focus required!`);
+  } else {
+    ns.print("Focus NOT required.");
+  }
   if (ns.serverExists(Daemon))
     ns.print(
       `Hacking Level to crash the bitnode: ${ns.getServerRequiredHackingLevel(
@@ -123,4 +128,10 @@ export function monitor(ns: NS, target: Server | null = null) {
 
 export function autocomplete(data: AutocompleteData) {
   return data.servers;
+}
+
+function needFocus(ns: NS): boolean {
+  return !ns.singularity
+    .getOwnedAugmentations()
+    .includes("Neuroreceptor Management Implant");
 }

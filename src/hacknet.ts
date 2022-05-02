@@ -1,5 +1,5 @@
 import { NS } from "Bitburner";
-const allowancePercentage = 0.01;
+let allowancePercentage = 0.01;
 
 /** @param {NS} ns **/
 export async function main(ns: NS) {
@@ -13,6 +13,8 @@ export async function main(ns: NS) {
 }
 
 export function expandHacknet(ns: NS) {
+  allowancePercentage *= ns.getBitNodeMultipliers().HacknetNodeMoney;
+
   // buy our first node if needed.
   if (ns.hacknet.numNodes() === 0) ns.hacknet.purchaseNode();
 

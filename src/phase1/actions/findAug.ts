@@ -28,11 +28,14 @@ function priciestAug(
       allAugs.push(aug);
     }
   }
-  return allAugs.sort(
-    (a, b) =>
-      ns.singularity.getAugmentationPrice(b) -
-      ns.singularity.getAugmentationPrice(a)
-  )[0];
+  function augValue(augName: string): number {
+    return (
+      1 /
+      ns.singularity.getAugmentationPrice(augName) /
+      ns.singularity.getAugmentationRepReq(augName)
+    );
+  }
+  return allAugs.sort((a, b) => augValue(b) - augValue(a))[0];
 }
 
 function getMaxPrice(ns: NS) {

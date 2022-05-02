@@ -35,12 +35,27 @@ export async function commitCrime(
     ns.enableLog("commitCrime");
     ns.tail();
     if (!ns.singularity.isBusy()) {
+      ns.print(`Crime until ${ns.nFormat(goal, "$0.0a")}`);
+      ns.print(
+        `Hacking Income     : ${ns.nFormat(
+          ns.getScriptIncome()[0],
+          "$0.0a"
+        )} / sec`
+      );
       ns.singularity.commitCrime(crime);
     }
     if (ns.getServerMoneyAvailable("home") >= goal) return;
     await ns.sleep(1);
   }
 }
+
+// function timeToGoal(ns: NS, goal: number) {
+//   // calculate the time until the goal in seconds.
+//   const startingCash = ns.getServerMoneyAvailable("home");
+//   const neededCash = goal - startingCash;
+//   if (neededCash < 0) return 0;
+//   return (neededCash / (ns.getScriptIncome()[0] || 0.01)) * 200;
+// }
 
 function getBestCrime(ns: NS): string {
   return crimes.sort(
