@@ -40,6 +40,9 @@ export function priciestAug(
   }
 
   function augValue(aug: string) {
+    // special conditions
+    if (aug === "The Red Pill") return 0;
+
     const stats = ns.singularity.getAugmentationStats(aug);
     let multiplier = 1;
     if (stats.faction_rep_mult) multiplier += 1e9 * stats.faction_rep_mult;
@@ -48,11 +51,7 @@ export function priciestAug(
     // if (stats.hacking_mult) multiplier += 1e3 * stats.hacking_mult;
     // if (stats.hacking_exp_mult) multiplier += 1e3 * stats.hacking_exp_mult;
     // if (stats.company_rep_mult) multiplier += 1e2 * stats.company_rep_mult;
-    return (
-      (1 /
-        (ns.singularity.getAugmentationPrice(aug) *
-          ns.singularity.getAugmentationRepReq(aug)) || 1) * multiplier
-    );
+    return (1 / ns.singularity.getAugmentationRepReq(aug) || 1) * multiplier;
   }
 
   return allAugs.sort((a, b) => augValue(b) - augValue(a))[0];

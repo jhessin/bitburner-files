@@ -65,10 +65,9 @@ export async function main(ns: NS) {
     await ns.sleep(1);
     // If I'm not to busy work for a company.
     const neededFactions = getNeededFactions(ns);
-    if (!ns.singularity.isBusy() || ns.getPlayer().workType.includes("Company"))
-      await neededFactions[0].workToJoin();
-    if (!(await purchasePricey(ns)) && hasAugsToInstall(ns))
-      await finishOut(ns);
+    if (!(await purchasePricey(ns)))
+      if (hasAugsToInstall(ns)) await finishOut(ns);
+      else await neededFactions[0].workToJoin();
   }
 }
 

@@ -1,5 +1,6 @@
 import { NS, Server } from "Bitburner";
 import { ServerTree } from "utils/ServerTree";
+import { Daemon } from "ui/monitor";
 import { bkdr } from "bkdr";
 
 export async function main(ns: NS) {
@@ -31,7 +32,9 @@ export async function main(ns: NS) {
 export async function installBackdoors(ns: NS) {
   const allServers = new ServerTree(ns).home.filter(
     (s) =>
-      s.hostname !== "home" && !ns.getPurchasedServers().includes(s.hostname)
+      s.hostname !== "home" &&
+      !ns.getPurchasedServers().includes(s.hostname) &&
+      s.hostname !== Daemon
   );
   const serversBackdoored = allServers.filter((s) => s.backdoorInstalled);
   if (serversBackdoored.length === allServers.length) {

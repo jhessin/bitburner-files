@@ -1,6 +1,7 @@
 import { commitCrime } from "actions/crime";
 import { NS } from "Bitburner";
 import { workForCompany } from "actions/companyWork";
+import { etaCalculator } from "utils/etaCalculator";
 
 // Interface to hold requirements to join a faction to be attached to the
 // factionData object.
@@ -138,8 +139,14 @@ export class FactionData {
     return true;
   }
 
-  async workToJoin() {
-    if (!this.needed) return;
+  async workToJoin(): Promise<boolean> {
+    if (!this.needed) return false;
+    // don't interupt programming
+    if (
+      this.ns.singularity.isBusy() &&
+      this.ns.getPlayer().workType.includes("Program")
+    )
+      return false;
 
     const req = this.requirements;
     if (this.canJoin && req.locations.length > 0) {
@@ -147,10 +154,10 @@ export class FactionData {
         // check other requirements
         if (req.chiefOfCompanyReq) {
           await workForCompany(this.ns, "MegaCorp", "business");
-          return;
+          return true;
         } else {
           await commitCrime(this.ns);
-          return;
+          return true;
         }
       }
     }
@@ -161,7 +168,7 @@ export class FactionData {
       req.augsReq &&
       req.augsReq > this.ns.singularity.getOwnedAugmentations(false).length
     )
-      return;
+      return false;
     const player = this.ns.getPlayer();
     if (req.strLevel && req.strLevel > player.strength)
       gym(this.ns, "strength");
@@ -183,13 +190,29 @@ export class FactionData {
       if (
         this.ns.singularity.isBusy() &&
         player.workType.includes("Company") &&
-        player.companyName === req.companyName &&
-        req.companyRep <=
+        player.companyName === req.companyName
+      ) {
+        if (
+          req.companyRep <=
           this.ns.singularity.getCompanyRep(req.companyName) +
-            player.workRepGained / 2
-      )
-        this.ns.singularity.stopAction();
-      else await workForCompany(this.ns, req.companyName);
+            player.workRepGained *
+              getCompanyRepMultiplier(this.ns, req.companyName)
+        )
+          this.ns.singularity.stopAction();
+        else {
+          const current =
+            this.ns.singularity.getCompanyRep(req.companyName) +
+            player.workRepGained *
+              getCompanyRepMultiplier(this.ns, req.companyName);
+          const gainRate =
+            this.ns.getPlayer().workRepGainRate *
+            getCompanyRepMultiplier(this.ns, req.companyName);
+          const timeLeft = (req.companyRep - current) / gainRate;
+          this.ns.print(`Need rep with ${req.companyName}`);
+          this.ns.print(`ETA   : ${this.ns.tFormat(timeLeft)}`);
+          this.ns.print(`ETA   : ${etaCalculator(this.ns, timeLeft)}`);
+        }
+      } else await workForCompany(this.ns, req.companyName);
     } else if (req.peopleKilled && req.peopleKilled > player.numPeopleKilled)
       await commitCrime(this.ns, "homicide");
     else if (
@@ -197,6 +220,8 @@ export class FactionData {
       req.cashReq > this.ns.getServerMoneyAvailable("home")
     )
       await commitCrime(this.ns);
+
+    return true;
   }
 }
 
@@ -460,4 +485,12 @@ export function getUninstalledAugs(ns: NS): string[] {
   return getAllAugs(ns).filter(
     (aug) => !ns.singularity.getOwnedAugmentations(false).includes(aug)
   );
+}
+function getCompanyRepMultiplier(ns: NS, companyName: string) {
+  try {
+    if (ns.getServer(companyName).backdoorInstalled) return 0.75;
+    else return 0.5;
+  } catch (error) {
+    return 0.5;
+  }
 }
