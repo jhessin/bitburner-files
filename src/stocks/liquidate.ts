@@ -8,7 +8,7 @@ export async function main(ns: NS) {
   await liquidate(ns);
 }
 
-async function liquidate(ns: NS) {
+export async function liquidate(ns: NS) {
   let folio = getFolio(ns);
   let total = 0;
   while (folio.length > 0) {

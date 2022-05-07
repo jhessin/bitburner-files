@@ -12,12 +12,13 @@ import { expandHacknet } from "hacknet";
 import { batch } from "batching/batch";
 import { purchasePricey, getMaxPrice } from "actions/augmentations";
 import { manageStock } from "stocks/start";
+import { liquidate } from "stocks/liquidate";
 import { getNeededFactions } from "actions/factionHunt";
 import { workForFaction } from "actions/factionWork";
 import { commitCrime } from "actions/crime";
 import { kill } from "utils/scriptKilling";
 
-const nextBitnode = 4;
+const nextBitnode = 5;
 
 const scripts = [
   "/contracts/start.js",
@@ -43,11 +44,17 @@ export async function main(ns: NS) {
     )
       await batch(ns, target);
   }
-  await spendMoney(ns);
+  await work(ns);
   await nukeAll(ns);
   await updateHack();
 
   while (true) {
+    if (
+      ns.serverExists(Daemon) &&
+      ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(Daemon)
+    ) {
+      ns.singularity.destroyW0r1dD43m0n(nextBitnode, "restart.js");
+    }
     ns.clearLog();
     ns.tail();
     // Keep nuking servers
@@ -60,21 +67,13 @@ export async function main(ns: NS) {
     }
     if (!ns.scriptRunning("factionWatch.js", "home"))
       if (!ns.run("factionWatch.js")) factionWatch(ns);
-    await spendMoney(ns);
+    await work(ns);
     monitor(ns);
     await ns.sleep(1);
-    // If I'm not to busy work for a company.
-    const neededFactions = getNeededFactions(ns);
-    if (!(await purchasePricey(ns)))
-      if (hasAugsToInstall(ns)) await finishOut(ns);
-      else await neededFactions[0].workToJoin();
   }
 }
 
-async function spendMoney(ns: NS) {
-  await purchasePricey(ns);
-  // Buy or create any programs you may need.
-  await createPrograms(ns);
+async function work(ns: NS) {
   expandServer(ns);
   if (getMinRam(ns) < ns.getPurchasedServerMaxRam()) {
     if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
@@ -83,6 +82,13 @@ async function spendMoney(ns: NS) {
   }
   expandHacknet(ns);
   await manageStock(ns);
+  const neededFactions = getNeededFactions(ns);
+  // Buy or create any programs you may need or work to purchase pricey augs.
+  if (!(await createPrograms(ns)))
+    if (!(await purchasePricey(ns)))
+      if (hasAugsToInstall(ns) && !(await stillGrowing(ns)))
+        await finishOut(ns);
+      else await neededFactions[0].workToJoin();
 }
 
 async function finishOut(ns: NS) {
@@ -93,6 +99,9 @@ async function finishOut(ns: NS) {
   ) {
     ns.singularity.destroyW0r1dD43m0n(nextBitnode, "restart.js");
   }
+
+  // liquidate all stocks to start.
+  await liquidate(ns);
 
   // first find the faction I have the most rep with.
   const targetFaction = ns
@@ -135,4 +144,11 @@ function hasAugsToInstall(ns: NS) {
     ns.singularity.getOwnedAugmentations(true).length >
     ns.singularity.getOwnedAugmentations(false).length
   );
+}
+
+async function stillGrowing(ns: NS): Promise<boolean> {
+  const samplingTime = 5000; // 2 Seconds
+  let startLevel = ns.getHackingLevel();
+  await ns.sleep(samplingTime);
+  return startLevel !== ns.getHackingLevel();
 }

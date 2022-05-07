@@ -33,7 +33,7 @@ export async function main(ns: NS) {
 export async function upgradeServers(ns: NS) {
   if (ns.getPurchasedServers().length === 0) return;
   // serverStats(ns);
-  const ram = await calculateRam(ns);
+  const ram = calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
   const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
   // find the server with the least amount of ram.
@@ -59,20 +59,26 @@ export async function upgradeServers(ns: NS) {
 
 export async function purchaseServers(ns: NS) {
   // serverStats(ns);
-  const ram = await calculateRam(ns);
+  const ram = calculateRam(ns);
   const price = ns.getPurchasedServerCost(ram);
   const moneyAvailable = ns.getServerMoneyAvailable("home") * budgetPercent;
   if (moneyAvailable > price) {
     const serverName = `pserver-${Date.now()}`;
     ns.purchaseServer(serverName, ram);
+  } else {
+    ns.print(
+      `${ns.nFormat(price, "$0.0a")} needed to add ${ns.nFormat(
+        ram * 1e9,
+        "0.0b"
+      )} to servers`
+    );
   }
 }
 
-export async function calculateRam(ns: NS) {
-  // return ns.getPurchasedServerMaxRam();
+export function calculateRam(ns: NS) {
   // get budget
   const budget = ns.getServerMoneyAvailable("home") * budgetPercent;
-  for (const ram of ramStopPoints.reverse())
+  for (const ram of Array.from(ramStopPoints).reverse())
     if (ns.getPurchasedServerCost(ram) <= budget && ram > getMinRam(ns))
       return ram;
   for (const ram of ramStopPoints) if (ram > getMinRam(ns)) return ram;
@@ -81,7 +87,7 @@ export async function calculateRam(ns: NS) {
 
 export function getMinRam(ns: NS) {
   if (ns.getPurchasedServers().length < ns.getPurchasedServerLimit())
-    return ramStopPoints[0];
+    return ramStopPoints[0] - 1;
   return Math.min(
     ...ns.getPurchasedServers().map((s) => ns.getServerMaxRam(s))
   );

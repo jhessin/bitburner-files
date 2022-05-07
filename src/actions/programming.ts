@@ -22,7 +22,10 @@ export async function main(ns: NS) {
   }
 }
 
-export async function createProgram(ns: NS, programName: string) {
+export async function createProgram(
+  ns: NS,
+  programName: string
+): Promise<boolean> {
   ns.tail();
   if (
     ns.fileExists(programName) &&
@@ -31,18 +34,19 @@ export async function createProgram(ns: NS, programName: string) {
     ns.getPlayer().createProgramName === programName
   ) {
     ns.singularity.stopAction();
-    return;
+    return false;
   }
   if (
     ns.singularity.purchaseTor() &&
     ns.singularity.purchaseProgram(programName)
   )
-    return;
+    return false;
   if (
     !ns.singularity.isBusy() ||
     !ns.getPlayer().workType.toLowerCase().includes("program")
   ) {
     // ns.toast(ns.getPlayer().workType);
-    ns.singularity.createProgram(programName);
+    return ns.singularity.createProgram(programName);
   }
+  return true;
 }

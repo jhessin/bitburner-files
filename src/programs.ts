@@ -26,7 +26,8 @@ export async function main(ns: NS) {
   }
 }
 
-export async function createPrograms(ns: NS) {
+// Returns true if a program is being created.
+export async function createPrograms(ns: NS): Promise<boolean> {
   const data = new ProgramData(ns);
 
   if (ns.singularity.purchaseTor()) {
@@ -43,10 +44,10 @@ export async function createPrograms(ns: NS) {
     if (program.hackingLevel <= ns.getHackingLevel()) {
       // this program needs created.
       if (!program.exists) {
-        await createProgram(ns, program.filename);
+        return await createProgram(ns, program.filename);
       }
     }
   }
 
-  if (neededPrograms.length === 0) return;
+  return false;
 }

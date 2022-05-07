@@ -141,7 +141,7 @@ export function getMaxPrice(ns: NS) {
   )
     min = Infinity;
   return Math.max(
-    ns.getServerMoneyAvailable("home") + ns.getScriptIncome()[0] * 60,
+    ns.getServerMoneyAvailable("home"), // + ns.getScriptIncome()[0] * 60,
     min
   );
 }

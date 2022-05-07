@@ -88,27 +88,7 @@ export class FactionData {
       !ns.getServer(req.backdoorServer).backdoorInstalled
     )
       return false;
-    function getHacknetStats(): {
-      levels: number;
-      ram: number;
-      cores: number;
-    } {
-      let levels = 0;
-      let ram = 0;
-      let cores = 0;
-      for (let i = 0; i < ns.hacknet.numNodes(); i++) {
-        const node = ns.hacknet.getNodeStats(i);
-        levels += node.level;
-        ram += node.ram;
-        cores += node.cores;
-      }
-      return {
-        levels,
-        cores,
-        ram,
-      };
-    }
-    const hacknetStats = getHacknetStats();
+    const hacknetStats = getHacknetStats(this.ns);
     if (req.hacknetLevels && req.hacknetLevels > hacknetStats.levels)
       return false;
     if (req.hacknetRAM && req.hacknetRAM > hacknetStats.ram) return false;
@@ -148,6 +128,8 @@ export class FactionData {
     )
       return false;
 
+    this.ns.print(`Trying to join ${this.name}`);
+
     const req = this.requirements;
     if (this.canJoin && req.locations.length > 0) {
       if (req.locations.includes(this.ns.getPlayer().location)) {
@@ -170,6 +152,37 @@ export class FactionData {
     )
       return false;
     const player = this.ns.getPlayer();
+    const hacknetStats = getHacknetStats(this.ns);
+    if (req.hacknetLevels && req.hacknetLevels > hacknetStats.levels) {
+      for (let i = 0; i < this.ns.hacknet.numNodes(); i++) {
+        if (
+          this.ns.getServerMoneyAvailable("home") >=
+          this.ns.hacknet.getLevelUpgradeCost(i, 1)
+        )
+          this.ns.hacknet.upgradeLevel(i, 1);
+      }
+      return false;
+    }
+    if (req.hacknetRAM && req.hacknetRAM > hacknetStats.ram) {
+      for (let i = 0; i < this.ns.hacknet.numNodes(); i++) {
+        if (
+          this.ns.getServerMoneyAvailable("home") >=
+          this.ns.hacknet.getRamUpgradeCost(i, 1)
+        )
+          this.ns.hacknet.upgradeRam(i, 1);
+      }
+      return false;
+    }
+    if (req.hacknetCores && req.hacknetCores > hacknetStats.cores) {
+      for (let i = 0; i < this.ns.hacknet.numNodes(); i++) {
+        if (
+          this.ns.getServerMoneyAvailable("home") >=
+          this.ns.hacknet.getCoreUpgradeCost(i, 1)
+        )
+          this.ns.hacknet.upgradeCore(i, 1);
+      }
+      return false;
+    }
     if (req.strLevel && req.strLevel > player.strength)
       gym(this.ns, "strength");
     else if (req.defLevel && req.defLevel > player.defense)
@@ -493,4 +506,25 @@ function getCompanyRepMultiplier(ns: NS, companyName: string) {
   } catch (error) {
     return 0.5;
   }
+}
+
+function getHacknetStats(ns: NS): {
+  levels: number;
+  ram: number;
+  cores: number;
+} {
+  let levels = 0;
+  let ram = 0;
+  let cores = 0;
+  for (let i = 0; i < ns.hacknet.numNodes(); i++) {
+    const node = ns.hacknet.getNodeStats(i);
+    levels += node.level;
+    ram += node.ram;
+    cores += node.cores;
+  }
+  return {
+    levels,
+    cores,
+    ram,
+  };
 }
