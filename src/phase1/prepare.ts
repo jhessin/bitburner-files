@@ -47,7 +47,7 @@ async function prepBatch(ns: NS, target: string) {
   ) {
     // check for full growth and min security and if good stop all spawners and
     if (fullGrowth() && minSecurity()) {
-      kill(ns, (ps) => ps.filename === spawnerName);
+      kill(ns, (ps) => ps.filename.startsWith("/batching"));
       ns.spawn("phase1/cheapHack.js", 1, target);
     } else ns.spawn("phase1/restart.js");
     return;

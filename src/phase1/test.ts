@@ -2,6 +2,7 @@ import { NS } from "Bitburner";
 
 const scripts = [
   "/phase1/restart.js",
+  "/phase1/expandServer.js",
   "/phase1/nuke.js",
   "/phase1/work.js",
   "/phase1/prepare.js",

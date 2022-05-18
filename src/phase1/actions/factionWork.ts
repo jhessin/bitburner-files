@@ -1,5 +1,4 @@
 import { NS } from "Bitburner";
-import { shareAll } from "shareAll";
 
 const workTypes = ["Hacking Contracts", "Field Work", "Security Work"];
 
@@ -23,7 +22,6 @@ export async function main(ns: NS) {
 
 export async function workForFaction(ns: NS, faction: string) {
   const goal = getFactionRepGoal(ns, faction);
-  await shareAll(ns);
   if (
     ns.singularity.isBusy() &&
     ns.getPlayer().workType.toLowerCase().includes("faction") &&

@@ -2,6 +2,7 @@ import { NS } from "Bitburner";
 import { etaCalculator } from "utils/etaCalculator";
 
 export async function main(ns: NS) {
+  ns.disableLog("ALL");
   const targetAug = ns.args[0] as string;
   purchaseAug(ns, targetAug);
   ns.spawn("/phase1/nuke.js");

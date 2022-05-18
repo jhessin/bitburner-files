@@ -1,5 +1,6 @@
 import { NS } from "Bitburner";
 import { getRunnableServers } from "cnct";
+import { phase2RAM } from "phase1/restart";
 
 export const spawnerName = "/batching/spawner.js";
 
@@ -17,7 +18,9 @@ export async function runSpawner(
   bufferTime: number,
   index: number = 0
 ) {
-  let host = getRunnableServers(ns)[0];
+  let host = getRunnableServers(ns).filter(
+    (s) => ns.getServerMaxRam("home") > phase2RAM(ns) || s.hostname !== "home"
+  )[0];
 
   await ns.scp(spawnerName, "home", host.hostname);
   for (const script of killScripts) {

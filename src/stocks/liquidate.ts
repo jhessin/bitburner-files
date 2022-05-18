@@ -9,6 +9,18 @@ export async function main(ns: NS) {
 }
 
 export async function liquidate(ns: NS) {
+  try {
+    if (
+      !ns.stock.purchaseWseAccount() ||
+      !ns.stock.purchaseTixApi() ||
+      !ns.stock.purchase4SMarketData() ||
+      !ns.stock.purchase4SMarketDataTixApi()
+    ) {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
   let folio = getFolio(ns);
   let total = 0;
   while (folio.length > 0) {

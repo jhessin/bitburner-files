@@ -18,7 +18,37 @@ import { workForFaction } from "actions/factionWork";
 import { commitCrime } from "actions/crime";
 import { kill } from "utils/scriptKilling";
 
-const nextBitnode = 5;
+function getNextBitnode(ns: NS, addCurrent: boolean = false) {
+  const bitnodePriorities: [number, number][] = [
+    [1, 3], // Genesis
+    [4, 3], // Singularity
+    [5, 3], // Artificial Intelligence
+    [3, 3], // Corporatocracy
+    [6, 3], // Bladeburners
+    [7, 3], // Bladeburners 2079
+    [9, 3], // Hacktocracy
+    [2, 3], // Rise of the Underworld
+    [8, 3], // Ghost of Wall Street
+    [10, 3], // Digital Carbon
+    [11, 3], // The Big Crash
+  ];
+
+  const owned = ns.getOwnedSourceFiles();
+
+  for (const sf of bitnodePriorities) {
+    let sfFound = false;
+    for (let { n, lvl } of owned) {
+      if (addCurrent && n === ns.getPlayer().bitNodeN) lvl++;
+      if (n === sf[0]) {
+        sfFound = true;
+        if (lvl < sf[1]) return sf[0];
+      }
+    }
+    if (!sfFound) return sf[0];
+  }
+
+  return 12; // The Recursion
+}
 
 const scripts = [
   "/contracts/start.js",
@@ -53,10 +83,12 @@ export async function main(ns: NS) {
       ns.serverExists(Daemon) &&
       ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(Daemon)
     ) {
-      ns.singularity.destroyW0r1dD43m0n(nextBitnode, "restart.js");
+      ns.singularity.destroyW0r1dD43m0n(getNextBitnode(ns), "restart.js");
     }
     ns.clearLog();
     ns.tail();
+    ns.print(`Current Bitnode: ${ns.getPlayer().bitNodeN}`);
+    ns.print(`Next Bitnode: ${getNextBitnode(ns, true)}`);
     // Keep nuking servers
     await nukeAll(ns);
     // update hack target if necessary
@@ -97,7 +129,7 @@ async function finishOut(ns: NS) {
     ns.serverExists(Daemon) &&
     ns.getHackingLevel() >= ns.getServerRequiredHackingLevel(Daemon)
   ) {
-    ns.singularity.destroyW0r1dD43m0n(nextBitnode, "restart.js");
+    ns.singularity.destroyW0r1dD43m0n(getNextBitnode(ns), "restart.js");
   }
 
   // liquidate all stocks to start.

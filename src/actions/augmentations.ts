@@ -3,6 +3,17 @@ import { commitCrime } from "actions/crime";
 import { getFactionRepGoal, workForFaction } from "actions/factionWork";
 import { etaCalculator } from "utils/etaCalculator";
 
+const highPriority = [
+  "CashRoot Starter Kit",
+  "Neuroreceptor Management Implant",
+  //
+];
+
+const lowPriority = [
+  "The Red Pill",
+  //
+];
+
 export async function main(ns: NS) {
   const args = ns.flags([["help", false]]);
   const hostname = args._[0];
@@ -41,7 +52,8 @@ export function priciestAug(
 
   function augValue(aug: string) {
     // special conditions
-    if (aug === "The Red Pill") return 0;
+    if (highPriority.includes(aug)) return Infinity;
+    if (lowPriority.includes(aug)) return 0;
 
     const stats = ns.singularity.getAugmentationStats(aug);
     let multiplier = 1;
@@ -51,7 +63,11 @@ export function priciestAug(
     // if (stats.hacking_mult) multiplier += 1e3 * stats.hacking_mult;
     // if (stats.hacking_exp_mult) multiplier += 1e3 * stats.hacking_exp_mult;
     // if (stats.company_rep_mult) multiplier += 1e2 * stats.company_rep_mult;
-    return (1 / ns.singularity.getAugmentationRepReq(aug) || 1) * multiplier;
+    // return (1 / ns.singularity.getAugmentationRepReq(aug) || 1) * multiplier;
+    return (
+      ns.singularity.getAugmentationPrice(aug) * multiplier
+      // ns.singularity.getAugmentationRepReq(aug) || 1
+    );
   }
 
   return allAugs.sort((a, b) => augValue(b) - augValue(a))[0];
@@ -69,6 +85,7 @@ export async function farmRep(ns: NS) {
 }
 
 export async function purchasePricey(ns: NS): Promise<boolean> {
+  // if
   const targetAug = priciestAug(ns);
   if (!targetAug) return false;
   ns.print(`target aug : ${targetAug}`);
@@ -135,9 +152,8 @@ export function getMaxPrice(ns: NS) {
   // instead.
   let min = 10_000_000;
   if (
-    ns.singularity.getOwnedAugmentations(true).length -
-      ns.singularity.getOwnedAugmentations(false).length ===
-    0
+    ns.singularity.getOwnedAugmentations(true).length ===
+    ns.singularity.getOwnedAugmentations(false).length
   )
     min = Infinity;
   return Math.max(
