@@ -65,13 +65,13 @@ async function prepBatch(ns: NS, target: string) {
 
   while (ns.weakenAnalyze(weakenThreads) < targetDelta) {
     weakenThreads += 1;
-    ns.toast(`Calculating Weaken Threads: ${weakenThreads}`);
-    ns.toast(
+    ns.print(`Calculating Weaken Threads: ${weakenThreads}`);
+    ns.print(
       `${weakenThreads} threads will cut security by ${ns.weakenAnalyze(
         weakenThreads
       )}`
     );
-    ns.toast(`Target security is ${targetDelta}`);
+    ns.print(`Target security is ${targetDelta}`);
     await ns.sleep(1);
   }
 

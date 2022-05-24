@@ -18,7 +18,7 @@ import { workForFaction } from "actions/factionWork";
 import { commitCrime } from "actions/crime";
 import { kill } from "utils/scriptKilling";
 
-function getNextBitnode(ns: NS, addCurrent: boolean = false) {
+function getNextBitnode(ns: NS, addCurrent: boolean = true) {
   const bitnodePriorities: [number, number][] = [
     [1, 3], // Genesis
     [4, 3], // Singularity
